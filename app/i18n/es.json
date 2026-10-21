@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "titulo": "Programa de referidos de talento | WorldTeams",
+    "descripcion": "Recomendá talento de arquitectura e ingeniería a WorldTeams y ganá cuando su perfil se valide."
+  },
+  "marca": { "nombre": "WorldTeams", "logoAlt": "WorldTeams" },
+  "candidato": {
+    "tituloPagina": "Te recomendaron para WorldTeams",
+    "titulo": "{nombre} te recomendó para WorldTeams",
+    "bajada": "WorldTeams conecta a profesionales de arquitectura e ingeniería de LATAM con firmas de EE.UU. Completá tu perfil en un par de minutos.",
+    "razones": [
+      { "titulo": "Alguien de confianza dio la cara", "texto": "{nombre} ya trabaja con una firma a través de WorldTeams y te recomendó por tu trabajo." },
+      { "titulo": "Firmas de EE.UU. que buscan tu perfil", "texto": "Trabajamos con arquitectura e ingeniería. Si tu perfil encaja, te contactamos con la oportunidad." },
+      { "titulo": "Tu perfil queda en nuestra base", "texto": "Aunque hoy no haya una búsqueda para vos, te vamos a tener en cuenta cuando aparezca una." }
+    ],
+    "noEncontrado": {
+      "titulo": "No encontramos este link",
+      "texto": "El código del link no existe o ya no está activo. Pedile a quien te lo pasó que te lo vuelva a enviar.",
+      "cta": "Conocer el programa"
+    }
+  },
+  "formulario": {
+    "titulo": "Tu perfil",
+    "ayudaObligatorios": "Todos los campos son obligatorios.",
+    "campos": {
+      "nombre": { "label": "Nombre", "placeholder": "Ana" },
+      "apellido": { "label": "Apellido", "placeholder": "Pérez" },
+      "email": { "label": "Email", "placeholder": "ana@correo.com", "ayuda": "Te escribimos acá." },
+      "linkedin_url": { "label": "Perfil de LinkedIn", "placeholder": "linkedin.com/in/tu-perfil" },
+      "especialidad": {
+        "label": "Especialidad",
+        "opciones": { "arquitectura": "Arquitectura", "ingenieria": "Ingeniería" }
+      },
+      "usa_revit": {
+        "label": "¿Manejás Revit?",
+        "opciones": { "si": "Sí", "no": "No" }
+      },
+      "seniority": {
+        "label": "Seniority",
+        "opciones": { "junior": "Junior", "semi_senior": "Semi senior", "senior": "Senior" }
+      },
+      "nivel_ingles": {
+        "label": "Nivel de inglés",
+        "opciones": { "basico": "Básico", "intermedio": "Intermedio", "avanzado": "Avanzado", "nativo": "Nativo" }
+      },
+      "cv": {
+        "label": "CV",
+        "vacio": "Elegí tu CV o arrastralo acá",
+        "ayuda": "PDF, hasta {mb} MB",
+        "cambiar": "Cambiar",
+        "quitar": "Quitar"
+      },
+      "acepto_visibilidad": {
+        "label": "Quien te recomendó podrá ver tu nombre y el estado de tu registro."
+      }
+    },
+    "errores": {
+      "requerido": "Completá este campo.",
+      "nombre": "Escribí tu nombre (mínimo 2 letras).",
+      "apellido": "Escribí tu apellido (mínimo 2 letras).",
+      "email": "Revisá el email: parece incompleto.",
+      "linkedin": "Pegá el link de tu perfil, por ejemplo linkedin.com/in/tu-nombre.",
+      "opcion": "Elegí una opción.",
+      "cvFaltante": "Subí tu CV en PDF.",
+      "cvTipo": "El CV tiene que ser un PDF.",
+      "cvPeso": "El CV pesa más de {mb} MB. Subí una versión más liviana.",
+      "visibilidad": "Necesitamos que aceptes este aviso para continuar.",
+      "servidor": "No pudimos enviar tu perfil. Revisá tu conexión e intentá de nuevo.",
+      "captcha": "No pudimos verificar que sos una persona. Recargá la página e intentá de nuevo.",
+      "demasiados": "Hiciste demasiados intentos. Esperá unos minutos y volvé a probar."
+    },
+    "enviar": "Enviar mi perfil",
+    "enviando": "Enviando…",
+    "privacidad": "Usamos tus datos solo para evaluar tu perfil dentro de WorldTeams."
+  },
+  "confirmacion": {
+    "titulo": "Listo, {nombre}. Recibimos tu perfil.",
+    "bajada": "{referente} te recomendó y ya le avisamos que tu registro está en marcha.",
+    "pasos": [
+      { "titulo": "Revisamos tu perfil", "texto": "El equipo de reclutamiento lo mira con tu CV y tu experiencia." },
+      { "titulo": "Te contactamos", "texto": "Te escribimos a {email} en hasta {dias} días hábiles." },
+      { "titulo": "Quedás en nuestra base", "texto": "Si hay una oportunidad que encaje con tu perfil, te avisamos." }
+    ],
+    "mail": "También te enviamos un mail con esta información."
+  },
+  "yaRegistrado": {
+    "titulo": "Ya tenemos tu perfil",
+    "texto": "Ya tenemos tu perfil en nuestra base; te vamos a contactar si hay una oportunidad.",
+    "cta": "Ir a WorldTeams"
+  }
+}

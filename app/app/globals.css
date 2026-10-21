@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* Tokens de marca tomados del CSS público de worldteams.com */
+@theme {
+  --color-verde: #142d2b;
+  --color-verde-hondo: #0d211f;
+  --color-negro: #131313;
+  --color-lima: #d0ef76;
+  --color-crema: #fff7f3;
+  --color-arena: #d4b5aa;
+  --color-salvia: #58958c;
+  --color-tinta-suave: #4a5f5b;
+  --color-borde: #7a8e89;
+  --color-error: #b3261e;
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-verde);
+  color: var(--color-crema);
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-lima);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.sobre-crema :focus-visible {
+  outline-color: var(--color-verde);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
