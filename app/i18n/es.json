@@ -4,6 +4,77 @@
     "descripcion": "Recomendá talento de arquitectura e ingeniería a WorldTeams y ganá cuando su perfil se valide."
   },
   "marca": { "nombre": "WorldTeams", "logoAlt": "WorldTeams" },
+  "inicio": {
+    "hero": {
+      "etiqueta": "Programa de referidos de talento",
+      "titulo1": "Tu criterio",
+      "titulo2": "vale premio.",
+      "bajada": "Recomendá a colegas de arquitectura e ingeniería para el talent pool de WorldTeams. Cuando su perfil se valida, vos cobrás.",
+      "cta": "Calcular mi premio",
+      "cta2": "Cómo funciona",
+      "datos": [
+        { "valor": "USD {base}", "texto": "por cada referido validado" },
+        { "valor": "USD {prioritario}", "texto": "si el perfil es prioritario" },
+        { "valor": "hasta USD {hitoMax}", "texto": "de bono por llegar a {hitoMaxReferidos} en el año" }
+      ]
+    },
+    "pasos": {
+      "titulo": "Tres pasos, sin formularios para vos",
+      "items": [
+        { "titulo": "Compartí tu link personal", "texto": "Cada referente tiene un link único. Se lo mandás a quien recomendás, por el canal que prefieras." },
+        { "titulo": "La persona completa su perfil", "texto": "Carga ella misma sus datos y su CV. Nadie carga datos de terceros sin que lo sepan." },
+        { "titulo": "Validamos y se acredita tu premio", "texto": "Si el perfil cumple las reglas, queda validado sin esperas. Si hay dudas, lo revisa una persona de reclutamiento." }
+      ]
+    },
+    "premios": {
+      "titulo": "Cuánto se gana",
+      "bajada": "Pagos únicos en dólares. No dependen del sueldo de nadie y no tienen tope de referidos.",
+      "baseTitulo": "Por referido validado",
+      "baseMonto": "USD {base}",
+      "baseTexto": "Cada persona que se registra con tu link y cuyo perfil se valida.",
+      "prioritarioTitulo": "Perfil prioritario",
+      "prioritarioMonto": "USD {prioritario}",
+      "prioritarioTexto": "Arquitectura, con Revit, senior y con inglés avanzado o nativo: es el perfil que más buscan las firmas.",
+      "hitosTitulo": "Bono por hitos",
+      "hitosTexto": "Se suma al llegar a cierta cantidad de referidos validados en el año calendario.",
+      "hito": "referidos validados",
+      "hitoBono": "+ USD {bono}"
+    },
+    "calculadora": {
+      "titulo": "Hacé tu cuenta",
+      "bajada": "Movelo y mirá cuánto sumarías en un año.",
+      "total": "Personas que recomendás por año",
+      "prioritarias": "De esas, con perfil prioritario",
+      "resultado": "Estimás ganar",
+      "resultadoUnidad": "USD por año",
+      "desglose": {
+        "base": "Base ({n} × USD {monto})",
+        "prioritario": "Extra por prioritarias ({n} × USD {monto})",
+        "hitos": "Bonos por hitos",
+        "ninguno": "Sin bono todavía"
+      },
+      "proximo": "Te faltan {n} para el bono de USD {bono} (hito de {hito}).",
+      "completo": "Alcanzaste todos los bonos del año.",
+      "aclaracion": "Es una estimación: el premio se confirma cuando cada perfil queda validado."
+    },
+    "faq": {
+      "titulo": "Preguntas frecuentes",
+      "items": [
+        { "p": "¿Quién puede referir?", "r": "Profesionales que ya trabajan con una firma cliente a través de WorldTeams. Tu criterio ya fue validado y por eso confiamos en tus recomendaciones." },
+        { "p": "¿Cuándo se paga?", "r": "Una vez por mes, junto con el sueldo, con corte el día {corte}. Si ya no trabajás con una firma, se paga por transferencia en el mismo ciclo." },
+        { "p": "¿Qué pasa si la persona ya estaba en la base de WorldTeams?", "r": "No cuenta como referido, porque el objetivo es sumar gente nueva. Te avisamos por mail para que sepas que tu recomendación llegó." },
+        { "p": "¿Qué ven la persona recomendada y yo?", "r": "Vos ves su nombre completo y el estado de su registro, nada más. Ella lo sabe: el formulario se lo avisa antes de enviar." },
+        { "p": "¿Cuántas personas puedo recomendar?", "r": "No hay tope. Si en {dias} días llegan más de {cantidad}, esos perfiles pasan por una revisión extra antes de validarse." },
+        { "p": "¿Puedo referirme a mí mismo o cargar perfiles falsos?", "r": "No. Se detecta con el control de duplicados y la validación del perfil, y implica perder los premios y puede implicar la expulsión del programa." },
+        { "p": "¿Y si dejo de trabajar con la firma?", "r": "Lo que ya ganaste es tuyo y se te paga igual, salvo que haya habido una sanción." }
+      ]
+    },
+    "cierre": {
+      "titulo": "Tu red ya sabe quién es bueno.",
+      "texto": "Si trabajás con una firma a través de WorldTeams, ya tenés tu link personal: te lo enviamos por mail con tu acceso.",
+      "nota": "¿No lo encontrás? Escribile a tu contacto en WorldTeams."
+    }
+  },
   "candidato": {
     "tituloPagina": "Te recomendaron para WorldTeams",
     "titulo": "te recomendó para WorldTeams",
