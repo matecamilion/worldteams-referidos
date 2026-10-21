@@ -74,7 +74,7 @@
   },
   "confirmacion": {
     "titulo": "Listo, {nombre}. Recibimos tu perfil.",
-    "bajada": "{referente} te recomendó y ya le avisamos que tu registro está en marcha.",
+    "bajada": "{referente} te recomendó y va a poder ver el estado de tu registro.",
     "pasos": [
       { "titulo": "Revisamos tu perfil", "texto": "El equipo de reclutamiento lo mira con tu CV y tu experiencia." },
       { "titulo": "Te contactamos", "texto": "Te escribimos a {email} en hasta {dias} días hábiles." },

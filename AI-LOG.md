@@ -18,7 +18,6 @@
 | Carpeta del proyecto | Creé los archivos en `C:\dev\WroldTeams` (con el nombre mal escrito del CLAUDE.md) | Corrigió el nombre a `C:\dev\WorldTeams`. La carpeta vieja estaba abierta en la sesión y no se podía renombrar: copié los documentos a la nueva y la vieja se borra a mano |
 | Calculadora de premios | Dos controles sueltos: personas a recomendar y cuántas son prioritarias | Pidió que el control de prioritarias nunca supere el total, que el texto diga "por año" (los hitos son por año calendario) y que se aclare que es una estimación (pendiente de construir con la página "/") |
 | Git | Había dejado `git init` para la tarea del miércoles | Pidió hacerlo ya, con `.gitignore` que incluya `.env` y commits chicos por cada paso |
-
 | Diseño del formulario | Botones grandes de opciones apilados, campos con mucho aire, un solo bloque largo, placeholders con nombres de ejemplo y tarjeta de 28 px de radio: se veía estirado | Pidió 3 bloques numerados (datos, perfil profesional, CV), controles segmentados de una línea (~40 px, radiogroup), inputs de ~44 px, radio de 8 px parejo, CV en una línea, checkbox con texto en primera persona, dos columnas con bienvenida fija en escritorio y revisar las franjas de fondo en móvil |
 
 <!-- Claude Code: agregá una fila cada vez que Mateo corrija o rechace algo que propongas. -->
