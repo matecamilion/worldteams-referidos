@@ -55,6 +55,7 @@ export async function POST(request: Request) {
   }
 
   const consulta = await consultarReferente(String(form.get("codigo_referente") ?? ""), ipDelCliente(request.headers));
+  if (consulta.tipo === "no_disponible") return responder({ resultado: "error", mensaje: errores.servidor }, 503);
   if (consulta.tipo === "bloqueada") return responder({ resultado: "error", mensaje: errores.demasiados }, 429);
   if (consulta.tipo === "no_existe") return responder({ resultado: "codigo_invalido" }, 404);
   const { referente } = consulta;

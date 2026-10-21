@@ -42,8 +42,9 @@ function Razones({ nombre, className }: { nombre: string; className: string }) {
 
 async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"] }) {
   const { codigo } = await params;
-  const consulta = await consultarReferente(decodeURIComponent(codigo), ipDelCliente(await headers()));
+  const consulta = await consultarReferente(decodificar(codigo), ipDelCliente(await headers()));
 
+  if (consulta.tipo === "no_disponible") return <MensajeSimple clave="noDisponible" />;
   if (consulta.tipo === "bloqueada") return <MensajeSimple clave="bloqueado" />;
   if (consulta.tipo === "no_existe") return <MensajeSimple clave="noEncontrado" />;
   const { referente } = consulta;
@@ -76,7 +77,16 @@ async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"
   );
 }
 
-function MensajeSimple({ clave }: { clave: "noEncontrado" | "bloqueado" }) {
+/** Un `%` mal formado en la URL no tiene que romper la página: se trata como un código que no existe. */
+function decodificar(codigo: string) {
+  try {
+    return decodeURIComponent(codigo);
+  } catch {
+    return "";
+  }
+}
+
+function MensajeSimple({ clave }: { clave: "noEncontrado" | "bloqueado" | "noDisponible" }) {
   return (
     <div className="mx-auto max-w-2xl py-16 sm:py-28">
       <h1 className="font-display text-[clamp(2.5rem,7vw,5rem)] font-medium leading-[0.98] tracking-[-0.035em]">

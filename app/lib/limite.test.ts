@@ -49,4 +49,10 @@ describe("ipDelCliente", () => {
     expect(ipDelCliente(new Headers({ "x-real-ip": "198.51.100.4" }))).toBe("198.51.100.4");
     expect(ipDelCliente(new Headers())).toBe("desconocida");
   });
+
+  it("prefiere los encabezados de la plataforma sobre x-forwarded-for", () => {
+    const h = new Headers({ "x-forwarded-for": "6.6.6.6", "x-real-ip": "198.51.100.4", "x-vercel-forwarded-for": "203.0.113.9" });
+    expect(ipDelCliente(h)).toBe("203.0.113.9");
+    expect(ipDelCliente(new Headers({ "x-forwarded-for": "6.6.6.6", "x-real-ip": "198.51.100.4" }))).toBe("198.51.100.4");
+  });
 });

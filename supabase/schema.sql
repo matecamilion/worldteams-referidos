@@ -74,10 +74,10 @@ create table public.referentes (
   apellido       text not null check (btrim(apellido) <> ''),
   email          text not null unique check (email = public.normalizar_email(email) and email like '%_@_%'),
   linkedin_url   text check (linkedin_url = public.normalizar_linkedin(linkedin_url)),
-  -- Decisión 2: nombre normalizado + sufijo aleatorio base36 de 6 caracteres (ej. lucia-k7q2m9).
+  -- Decisión 2: nombre normalizado + sufijo aleatorio base36 de 8 caracteres (ej. lucia-k7q2m9xd).
   -- Se genera una sola vez (trigger) y no se reutiliza; el formato se valida acá y en la app.
   codigo_referido text not null unique
-    check (codigo_referido ~ '^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{6}$' and length(codigo_referido) <= 64),
+    check (codigo_referido ~ '^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{8}$' and length(codigo_referido) <= 64),
   colocado       boolean not null default true,
   -- Sanción (decisión 8): un sancionado no abre referidos nuevos ni genera movimientos nuevos. Lo marca sancionar_referente().
   sancionado_en  timestamptz,
@@ -194,7 +194,7 @@ begin
   return v #>> '{}';
 end $$;
 
--- Sufijo aleatorio base36 de 6 caracteres. La fuente es gen_random_uuid() (generador criptográfico de Postgres);
+-- Sufijo aleatorio base36 de 8 caracteres. La fuente es gen_random_uuid() (generador criptográfico de Postgres);
 -- se descartan los bytes >= 252 para que los 36 caracteres sean igual de probables (sin sesgo de módulo).
 create function public.generar_sufijo_codigo()
 returns text language plpgsql volatile
@@ -206,12 +206,12 @@ declare
   i integer;
   b integer;
 begin
-  while length(resultado) < 6 loop
+  while length(resultado) < 8 loop
     bytes := decode(replace(gen_random_uuid()::text, '-', ''), 'hex');
     -- Los bytes 6 y 8 de un UUID v4 llevan bits fijos de versión y variante: se saltean.
     foreach i in array array[0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15] loop
       b := get_byte(bytes, i);
-      if b < 252 and length(resultado) < 6 then
+      if b < 252 and length(resultado) < 8 then
         resultado := resultado || substr(alfabeto, (b % 36) + 1, 1);
       end if;
     end loop;

@@ -11,8 +11,8 @@ describe("normalizarNombre", () => {
 });
 
 describe("generarSufijo", () => {
-  it("tiene 6 caracteres base36", () => {
-    for (let i = 0; i < 200; i++) expect(generarSufijo()).toMatch(/^[0-9a-z]{6}$/);
+  it("tiene 8 caracteres base36", () => {
+    for (let i = 0; i < 200; i++) expect(generarSufijo()).toMatch(/^[0-9a-z]{8}$/);
   });
 
   it("no repite en una muestra grande", () => {
@@ -29,12 +29,12 @@ describe("generarSufijo", () => {
 describe("generarCodigo", () => {
   it("une el nombre normalizado con el sufijo y pasa la validación de formato", () => {
     const c = generarCodigo("Lucía");
-    expect(c).toMatch(/^lucia-[0-9a-z]{6}$/);
+    expect(c).toMatch(/^lucia-[0-9a-z]{8}$/);
     expect(tieneFormatoDeCodigo(c)).toBe(true);
   });
 
   it("usa un nombre de respaldo si no queda ningún carácter válido", () => {
-    expect(generarCodigo("***")).toMatch(/^ref-[0-9a-z]{6}$/);
+    expect(generarCodigo("***")).toMatch(/^ref-[0-9a-z]{8}$/);
   });
 });
 
@@ -45,13 +45,17 @@ describe("tieneFormatoDeCodigo", () => {
 
   it("rechaza el formato viejo, que era solo el nombre", () => {
     expect(tieneFormatoDeCodigo("lucia-gomez")).toBe(false);
-    expect(tieneFormatoDeCodigo("martin-ferreyra")).toBe(false);
+    expect(tieneFormatoDeCodigo("camila-duarte")).toBe(false);
+  });
+
+  it("rechaza el sufijo de 6 caracteres de la versión anterior", () => {
+    expect(tieneFormatoDeCodigo("lucia-k7q2m9")).toBe(false);
   });
 
   it("rechaza mayúsculas, caracteres raros y largos excesivos", () => {
-    expect(tieneFormatoDeCodigo("Lucia-K7Q2M9")).toBe(false);
-    expect(tieneFormatoDeCodigo("lucia-k7q2m")).toBe(false);
+    expect(tieneFormatoDeCodigo("Lucia-K7Q2M9XD")).toBe(false);
+    expect(tieneFormatoDeCodigo("lucia-k7q2m9x")).toBe(false);
     expect(tieneFormatoDeCodigo("../etc/passwd")).toBe(false);
-    expect(tieneFormatoDeCodigo(`${"a".repeat(80)}-k7q2m9`)).toBe(false);
+    expect(tieneFormatoDeCodigo(`${"a".repeat(80)}-k7q2m9xd`)).toBe(false);
   });
 });

@@ -77,19 +77,21 @@ declare v_id uuid; v_cod text;
 begin
   insert into public.referentes (nombre, apellido, email) values ('Lucía-María', 'X', 'cod1@t.com')
   returning id, codigo_referido into v_id, v_cod;
-  perform pg_temp.registrar('codigo: se genera solo, con nombre normalizado + sufijo base36 de 6', v_cod ~ '^lucia-maria-[0-9a-z]{6}$', v_cod);
+  perform pg_temp.registrar('codigo: se genera solo, con nombre normalizado + sufijo base36 de 8', v_cod ~ '^lucia-maria-[0-9a-z]{8}$', v_cod);
 
   perform pg_temp.espera_error('codigo: el formato viejo (solo el nombre) se rechaza',
     $q$insert into public.referentes (nombre, apellido, email, codigo_referido) values ('A', 'B', 'cod2@t.com', 'lucia-gomez')$q$, 'check constraint');
+  perform pg_temp.espera_error('codigo: el sufijo de 6 caracteres de la versión anterior se rechaza',
+    $q$insert into public.referentes (nombre, apellido, email, codigo_referido) values ('A', 'B', 'cod2@t.com', 'lucia-k7q2m9')$q$, 'check constraint');
   perform pg_temp.espera_error('codigo: mayúsculas se rechazan',
-    $q$insert into public.referentes (nombre, apellido, email, codigo_referido) values ('A', 'B', 'cod2@t.com', 'Lucia-K7Q2M9')$q$, 'check constraint');
+    $q$insert into public.referentes (nombre, apellido, email, codigo_referido) values ('A', 'B', 'cod2@t.com', 'Lucia-K7Q2M9XD')$q$, 'check constraint');
   perform pg_temp.espera_error('codigo: duplicado se rechaza',
     format($q$insert into public.referentes (nombre, apellido, email, codigo_referido) values ('A', 'B', 'cod3@t.com', %L)$q$, v_cod), 'unique');
   perform pg_temp.espera_error('codigo: no se puede cambiar una vez generado',
-    format($q$update public.referentes set codigo_referido = 'otro-abc123' where id = %L$q$, v_id), 'codigo_inmutable');
+    format($q$update public.referentes set codigo_referido = 'otro-abcd1234' where id = %L$q$, v_id), 'codigo_inmutable');
 
   perform pg_temp.registrar('codigo: 500 generados, todos válidos y distintos',
-    (select count(distinct c) = 500 and bool_and(c ~ '^ref-[0-9a-z]{6}$')
+    (select count(distinct c) = 500 and bool_and(c ~ '^ref-[0-9a-z]{8}$')
        from (select public.generar_codigo_referido('***') as c from generate_series(1, 500)) g));
   perform pg_temp.registrar('codigo: el sufijo usa los 36 caracteres',
     (select count(distinct ch) = 36 from (select regexp_split_to_table(string_agg(public.generar_sufijo_codigo(), ''), '') as ch
@@ -590,6 +592,183 @@ select pg_temp.registrar('v_cierre_ciclo suma los pendientes por ciclo, referent
   (select coalesce(sum(total_usd), 0) = (select coalesce(sum(monto_usd), 0) from public.movimientos_pago where estado = 'pendiente')
         and coalesce(sum(cantidad_movimientos), 0) = (select count(*) from public.movimientos_pago where estado = 'pendiente')
      from public.v_cierre_ciclo));
+
+-- ---------------------------------------------------------------------
+-- 7. Consulta del link desde la landing (decisiones 2 y 41): función con secreto, sin exponer `referentes`
+--    Requiere consulta_referente.sql aplicado. El secreto real no se toca: estas pruebas fijan uno de prueba dentro
+--    de la transacción y el ROLLBACK final restaura el verdadero.
+-- ---------------------------------------------------------------------
+select pg_temp.registrar('consulta: la función y las tablas privadas existen (aplicá consulta_referente.sql)',
+  to_regprocedure('public.consultar_referente_por_codigo(text,text,text)') is not null
+  and to_regclass('public.secretos_internos') is not null and to_regclass('public.intentos_consulta_codigo') is not null);
+
+insert into public.secretos_internos (clave, valor) values ('consulta_codigo', 'secreto-de-prueba-0123456789abcdef0123')
+on conflict (clave) do update set valor = excluded.valor;
+
+select pg_temp.registrar('codigo: los referentes del seed tienen códigos de 8 caracteres (lucia-k7q2m9xd, etc.)',
+  (select count(*) = 4 and bool_and(codigo_referido ~ '^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{8}$')
+          and bool_or(codigo_referido = 'lucia-k7q2m9xd') and bool_or(codigo_referido = 'andres-m2w5q8vc')
+     from public.referentes where email like 'matecamilion05+%@gmail.com'));
+
+-- 7.1 Qué devuelve y a quién
+do $$
+declare
+  k constant text := 'secreto-de-prueba-0123456789abcdef0123';
+  v record; v_ok text; v_nc text; v_sa text; v_antiguo text := 'lucia-k7q2m9'; v_cols text[];
+begin
+  insert into public.referentes (nombre, apellido, email) values ('Cons', 'Ok', 'cons-ok@t.com') returning codigo_referido into v_ok;
+  insert into public.referentes (nombre, apellido, email, colocado) values ('Cons', 'Nc', 'cons-nc@t.com', false) returning codigo_referido into v_nc;
+  insert into public.referentes (nombre, apellido, email) values ('Cons', 'Sa', 'cons-sa@t.com') returning codigo_referido into v_sa;
+  update public.referentes set sancionado_en = now() where email = 'cons-sa@t.com';
+
+  select * into v from public.consultar_referente_por_codigo(v_ok, '10.0.0.1', k);
+  perform pg_temp.registrar('consulta: con secreto, un referente colocado devuelve ok con nombre, apellido y código',
+    v.estado = 'ok' and v.nombre = 'Cons' and v.apellido = 'Ok' and v.codigo_referido = v_ok, format('%s', row_to_json(v)));
+
+  select * into v from public.consultar_referente_por_codigo('  ' || upper(v_ok) || ' ', '10.0.0.1', k);
+  perform pg_temp.registrar('consulta: el código se normaliza (mayúsculas y espacios)', v.estado = 'ok', v.estado);
+
+  select * into v from public.consultar_referente_por_codigo(v_nc, '10.0.0.2', k);
+  perform pg_temp.registrar('consulta: un referente que ya no está colocado responde no_existe', v.estado = 'no_existe', v.estado);
+  select * into v from public.consultar_referente_por_codigo(v_sa, '10.0.0.3', k);
+  perform pg_temp.registrar('consulta: un referente sancionado responde no_existe', v.estado = 'no_existe', v.estado);
+  select * into v from public.consultar_referente_por_codigo(v_antiguo, '10.0.0.4', k);
+  perform pg_temp.registrar('consulta: el formato viejo de 6 caracteres responde no_existe', v.estado = 'no_existe', v.estado);
+  select * into v from public.consultar_referente_por_codigo('zzz-00000000', '10.0.0.5', k);
+  perform pg_temp.registrar('consulta: un código con formato válido pero inexistente responde no_existe', v.estado = 'no_existe', v.estado);
+
+  -- La firma devuelve solo estado, nombre, apellido y código: nunca email, LinkedIn ni nada más.
+  select proargnames[4:7] into v_cols from pg_proc where proname = 'consultar_referente_por_codigo';
+  perform pg_temp.registrar('consulta: solo devuelve estado, nombre, apellido y código (sin email ni LinkedIn)',
+    v_cols = array['estado', 'nombre', 'apellido', 'codigo_referido']
+    and (select cardinality(proargnames) = 7 from pg_proc where proname = 'consultar_referente_por_codigo'),
+    coalesce(v_cols::text, 'null'));
+end $$;
+
+-- 7.2 Sin secreto válido no responde nada, y la IP o los encabezados del cliente no sirven para nada
+do $$
+declare
+  k constant text := 'secreto-de-prueba-0123456789abcdef0123';
+  v record; v_ok text; i integer; n_antes integer; n_filas integer; v_todos_no_autorizados boolean := true;
+begin
+  select codigo_referido into v_ok from public.referentes where email = 'cons-ok@t.com';
+
+  select * into v from public.consultar_referente_por_codigo(v_ok, '10.0.0.1', null);
+  perform pg_temp.registrar('secreto: sin secreto (null) un código VÁLIDO responde no_autorizado', v.estado = 'no_autorizado' and v.nombre is null, v.estado);
+  select * into v from public.consultar_referente_por_codigo(v_ok, '10.0.0.1', 'secreto-equivocado-0123456789abcdef0123');
+  perform pg_temp.registrar('secreto: con un secreto incorrecto un código válido responde no_autorizado', v.estado = 'no_autorizado' and v.nombre is null, v.estado);
+  select * into v from public.consultar_referente_por_codigo(v_ok, '10.0.0.1', '');
+  perform pg_temp.registrar('secreto: con secreto vacío responde no_autorizado', v.estado = 'no_autorizado', v.estado);
+
+  -- Un cliente que inventa x-forwarded-for / cf-connecting-ip / x-real-ip y una IP distinta en cada llamada:
+  -- la función no usa nada de eso, no responde nada útil y no escribe ni una fila en la tabla de intentos.
+  perform set_config('request.headers',
+    '{"x-forwarded-for": "6.6.6.6, 7.7.7.7", "cf-connecting-ip": "6.6.6.6", "x-real-ip": "6.6.6.6"}', true);
+  select count(*) into n_antes from public.intentos_consulta_codigo;
+  for i in 1..30 loop
+    select * into v from public.consultar_referente_por_codigo('zzz-' || lpad(i::text, 8, '0'), '66.66.66.' || i, 'secreto-equivocado-0123456789abcdef0123');
+    v_todos_no_autorizados := v_todos_no_autorizados and v.estado = 'no_autorizado';
+  end loop;
+  select count(*) into n_filas from public.intentos_consulta_codigo;
+  perform pg_temp.registrar('secreto: 30 intentos sin secreto con IP y encabezados inventados no devuelven datos ni guardan filas',
+    v_todos_no_autorizados and n_filas = n_antes, format('filas antes %s, después %s', n_antes, n_filas));
+
+  -- Y no perjudican a nadie: la IP 6.6.6.6 (la que "inventaron") no queda bloqueada para quien sí tiene el secreto.
+  select * into v from public.consultar_referente_por_codigo(v_ok, '6.6.6.6', k);
+  perform pg_temp.registrar('secreto: una IP inventada por un cliente sin secreto no queda bloqueada ni afecta a otros', v.estado = 'ok', v.estado);
+  perform set_config('request.headers', '', true);
+
+  -- Sin secreto cargado, nada funciona (estado seguro por defecto).
+  delete from public.secretos_internos where clave = 'consulta_codigo';
+  select * into v from public.consultar_referente_por_codigo(v_ok, '10.0.0.1', k);
+  perform pg_temp.registrar('secreto: si no hay secreto cargado, todo responde no_autorizado', v.estado = 'no_autorizado', v.estado);
+  insert into public.secretos_internos (clave, valor) values ('consulta_codigo', k);
+
+  perform pg_temp.espera_error('secreto: un secreto de menos de 32 caracteres no se acepta',
+    $q$update public.secretos_internos set valor = 'corto' where clave = 'consulta_codigo'$q$, 'check constraint');
+end $$;
+
+-- 7.3 Límite por IP: segunda capa (configuracion.limite_consulta_codigo)
+do $$
+declare
+  k constant text := 'secreto-de-prueba-0123456789abcdef0123';
+  v record; v_ok text; i integer; v_estados text[] := '{}'; n_viejos integer;
+begin
+  select codigo_referido into v_ok from public.referentes where email = 'cons-ok@t.com';
+
+  for i in 1..10 loop
+    select * into v from public.consultar_referente_por_codigo('zzz-' || lpad(i::text, 8, '0'), '20.0.0.1', k);
+    v_estados := v_estados || v.estado;
+  end loop;
+  perform pg_temp.registrar('límite: los primeros 10 códigos inexistentes de una IP responden no_existe',
+    (select bool_and(e = 'no_existe') and count(*) = 10 from unnest(v_estados) e), array_to_string(v_estados, ','));
+  select * into v from public.consultar_referente_por_codigo('zzz-00000011', '20.0.0.1', k);
+  perform pg_temp.registrar('límite: el 11.º código distinto queda bloqueado', v.estado = 'bloqueada', v.estado);
+  select * into v from public.consultar_referente_por_codigo(v_ok, '20.0.0.1', k);
+  perform pg_temp.registrar('límite: con la IP bloqueada ni un código válido responde', v.estado = 'bloqueada' and v.nombre is null, v.estado);
+  select * into v from public.consultar_referente_por_codigo(v_ok, '20.0.0.2', k);
+  perform pg_temp.registrar('límite: otra IP sigue libre', v.estado = 'ok', v.estado);
+
+  for i in 1..25 loop perform * from public.consultar_referente_por_codigo('zzz-99999999', '20.0.0.3', k); end loop;
+  select * into v from public.consultar_referente_por_codigo(v_ok, '20.0.0.3', k);
+  perform pg_temp.registrar('límite: repetir el mismo código roto 25 veces cuenta una sola vez', v.estado = 'ok', v.estado);
+
+  -- La ventana vence: los intentos viejos se borran al consultar y la IP queda libre.
+  update public.intentos_consulta_codigo set creado_en = now() - interval '11 minutes' where ip = '20.0.0.1';
+  select * into v from public.consultar_referente_por_codigo(v_ok, '20.0.0.1', k);
+  select count(*) into n_viejos from public.intentos_consulta_codigo where creado_en < now() - interval '10 minutes';
+  perform pg_temp.registrar('límite: vencida la ventana la IP queda libre y los intentos viejos se borran', v.estado = 'ok' and n_viejos = 0,
+    format('estado %s, viejos %s', v.estado, n_viejos));
+
+  -- El tope sale de la configuración.
+  update public.configuracion set valor = '{"fallos": 2, "segundos": 600}' where clave = 'limite_consulta_codigo';
+  perform * from public.consultar_referente_por_codigo('zzz-00000101', '20.0.0.9', k);
+  perform * from public.consultar_referente_por_codigo('zzz-00000102', '20.0.0.9', k);
+  select * into v from public.consultar_referente_por_codigo('zzz-00000103', '20.0.0.9', k);
+  perform pg_temp.registrar('límite: el tope se lee de configuracion (con 2 fallos bloquea al tercero)', v.estado = 'bloqueada', v.estado);
+  update public.configuracion set valor = '{"fallos": 10, "segundos": 600}' where clave = 'limite_consulta_codigo';
+end $$;
+
+-- 7.4 Permisos: el anónimo solo puede llamar a la función; las tablas siguen cerradas
+do $$
+declare
+  k constant text := 'secreto-de-prueba-0123456789abcdef0123';
+  v_ok text; v_a record; v_u record;
+  d_ref boolean; d_sec boolean; d_int boolean; d_ins boolean; d_fn boolean; d_sec_u boolean;
+begin
+  select codigo_referido into v_ok from public.referentes where email = 'cons-ok@t.com';
+
+  execute 'set local role anon';
+  select * into v_a from public.consultar_referente_por_codigo(v_ok, '30.0.0.1', k);
+  begin perform 1 from public.referentes; d_ref := true; exception when others then d_ref := not (sqlerrm ilike '%permission denied%'); end;
+  begin perform 1 from public.secretos_internos; d_sec := true; exception when others then d_sec := not (sqlerrm ilike '%permission denied%'); end;
+  begin perform 1 from public.intentos_consulta_codigo; d_int := true; exception when others then d_int := not (sqlerrm ilike '%permission denied%'); end;
+  begin insert into public.intentos_consulta_codigo (ip, codigo) values ('1.1.1.1', 'x'); d_ins := true;
+  exception when others then d_ins := not (sqlerrm ilike '%permission denied%'); end;
+  begin perform public.cambiar_estado_referido(gen_random_uuid(), 'validado'); d_fn := true;
+  exception when others then d_fn := not (sqlerrm ilike '%permission denied%'); end;
+  execute 'reset role';
+
+  execute 'set local role authenticated';
+  select * into v_u from public.consultar_referente_por_codigo(v_ok, '30.0.0.2', k);
+  begin perform 1 from public.secretos_internos; d_sec_u := true; exception when others then d_sec_u := not (sqlerrm ilike '%permission denied%'); end;
+  execute 'reset role';
+
+  perform pg_temp.registrar('permisos: el rol anónimo puede llamar a la función (con el secreto) y recibe el nombre', v_a.estado = 'ok' and v_a.nombre = 'Cons', format('%s', row_to_json(v_a)));
+  perform pg_temp.registrar('permisos: el rol anónimo sigue sin leer referentes', not d_ref);
+  perform pg_temp.registrar('permisos: el rol anónimo no lee el secreto ni la tabla de intentos', not d_sec and not d_int);
+  perform pg_temp.registrar('permisos: el rol anónimo no escribe en la tabla de intentos ni ejecuta funciones de negocio', not d_ins and not d_fn);
+  perform pg_temp.registrar('permisos: un usuario autenticado tampoco lee el secreto', not d_sec_u);
+  perform pg_temp.registrar('permisos: las tablas nuevas tienen RLS activado y ninguna política',
+    (select count(*) = 2 and bool_and(relrowsecurity) from pg_class where relnamespace = 'public'::regnamespace
+      and relname in ('secretos_internos', 'intentos_consulta_codigo'))
+    and (select count(*) = 0 from pg_policies where schemaname = 'public' and tablename in ('secretos_internos', 'intentos_consulta_codigo')));
+  perform pg_temp.registrar('permisos: solo la función de consulta es ejecutable por anónimos entre las de negocio',
+    has_function_privilege('anon', 'public.consultar_referente_por_codigo(text,text,text)', 'execute')
+    and not has_function_privilege('anon', 'public.cambiar_estado_referido(uuid,public.tipo_estado_referido,public.tipo_actor,uuid,text,text[])', 'execute')
+    and not has_function_privilege('anon', 'public.sancionar_referente(uuid)', 'execute')
+    and not has_function_privilege('anon', 'public.crear_movimientos_validacion(uuid)', 'execute'));
+end $$;
 
 -- Resultado: el resumen primero y después cada prueba.
 select resultado, prueba, detalle from (

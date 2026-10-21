@@ -1,13 +1,14 @@
 /**
- * Código de referido: nombre normalizado + sufijo aleatorio ("lucia-k7q2m9").
+ * Código de referido: nombre normalizado + sufijo aleatorio ("lucia-k7q2m9xd").
  * El nombre solo hace el link legible; la protección está en el sufijo, que no se puede adivinar:
- * 6 caracteres base36 (36^6, unos 2.200 millones de combinaciones) sacados de un generador criptográfico.
+ * 8 caracteres base36 (36^8, unos 2,8 billones de combinaciones) sacados de un generador criptográfico:
+ * adivinar un código es inviable incluso sin límite de intentos; el límite por IP es la segunda capa.
  */
 const ALFABETO = "0123456789abcdefghijklmnopqrstuvwxyz";
-export const LARGO_SUFIJO = 6;
+export const LARGO_SUFIJO = 8;
 
-/** Formato válido: partes en minúsculas unidas por guiones y, al final, un sufijo de 6 caracteres. */
-const FORMATO = /^[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{6}$/;
+/** Formato válido: partes en minúsculas unidas por guiones y, al final, un sufijo de 8 caracteres. */
+const FORMATO = /^[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{8}$/;
 const LARGO_MAXIMO = 64;
 
 /** "María José" -> "maria-jose". Sin tildes, solo a-z y 0-9. */

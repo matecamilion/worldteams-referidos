@@ -52,7 +52,13 @@ export const limitadorConsultas = (global.__limitadorConsultas ??= crearLimitado
   ventanaMs: config.limiteConsultaCodigo.ventanaSegundos * 1000,
 }));
 
-/** IP del cliente según el proxy (Vercel agrega `x-forwarded-for`); la primera es la del cliente. */
+/**
+ * IP del usuario final según el encabezado que pone la plataforma. En Vercel, `x-vercel-forwarded-for` y `x-real-ip`
+ * los fija la plataforma y `x-forwarded-for` se sobrescribe, así que un cliente no puede inventarlos (confirmar en el deploy).
+ * Fuera de la plataforma (desarrollo local) cualquiera puede mandar estos encabezados, pero ahí no importa: la IP solo
+ * se usa para limitar intentos, y la base solo confía en ella cuando llega con el secreto de la aplicación.
+ */
 export function ipDelCliente(headers: Headers): string {
-  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip") || "desconocida";
+  const primera = (nombre: string) => headers.get(nombre)?.split(",")[0]?.trim() || undefined;
+  return primera("x-vercel-forwarded-for") ?? primera("x-real-ip") ?? primera("x-forwarded-for") ?? "desconocida";
 }

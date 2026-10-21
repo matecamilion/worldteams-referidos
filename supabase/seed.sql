@@ -31,8 +31,8 @@ on conflict (email) do nothing;
 -- así la landing en NEXT_PUBLIC_DEMO=false abre los mismos links. El cuarto referente ya no está colocado:
 -- sirve para probar que no puede referir y que, si ganó algo, cobra por transferencia (decisión 14).
 insert into public.referentes (nombre, apellido, email, linkedin_url, codigo_referido, colocado) values
-  ('Lucía',  'Gómez',    'matecamilion05+lucia@gmail.com',    'https://www.linkedin.com/in/lucia-gomez-demo',    'lucia-k7q2m9',  true),
-  ('Martín', 'Ferreyra', 'matecamilion05+martin@gmail.com', 'https://www.linkedin.com/in/martin-ferreyra-demo', 'martin-x4d8w1', true),
-  ('Camila', 'Duarte',   'matecamilion05+camila@gmail.com',   'https://www.linkedin.com/in/camila-duarte-demo',   'camila-p3n6z5', true),
-  ('Andrés', 'Paredes',  'matecamilion05+andres@gmail.com',  'https://www.linkedin.com/in/andres-paredes-demo',  'andres-m2w5q8', false)
+  ('Lucía',  'Gómez',    'matecamilion05+lucia@gmail.com',    'https://www.linkedin.com/in/lucia-gomez-demo',    'lucia-k7q2m9xd',  true),
+  ('Martín', 'Ferreyra', 'matecamilion05+martin@gmail.com', 'https://www.linkedin.com/in/martin-ferreyra-demo', 'martin-x4d8w1bn', true),
+  ('Camila', 'Duarte',   'matecamilion05+camila@gmail.com',   'https://www.linkedin.com/in/camila-duarte-demo',   'camila-p3n6z5ht', true),
+  ('Andrés', 'Paredes',  'matecamilion05+andres@gmail.com',  'https://www.linkedin.com/in/andres-paredes-demo',  'andres-m2w5q8vc', false)
 on conflict (email) do nothing;

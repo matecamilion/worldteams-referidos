@@ -2,9 +2,9 @@
 export type Referente = { codigo: string; nombre: string; apellido: string };
 
 export const referentesDemo: Referente[] = [
-  { codigo: "lucia-k7q2m9", nombre: "Lucía", apellido: "Gómez" },
-  { codigo: "martin-x4d8w1", nombre: "Martín", apellido: "Ferreyra" },
-  { codigo: "camila-p3n6z5", nombre: "Camila", apellido: "Duarte" },
+  { codigo: "lucia-k7q2m9xd", nombre: "Lucía", apellido: "Gómez" },
+  { codigo: "martin-x4d8w1bn", nombre: "Martín", apellido: "Ferreyra" },
+  { codigo: "camila-p3n6z5ht", nombre: "Camila", apellido: "Duarte" },
 ];
 
 /** Este email simula a alguien que ya estaba en el talent pool. */
