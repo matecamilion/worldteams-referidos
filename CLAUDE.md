@@ -17,7 +17,7 @@ Entregables pedidos:
 Lo que evalúan: cómo pensamos y priorizamos, que las piezas sean coherentes entre sí y que cada decisión se pueda defender.
 
 ## Archivos de este repo (leer antes de trabajar)
-- `DECISIONS.md` — las decisiones ya tomadas (hoy 48), supuestos y especificación del modelo de datos. **Es la fuente de verdad.**
+- `DECISIONS.md` — las decisiones ya tomadas (hoy 49), supuestos y especificación del modelo de datos. **Es la fuente de verdad.**
 - `PLAN.md` — tareas en orden de prioridad, con planes de respaldo.
 - `AI-LOG.md` — registro de qué propuso la IA y qué corrigió Mateo (es parte de la entrega).
 - Documento de modelo de datos (Claude Doc): https://claude.ai/artifact/5FZzwEEBxq7a16CMjapF2a

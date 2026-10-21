@@ -172,3 +172,5 @@ Punto de equilibrio: el programa se paga solo si al menos X% de los referidos te
 - Panel de métricas y panel de pagos.
 - Inglés y portugués en la landing.
 - Premio recurrente mientras el referido siga colocado (variante de la idea de % de Mateo).
+
+**49. SMTP de Supabase Auth con Resend y plantillas en español** — el SMTP de Supabase Auth queda con Resend (no el mail por defecto de Supabase, que solo entrega a miembros del equipo y tiene un tope bajo por hora). Las plantillas *Confirm sign up* y *Magic Link* están en español. · por qué: el login tiene que llegar a cualquier casilla habilitada, no solo a la del equipo, y el mail tiene que estar en el idioma del producto (regla 9). · alternativa descartada: dejar el mail por defecto de Supabase.
