@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Suspense } from "react";
 import { Encabezado } from "@/components/Encabezado";
 import { FormularioReferido } from "@/components/FormularioReferido";
 import es from "@/i18n/es.json";
-import { buscarReferente } from "@/lib/referentes";
+import { ipDelCliente } from "@/lib/limite";
+import { consultarReferente } from "@/lib/referentes";
 import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = {
@@ -40,9 +42,11 @@ function Razones({ nombre, className }: { nombre: string; className: string }) {
 
 async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"] }) {
   const { codigo } = await params;
-  const referente = await buscarReferente(decodeURIComponent(codigo));
+  const consulta = await consultarReferente(decodeURIComponent(codigo), ipDelCliente(await headers()));
 
-  if (!referente) return <CodigoInexistente />;
+  if (consulta.tipo === "bloqueada") return <MensajeSimple clave="bloqueado" />;
+  if (consulta.tipo === "no_existe") return <MensajeSimple clave="noEncontrado" />;
+  const { referente } = consulta;
 
   const nombreCompleto = `${referente.nombre} ${referente.apellido}`;
 
@@ -72,18 +76,18 @@ async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"
   );
 }
 
-function CodigoInexistente() {
+function MensajeSimple({ clave }: { clave: "noEncontrado" | "bloqueado" }) {
   return (
     <div className="mx-auto max-w-2xl py-16 sm:py-28">
       <h1 className="font-display text-[clamp(2.5rem,7vw,5rem)] font-medium leading-[0.98] tracking-[-0.035em]">
-        {t("candidato.noEncontrado.titulo")}
+        {t(`candidato.${clave}.titulo`)}
       </h1>
-      <p className="mt-6 text-lg leading-relaxed text-crema/80">{t("candidato.noEncontrado.texto")}</p>
+      <p className="mt-6 text-lg leading-relaxed text-crema/80">{t(`candidato.${clave}.texto`)}</p>
       <Link
         href="/"
         className="mt-9 inline-flex h-12 items-center rounded-lg bg-lima px-8 font-bold text-verde transition-transform duration-150 active:scale-[0.98]"
       >
-        {t("candidato.noEncontrado.cta")}
+        {t(`candidato.${clave}.cta`)}
       </Link>
     </div>
   );

@@ -13,7 +13,7 @@ Formato para decisiones nuevas: **N. Título** — decisión · por qué · alte
 
 **1. Quién refiere** — Solo profesionales **colocados** por WorldTeams que trabajan con una firma cliente. Tienen sueldo donde cobrar, su criterio ya fue validado, no hay conflicto de intereses (como alguien en proceso de selección) y tienen menos urgencia económica y más reputación en juego, lo que reduce referidos flojos (hipótesis de diseño). Descartado: cualquier persona, o candidatos sin colocar → segunda etapa.
 
-**2. Cómo se refiere** — Link personal y único por referente (`/r/{codigo}`). El candidato carga sus propios datos. Descartado: que el referente cargue datos de terceros (sin consentimiento, depende del esfuerzo del referente).
+**2. Cómo se refiere** — Link personal y único por referente (`/r/{codigo}`), con código = nombre normalizado + sufijo aleatorio no adivinable de 6 caracteres base36 generado con crypto (ej. `/r/lucia-k7q2m9`, unos 2.200 millones de combinaciones). El candidato carga sus propios datos. · por qué: un código que fuera solo el nombre se podía adivinar, permitía atribuciones falsas (usar el link de otro) y exponía quién trabaja con WorldTeams; el nombre queda solo para que el link sea legible · límite: la consulta de un código aplica un tope de intentos fallidos por IP (10 en 10 minutos, configurable); con la IP bloqueada ni un código válido responde, y el formato se descarta antes de consultar la base · [supuesto] el límite en memoria frena el barrido casual; en producción con varias instancias se pasa a un contador compartido (base de datos o borde) · Descartado: que el referente cargue datos de terceros (sin consentimiento, depende del esfuerzo del referente); código solo con el nombre (adivinable); código totalmente opaco (el nombre ayuda a que el candidato reconozca el link y desconfíe menos).
 
 **3. Tipo de premio** — Efectivo. Consulta informal a 6 personas: 5 prefirieron efectivo por flexibilidad ("con la plata podés hacer lo mismo que ofrece un catálogo"); 1 prefirió créditos (premio con destino fijo). Descartado: créditos canjeables (logística de premios en LATAM, costo impredecible).
 
@@ -97,7 +97,7 @@ Punto de equilibrio: el programa se paga solo si al menos X% de los referidos te
 ## Especificación del modelo de datos
 
 **Tablas**
-- `referentes`: id, nombre, apellido, email (único, normalizado), linkedin_url, codigo_referido (único), colocado (bool), auth_user_id, creado_en.
+- `referentes`: id, nombre, apellido, email (único, normalizado), linkedin_url, codigo_referido (único; nombre normalizado + sufijo aleatorio base36 de 6 caracteres generado con CSPRNG; `CHECK` de formato `^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{6}$`; se genera una sola vez y no se reutiliza), colocado (bool), auth_user_id, creado_en.
 - `candidatos`: id, nombre, apellido, email (único, normalizado), linkedin_url (único, normalizado), especialidad, usa_revit, seniority, nivel_ingles, cv_url, acepto_visibilidad, origen, creado_en. `es_prioritario` = columna generada (arquitectura AND usa_revit AND senior AND inglés avanzado o nativo).
 - `referidos`: id, referente_id, candidato_id, estado, motivos_revision (array), validado_en, creado_en. Índice único parcial en candidato_id donde estado <> 'descartado'.
 - `historial_estados`: id, referido_id, estado_anterior, estado_nuevo, actor_tipo (sistema/reclutamiento), actor_id, motivo, creado_en. Solo inserción.
@@ -109,7 +109,7 @@ Punto de equilibrio: el programa se paga solo si al menos X% de los referidos te
 
 **Estados del referido**: inicio → `descartado` (ya en pool, duplicado, autorreferido) | `registrado` → `validado` (automático) | `en_revision` → `validado` | `rechazado`. Finales: validado, rechazado, descartado. Una sanción no cambia el estado: pasa los movimientos pendientes a `cancelado_sancion`.
 
-**Configuración inicial**: monto_base_usd 50 · multiplicador_prioritario 2 · hitos [{3:75},{6:150},{10:300}] · periodo_hitos año calendario · dia_corte_pago 25 · alerta_volumen {cantidad 5, dias 7} · plazo_respuesta_candidato_dias_habiles 5 · plazo_revision_dias_habiles 3.
+**Configuración inicial**: monto_base_usd 50 · multiplicador_prioritario 2 · hitos [{3:75},{6:150},{10:300}] · periodo_hitos año calendario · dia_corte_pago 25 · alerta_volumen {cantidad 5, dias 7} · plazo_respuesta_candidato_dias_habiles 5 · plazo_revision_dias_habiles 3 · limite_consulta_codigo {fallos 10, segundos 600}.
 
 **RLS**: referente → lee solo lo suyo (nombre y estado de sus referidos vía vista); reclutamiento → lee candidatos/referidos/historial; n8n (service role) → único que escribe referidos y movimientos.
 

@@ -3,7 +3,8 @@ import es from "@/i18n/es.json";
 import { emailFallaDemo, emailYaRegistradoDemo } from "@/lib/demo-data";
 import { esDemo } from "@/lib/demo";
 import { esquemaCandidato, normalizarLinkedin } from "@/lib/esquema";
-import { buscarReferente } from "@/lib/referentes";
+import { ipDelCliente } from "@/lib/limite";
+import { consultarReferente } from "@/lib/referentes";
 
 /**
  * Decisión 29: el navegador solo habla con esta ruta. Acá se verifica reCAPTCHA y se
@@ -13,6 +14,7 @@ import { buscarReferente } from "@/lib/referentes";
  *   200 { resultado: "registrado" | "ya_registrado" }
  *   404 { resultado: "codigo_invalido" }
  *   422 { resultado: "datos_invalidos", errores: { campo: mensaje } }
+ *   429 { resultado: "error", mensaje }  (demasiados códigos inválidos desde la misma IP)
  *   4xx/5xx { resultado: "error", mensaje }
  */
 export type RespuestaReferir =
@@ -52,9 +54,10 @@ export async function POST(request: Request) {
     return responder({ resultado: "error", mensaje: errores.servidor }, 400);
   }
 
-  const codigo = String(form.get("codigo_referente") ?? "").trim().toLowerCase();
-  const referente = codigo ? await buscarReferente(codigo) : null;
-  if (!referente) return responder({ resultado: "codigo_invalido" }, 404);
+  const consulta = await consultarReferente(String(form.get("codigo_referente") ?? ""), ipDelCliente(request.headers));
+  if (consulta.tipo === "bloqueada") return responder({ resultado: "error", mensaje: errores.demasiados }, 429);
+  if (consulta.tipo === "no_existe") return responder({ resultado: "codigo_invalido" }, 404);
+  const { referente } = consulta;
 
   const crudo = {
     nombre: form.get("nombre") ?? "",

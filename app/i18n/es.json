@@ -14,7 +14,7 @@
       "bajada": "Sumá colegas de arquitectura e ingeniería al talent pool de WorldTeams. Cuando su perfil se valida, vos cobrás.",
       "cta": "Calcular mi premio",
       "linkTitulo": "Tu link personal",
-      "linkEjemplo": "worldteams.com/r/tu-nombre",
+      "linkEjemplo": "worldteams.com/r/tu-nombre-k7q2m9",
       "linkNota": "Es un ejemplo: tu link real te llega por mail.",
       "copiar": "Copiar",
       "copiado": "Copiado",
@@ -32,21 +32,21 @@
       "celular": {
         "etiquetaFicticio": "Datos de ejemplo",
         "linkTitulo": "Tu link personal",
-        "linkValor": "worldteams.com/r/lucia-ejemplo",
+        "linkValor": "worldteams.com/r/andrea-h5t8c2",
         "copiar": "Copiar",
         "copiado": "Copiado",
         "linkAyuda": "Pegalo en un mensaje, un mail o un chat.",
         "referidosTitulo": "Tus referidos",
-        "formTitulo": "Te recomendó Lucía Ejemplo",
+        "formTitulo": "Te recomendó Andrea Quispe",
         "formCampos": [
-          { "etiqueta": "Nombre", "valor": "Valeria Ejemplo" },
-          { "etiqueta": "Email", "valor": "valeria@ejemplo.com" },
-          { "etiqueta": "LinkedIn", "valor": "linkedin.com/in/valeria-ejemplo" },
-          { "etiqueta": "CV", "valor": "cv-valeria.pdf" }
+          { "etiqueta": "Nombre", "valor": "Camila Restrepo" },
+          { "etiqueta": "Email", "valor": "camila.restrepo@ejemplo.com" },
+          { "etiqueta": "LinkedIn", "valor": "linkedin.com/in/camila-restrepo" },
+          { "etiqueta": "CV", "valor": "cv-camila-restrepo.pdf" }
         ],
         "formBoton": "Enviar mi perfil",
         "portalTitulo": "Tu portal",
-        "portalAviso": "Valeria Ejemplo: perfil validado",
+        "portalAviso": "Camila Restrepo: perfil validado",
         "portalBarra": "{validados} de {hito} para el bono de USD {bono}"
       }
     },
@@ -88,18 +88,18 @@
       "bajada": "Tu link, tus referidos con su estado, tus premios y cuánto falta para el próximo bono. Solo lectura, sin planillas.",
       "ficticio": "Datos de ejemplo: nadie de esta pantalla existe.",
       "ventana": "Portal del referente",
-      "saludo": "Hola, Lucía Ejemplo",
+      "saludo": "Hola, Andrea Quispe",
       "linkEtiqueta": "Tu link",
-      "linkValor": "worldteams.com/r/lucia-ejemplo",
+      "linkValor": "worldteams.com/r/andrea-h5t8c2",
       "barraTitulo": "Camino al próximo bono",
       "barraTexto": "{validados} de {hito} referidos validados este año. Bono de USD {bono}.",
       "referidosTitulo": "Tus referidos",
       "estados": { "validado": "Validado", "revision": "En revisión", "noAvanzo": "No avanzó" },
       "referidos": [
-        { "nombre": "Valeria Ejemplo", "estado": "validado" },
-        { "nombre": "Tomás Muestra", "estado": "revision" },
-        { "nombre": "Nora Prueba", "estado": "validado" },
-        { "nombre": "Iván Demo", "estado": "noAvanzo" }
+        { "nombre": "Camila Restrepo", "estado": "validado" },
+        { "nombre": "Joaquín Ferreyra", "estado": "revision" },
+        { "nombre": "Mariana Sousa", "estado": "validado" },
+        { "nombre": "Diego Mamani", "estado": "noAvanzo" }
       ],
       "premiosTitulo": "Tus premios",
       "pendiente": "Pendiente",
@@ -136,6 +136,11 @@
     "noEncontrado": {
       "titulo": "No encontramos este link",
       "texto": "El código del link no existe o ya no está activo. Pedile a quien te lo pasó que te lo vuelva a enviar.",
+      "cta": "Conocer el programa"
+    },
+    "bloqueado": {
+      "titulo": "Demasiados intentos",
+      "texto": "Probaste varios links que no existen. Esperá unos minutos y volvé a abrir el link que te pasaron.",
       "cta": "Conocer el programa"
     }
   },

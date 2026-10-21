@@ -18,6 +18,7 @@ export const config = {
   plazoRespuestaCandidatoDiasHabiles: 5,
   plazoRevisionDiasHabiles: 3,
   alertaVolumen: { cantidad: 5, dias: 7 },
+  limiteConsultaCodigo: { fallosMaximos: 10, ventanaSegundos: 600 },
   cvMaxMb: 5,
 } as const;
 
