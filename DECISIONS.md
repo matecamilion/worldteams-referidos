@@ -92,12 +92,31 @@ Punto de equilibrio: el programa se paga solo si al menos X% de los referidos te
 
 **32. Datos de ejemplo en la landing** — los referentes y candidatos de las maquetas (celular y portal) son ficticios y se rotulan como "datos de ejemplo". Los montos y totales salen de `config` (`lib/premios.ts`), nunca escritos a mano. Sin imágenes, monedas ni logos de clientes de WorldTeams. La franja lima dice "+750 profesionales · +370 empresas de EE.UU. y Canadá", con el texto de la web de WorldTeams; las cifras salen de su sitio y conviene reconfirmarlas antes de publicar.
 
+
+## Base de datos (decisiones agregadas el 22/10; aprobadas por Mateo)
+
+**33. Los pagos se generan solos al validar** — un trigger crea los movimientos de pago (base, extra prioritario y bono de hito) cuando un referido pasa a `validado`, con los montos de `configuracion` copiados en ese momento. n8n valida con una sola llamada, `cambiar_estado_referido(referido, estado, actor, actor_id, motivo, motivos)`, que además deja actor y motivo en el historial. · por qué: la regla "pago si y solo si validado" y la idempotencia (restricciones únicas) quedan en la base y no dependen de que el flujo no se repita; es la regla 5 de CLAUDE.md · cambia la tarea 3: n8n ya no crea movimientos a mano · descartado: que n8n los cree con inserciones sueltas (dos caminos, riesgo de duplicar o de olvidar un concepto).
+
+**34. Reglas que impone la base** — transiciones de estado permitidas (registrado → validado o en_revision; en_revision → validado o rechazado; los finales no cambian); un referido nace registrado o descartado; autorreferido bloqueado (email o LinkedIn del candidato igual al del referente); solo un referente colocado y no sancionado abre referidos; el historial se registra solo y es de solo inserción; los movimientos fijan monto y concepto al crearse y los pagados o cancelados no se tocan; la configuración se valida al guardarla (un valor roto frenaría los pagos). Solo la service role (n8n) escribe y ejecuta funciones de negocio.
+
+**35. Forma de los hitos en `configuracion`** — `[{"referidos": 3, "bono_usd": 75}, {"referidos": 6, "bono_usd": 150}, {"referidos": 10, "bono_usd": 300}]`, igual que `app/lib/config.ts`, en vez de la notación `{3:75}`. Los bonos son acumulativos: con 6 referidos validados en el año se cobran el de 3 y el de 6, una vez cada uno.
+
+**36. Extra por perfil prioritario** — es un movimiento aparte de valor base × (multiplicador − 1): con base 50 y multiplicador 2, USD 50 de base más USD 50 de extra, USD 100 en total. · por qué: cada monto es una fila (decisión 16) y el extra se puede auditar y pagar por separado.
+
+**37. Zona horaria del ciclo de pago** — `configuracion.zona_horaria` (por defecto `America/Argentina/Buenos_Aires`) define el día en que se valida el referido para el ciclo mensual y el año calendario de los hitos. El día de corte va de 1 a 28. · por qué: un mismo instante cae en días distintos según la zona, y eso mueve el ciclo; no puede quedar fijo en UTC · descartado: UTC (propuesta inicial de la IA).
+
+**38. El portal lee por vistas filtradas por el vínculo del usuario** — el referente no puede leer `referidos` ni `candidatos` en crudo (verían motivos de revisión y emails, decisión 20): ve sus referidos por `v_mis_referidos` (nombre y estado; rechazado y descartado como `no_avanzo`) y su avance por `v_progreso_referente`, y lee directo solo su fila de `referentes` y sus movimientos, por RLS. Las vistas corren con los permisos de su dueño y filtran por `referente_actual_id()`, que resuelve primero por `auth.uid()` (referente vinculado a su usuario de Auth) y, si no está vinculado, por el email verificado del magic link. Si hubiera dos coincidencias gana el usuario de Auth. · el *advisor* de Supabase las marca como "security definer view": es a propósito · [supuesto] el magic link solo emite sesión para emails confirmados; al construir el portal conviene dejar cerrado el registro libre en Auth.
+
+**39. Sanción** — `referentes.sancionado_en` (fecha; nulo = sin sanción). `sancionar_referente(referente)` lo marca, cancela los movimientos pendientes (`cancelado_sancion`), no toca lo ya pagado ni el estado de los referidos, y repetirla no cambia la fecha. Un sancionado queda como un no colocado para lo nuevo: no abre referidos y no genera movimientos nuevos; un referido que ya estaba registrado se puede validar (el candidato entra al pool) pero sin premio. · [supuesto] no hay función para levantar una sanción; si hiciera falta, la resuelve reclutamiento editando la fila.
+
+**40. Datos de prueba y almacenamiento** — el seed usa el alias `matecamilion05+nombre@gmail.com` (todos llegan a la misma bandeja) para probar el magic link con cada rol; el cuarto referente no está colocado. CVs en el bucket privado `cvs` (solo PDF, hasta 5 MB; lo escribe n8n y lo lee reclutamiento). Los candidatos que ya estaban en el pool se cargan con `origen = 'directo'`.
+
 ---
 
 ## Especificación del modelo de datos
 
 **Tablas**
-- `referentes`: id, nombre, apellido, email (único, normalizado), linkedin_url, codigo_referido (único; nombre normalizado + sufijo aleatorio base36 de 6 caracteres generado con CSPRNG; `CHECK` de formato `^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{6}$`; se genera una sola vez y no se reutiliza), colocado (bool), auth_user_id, creado_en.
+- `referentes`: id, nombre, apellido, email (único, normalizado), linkedin_url, codigo_referido (único; nombre normalizado + sufijo aleatorio base36 de 6 caracteres generado con CSPRNG; `CHECK` de formato `^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{6}$`; se genera una sola vez y no se reutiliza), colocado (bool), sancionado_en (fecha o nulo, decisión 39), auth_user_id, creado_en.
 - `candidatos`: id, nombre, apellido, email (único, normalizado), linkedin_url (único, normalizado), especialidad, usa_revit, seniority, nivel_ingles, cv_url, acepto_visibilidad, origen, creado_en. `es_prioritario` = columna generada (arquitectura AND usa_revit AND senior AND inglés avanzado o nativo).
 - `referidos`: id, referente_id, candidato_id, estado, motivos_revision (array), validado_en, creado_en. Índice único parcial en candidato_id donde estado <> 'descartado'.
 - `historial_estados`: id, referido_id, estado_anterior, estado_nuevo, actor_tipo (sistema/reclutamiento), actor_id, motivo, creado_en. Solo inserción.
@@ -105,11 +124,11 @@ Punto de equilibrio: el programa se paga solo si al menos X% de los referidos te
 - `configuracion`: clave (pk), valor (jsonb), descripcion, actualizado_en, actualizado_por.
 - `equipo_reclutamiento`: email (único), nombre, activo.
 
-**Vistas**: `v_progreso_referente` (validados del año, próximo hito, cuántos faltan) · `v_cierre_ciclo` (movimientos pendientes por ciclo, referente y método de pago).
+**Vistas**: `v_progreso_referente` (validados del año, próximo hito, cuántos faltan) · `v_mis_referidos` (nombre y estado de los referidos del referente, decisión 38) · `v_cierre_ciclo` (movimientos pendientes por ciclo, referente y método de pago).
 
 **Estados del referido**: inicio → `descartado` (ya en pool, duplicado, autorreferido) | `registrado` → `validado` (automático) | `en_revision` → `validado` | `rechazado`. Finales: validado, rechazado, descartado. Una sanción no cambia el estado: pasa los movimientos pendientes a `cancelado_sancion`.
 
-**Configuración inicial**: monto_base_usd 50 · multiplicador_prioritario 2 · hitos [{3:75},{6:150},{10:300}] · periodo_hitos año calendario · dia_corte_pago 25 · alerta_volumen {cantidad 5, dias 7} · plazo_respuesta_candidato_dias_habiles 5 · plazo_revision_dias_habiles 3 · limite_consulta_codigo {fallos 10, segundos 600}.
+**Configuración inicial**: monto_base_usd 50 · multiplicador_prioritario 2 · hitos [{referidos 3, bono_usd 75}, {6, 150}, {10, 300}] (decisión 35) · periodo_hitos año calendario · zona_horaria America/Argentina/Buenos_Aires (decisión 37) · dia_corte_pago 25 · alerta_volumen {cantidad 5, dias 7} · plazo_respuesta_candidato_dias_habiles 5 · plazo_revision_dias_habiles 3 · limite_consulta_codigo {fallos 10, segundos 600}.
 
 **RLS**: referente → lee solo lo suyo (nombre y estado de sus referidos vía vista); reclutamiento → lee candidatos/referidos/historial; n8n (service role) → único que escribe referidos y movimientos.
 

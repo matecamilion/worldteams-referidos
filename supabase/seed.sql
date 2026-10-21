@@ -2,8 +2,8 @@
 -- seed.sql — Datos iniciales del programa de referidos (WorldTeams)
 -- Se aplica después de schema.sql. Es re-ejecutable: no pisa lo que ya se editó.
 --
--- Todos los emails son de ejemplo (example.com). Para probar el ingreso por magic link,
--- cambiá el email de una persona de reclutamiento y de un referente por uno tuyo desde Supabase.
+-- Los emails usan el alias +nombre de la casilla de pruebas de Mateo (matecamilion05+lucia@gmail.com, etc.): todos
+-- llegan a la misma bandeja, así se prueba el ingreso por magic link con cada rol.
 -- =====================================================================
 
 -- Configuración inicial (DECISIONS.md, decisiones 10-12, 17, 23, 26 y 2).
@@ -14,6 +14,7 @@ insert into public.configuracion (clave, valor, descripcion) values
   ('hitos',                   '[{"referidos": 3, "bono_usd": 75}, {"referidos": 6, "bono_usd": 150}, {"referidos": 10, "bono_usd": 300}]',
                               'Bono por hitos: al llegar a "referidos" validados en el año calendario se suma "bono_usd".'),
   ('periodo_hitos',           '"anio_calendario"', 'Período de conteo de los hitos. Hoy solo se soporta el año calendario.'),
+  ('zona_horaria',           '"America/Argentina/Buenos_Aires"', 'Zona horaria con la que se calcula el ciclo de pago y el año de los hitos (nombre IANA).'),
   ('dia_corte_pago',          '25',  'Día del mes de corte: lo validado hasta ese día entra en el ciclo del mes; después, en el siguiente (1 a 28).'),
   ('alerta_volumen',          '{"cantidad": 5, "dias": 7}', 'Más de "cantidad" referidos de un mismo referente en "dias" días pasan a revisión.'),
   ('plazo_respuesta_candidato_dias_habiles', '5', 'Plazo que se le promete al candidato para recibir respuesta, en días hábiles.'),
@@ -23,15 +24,15 @@ on conflict (clave) do nothing;
 
 -- Reclutamiento: una persona de ejemplo para el panel.
 insert into public.equipo_reclutamiento (email, nombre, activo) values
-  ('reclutamiento@example.com', 'Reclutamiento Demo', true)
+  ('matecamilion05+reclutamiento@gmail.com', 'Reclutamiento Demo', true)
 on conflict (email) do nothing;
 
 -- Referentes de ejemplo. Los códigos son los mismos que usa la app en modo demo (app/lib/demo-data.ts),
 -- así la landing en NEXT_PUBLIC_DEMO=false abre los mismos links. El cuarto referente ya no está colocado:
 -- sirve para probar que no puede referir y que, si ganó algo, cobra por transferencia (decisión 14).
 insert into public.referentes (nombre, apellido, email, linkedin_url, codigo_referido, colocado) values
-  ('Lucía',  'Gómez',    'lucia.gomez@example.com',    'https://www.linkedin.com/in/lucia-gomez-demo',    'lucia-k7q2m9',  true),
-  ('Martín', 'Ferreyra', 'martin.ferreyra@example.com', 'https://www.linkedin.com/in/martin-ferreyra-demo', 'martin-x4d8w1', true),
-  ('Camila', 'Duarte',   'camila.duarte@example.com',   'https://www.linkedin.com/in/camila-duarte-demo',   'camila-p3n6z5', true),
-  ('Andrés', 'Paredes',  'andres.paredes@example.com',  'https://www.linkedin.com/in/andres-paredes-demo',  'andres-m2w5q8', false)
+  ('Lucía',  'Gómez',    'matecamilion05+lucia@gmail.com',    'https://www.linkedin.com/in/lucia-gomez-demo',    'lucia-k7q2m9',  true),
+  ('Martín', 'Ferreyra', 'matecamilion05+martin@gmail.com', 'https://www.linkedin.com/in/martin-ferreyra-demo', 'martin-x4d8w1', true),
+  ('Camila', 'Duarte',   'matecamilion05+camila@gmail.com',   'https://www.linkedin.com/in/camila-duarte-demo',   'camila-p3n6z5', true),
+  ('Andrés', 'Paredes',  'matecamilion05+andres@gmail.com',  'https://www.linkedin.com/in/andres-paredes-demo',  'andres-m2w5q8', false)
 on conflict (email) do nothing;

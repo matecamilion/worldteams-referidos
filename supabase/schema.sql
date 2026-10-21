@@ -79,6 +79,8 @@ create table public.referentes (
   codigo_referido text not null unique
     check (codigo_referido ~ '^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{6}$' and length(codigo_referido) <= 64),
   colocado       boolean not null default true,
+  -- Sanción (decisión 8): un sancionado no abre referidos nuevos ni genera movimientos nuevos. Lo marca sancionar_referente().
+  sancionado_en  timestamptz,
   auth_user_id   uuid unique references auth.users (id) on delete set null,
   creado_en      timestamptz not null default now()
 );
@@ -179,6 +181,19 @@ begin
   return (v #>> '{}')::numeric;
 end $$;
 
+-- Lee una clave de configuración de texto (ej. zona_horaria); falla fuerte si falta.
+create function public.config_texto(p_clave text)
+returns text language plpgsql stable
+as $$
+declare v jsonb;
+begin
+  select valor into v from public.configuracion where clave = p_clave;
+  if v is null or jsonb_typeof(v) <> 'string' then
+    raise exception 'configuracion_faltante: % debe existir y ser un texto', p_clave using errcode = '23514';
+  end if;
+  return v #>> '{}';
+end $$;
+
 -- Sufijo aleatorio base36 de 6 caracteres. La fuente es gen_random_uuid() (generador criptográfico de Postgres);
 -- se descartan los bytes >= 252 para que los 36 caracteres sean igual de probables (sin sesgo de módulo).
 create function public.generar_sufijo_codigo()
@@ -232,13 +247,15 @@ as $$
   )
 $$;
 
--- Id del referente que hace la consulta (por usuario de Auth o por email verificado), o null.
+-- Id del referente que hace la consulta, o null. Toma el usuario de Auth (auth.uid()) y, si el referente todavía
+-- no está vinculado, el email verificado del JWT (magic link). Es lo que usan la RLS y las vistas del portal.
 create function public.referente_actual_id()
 returns uuid language sql stable security definer set search_path = ''
 as $$
   select r.id from public.referentes r
   where r.auth_user_id = auth.uid()
      or r.email = lower(btrim(coalesce(auth.jwt() ->> 'email', '')))
+  order by (r.auth_user_id = auth.uid()) desc nulls last   -- si hubiera dos coincidencias, gana el usuario de Auth
   limit 1
 $$;
 
@@ -315,6 +332,16 @@ begin
     if coalesce((new.valor ->> 'cantidad')::int, 0) <= 0 or coalesce((new.valor ->> 'dias')::int, 0) <= 0 then
       raise exception 'configuracion_invalida: alerta_volumen necesita cantidad y dias mayores que 0' using errcode = '23514';
     end if;
+  elsif new.clave = 'zona_horaria' then
+    begin
+      if jsonb_typeof(new.valor) <> 'string' then
+        raise exception 'no es texto';
+      end if;
+      perform now() at time zone (new.valor #>> '{}');   -- falla si la zona no existe
+    exception when others then
+      raise exception 'configuracion_invalida: zona_horaria debe ser una zona horaria válida (ej. America/Argentina/Buenos_Aires)'
+        using errcode = '23514';
+    end;
   elsif new.clave = 'limite_consulta_codigo' then
     if coalesce((new.valor ->> 'fallos')::int, 0) <= 0 or coalesce((new.valor ->> 'segundos')::int, 0) <= 0 then
       raise exception 'configuracion_invalida: limite_consulta_codigo necesita fallos y segundos mayores que 0' using errcode = '23514';
@@ -338,6 +365,9 @@ begin
     select * into r from public.referentes where id = new.referente_id;
     if not r.colocado then
       raise exception 'referente_no_colocado: solo los colocados pueden referir (decisión 1)' using errcode = '23514';
+    end if;
+    if r.sancionado_en is not null then
+      raise exception 'referente_sancionado: un referente sancionado no abre referidos nuevos (decisión 8)' using errcode = '23514';
     end if;
     if new.estado <> 'descartado' then
       select * into c from public.candidatos where id = new.candidato_id;
@@ -397,6 +427,9 @@ create trigger historial_no_vaciar before truncate on public.historial_estados
 -- Movimientos: el monto y el concepto se fijan al crearse; solo un movimiento pendiente puede cambiar de estado.
 create function public.trg_movimiento_reglas() returns trigger language plpgsql as $$
 begin
+  if tg_op = 'INSERT' and exists (select 1 from public.referentes where id = new.referente_id and sancionado_en is not null) then
+    raise exception 'referente_sancionado: un referente sancionado no genera movimientos nuevos (decisión 8)' using errcode = '23514';
+  end if;
   if tg_op = 'UPDATE' then
     if new.referente_id <> old.referente_id
        or new.referido_id is distinct from old.referido_id
@@ -461,6 +494,7 @@ declare
   v_base numeric := public.config_numero('monto_base_usd');
   v_mult numeric := public.config_numero('multiplicador_prioritario');
   v_corte integer := public.config_numero('dia_corte_pago')::integer;
+  v_zona text := public.config_texto('zona_horaria');
   v_dia date;
   v_ciclo text;
   v_metodo public.tipo_metodo_pago;
@@ -475,11 +509,16 @@ begin
     raise exception 'referido_no_validado: solo un referido validado genera movimientos' using errcode = '23514';
   end if;
   select * into ref from public.referentes where id = r.referente_id;
+  -- Un referente sancionado no genera movimientos nuevos (decisión 8); el referido igual queda validado.
+  if ref.sancionado_en is not null then
+    return 0;
+  end if;
   select * into cand from public.candidatos where id = r.candidato_id;
 
-  -- Mensual con fecha de corte (decisión 11): hasta el día de corte entra en el ciclo del mes; después, en el siguiente.
+  -- Mensual con fecha de corte (decisión 11), en la zona horaria de la configuración: hasta el día de corte entra
+  -- en el ciclo del mes; después, en el siguiente.
   -- Referente que dejó de estar colocado: cobra por transferencia en el mismo ciclo (decisión 14).
-  v_dia := (r.validado_en at time zone 'UTC')::date;
+  v_dia := (r.validado_en at time zone v_zona)::date;
   v_ciclo := to_char(case when extract(day from v_dia) <= v_corte then v_dia else v_dia + interval '1 month' end, 'YYYY-MM');
   v_metodo := case when ref.colocado then 'liquidacion_sueldo' else 'transferencia' end;
 
@@ -498,11 +537,11 @@ begin
   end if;
 
   -- Bonos por hitos del año calendario (decisión 12): acumulativos, uno por umbral y por año.
-  v_anio := extract(year from r.validado_en at time zone 'UTC')::integer;
+  v_anio := extract(year from r.validado_en at time zone v_zona)::integer;
   select count(*) into v_validados
     from public.referidos d
    where d.referente_id = r.referente_id and d.estado = 'validado'
-     and extract(year from d.validado_en at time zone 'UTC') = v_anio;
+     and extract(year from d.validado_en at time zone v_zona) = v_anio;
   for h in select * from jsonb_array_elements((select valor from public.configuracion where clave = 'hitos')) loop
     if v_validados >= (h ->> 'referidos')::integer then
       insert into public.movimientos_pago (referente_id, concepto, hito_umbral, periodo_hito, monto_usd, ciclo_pago, metodo_pago)
@@ -524,17 +563,21 @@ create trigger referidos_movimientos after update of estado on public.referidos
   for each row when (new.estado = 'validado' and old.estado is distinct from new.estado)
   execute function public.trg_referido_movimientos();
 
--- Sanción (decisión 8 y 14): los movimientos pendientes pasan a cancelado_sancion; lo ya pagado no se toca
--- y el estado de los referidos no cambia. Devuelve cuántos movimientos canceló.
+-- Sanción (decisión 8): marca al referente (sancionado_en), cancela sus movimientos pendientes y no toca lo ya pagado
+-- ni el estado de sus referidos. Devuelve cuántos movimientos canceló. Repetirla no cambia la fecha original.
 create function public.sancionar_referente(p_referente uuid)
-returns integer language sql as $$
-  with cancelados as (
-    update public.movimientos_pago set estado = 'cancelado_sancion'
-     where referente_id = p_referente and estado = 'pendiente'
-    returning 1
-  )
-  select count(*)::integer from cancelados
-$$;
+returns integer language plpgsql as $$
+declare v_cancelados integer;
+begin
+  update public.referentes set sancionado_en = coalesce(sancionado_en, now()) where id = p_referente;
+  if not found then
+    raise exception 'referente_inexistente: %', p_referente using errcode = 'P0002';
+  end if;
+  update public.movimientos_pago set estado = 'cancelado_sancion'
+   where referente_id = p_referente and estado = 'pendiente';
+  get diagnostics v_cancelados = row_count;
+  return v_cancelados;
+end $$;
 
 -- ---------------------------------------------------------------------
 -- 7. Vistas
@@ -545,7 +588,7 @@ $$;
 create view public.v_progreso_referente with (security_invoker = false) as
 select
   r.id as referente_id,
-  extract(year from now() at time zone 'UTC')::integer as anio,
+  extract(year from now() at time zone public.config_texto('zona_horaria'))::integer as anio,
   v.validados as validados_anio,
   p.referidos as proximo_hito,
   p.bono_usd as proximo_bono_usd,
@@ -555,7 +598,8 @@ cross join lateral (
   select count(*)::integer as validados
     from public.referidos d
    where d.referente_id = r.id and d.estado = 'validado'
-     and extract(year from d.validado_en at time zone 'UTC') = extract(year from now() at time zone 'UTC')
+     and extract(year from d.validado_en at time zone public.config_texto('zona_horaria'))
+         = extract(year from now() at time zone public.config_texto('zona_horaria'))
 ) v
 left join lateral (
   select (h ->> 'referidos')::integer as referidos, (h ->> 'bono_usd')::numeric as bono_usd
@@ -642,6 +686,9 @@ revoke update, delete, truncate on public.historial_estados from service_role;
 -- Funciones: las de negocio solo las llama n8n; las dos de RLS las necesita quien consulta.
 revoke execute on all functions in schema public from public, anon, authenticated;
 grant execute on function public.es_reclutamiento(), public.referente_actual_id() to authenticated, service_role;
+-- Las vistas del portal llaman a config_texto(), y las funciones de una vista corren con los permisos de quien consulta
+-- (no del dueño de la vista). Solo lee configuracion, que ya es pública.
+grant execute on function public.config_texto(text) to authenticated;
 grant execute on all functions in schema public to service_role;
 
 -- ---------------------------------------------------------------------

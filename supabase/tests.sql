@@ -59,11 +59,13 @@ begin
 end $$;
 
 -- Precondición: la configuración inicial del seed tiene que estar cargada.
-select pg_temp.registrar('seed: las 9 claves de configuracion existen',
-  (select count(*) = 9 from public.configuracion where clave in
-    ('monto_base_usd', 'multiplicador_prioritario', 'hitos', 'periodo_hitos', 'dia_corte_pago', 'alerta_volumen',
+select pg_temp.registrar('seed: las 10 claves de configuracion existen',
+  (select count(*) = 10 from public.configuracion where clave in
+    ('monto_base_usd', 'multiplicador_prioritario', 'hitos', 'periodo_hitos', 'zona_horaria', 'dia_corte_pago', 'alerta_volumen',
      'plazo_respuesta_candidato_dias_habiles', 'plazo_revision_dias_habiles', 'limite_consulta_codigo')),
   'corré seed.sql antes de tests.sql');
+select pg_temp.registrar('seed: zona_horaria = America/Argentina/Buenos_Aires',
+  (select valor = '"America/Argentina/Buenos_Aires"'::jsonb from public.configuracion where clave = 'zona_horaria'));
 select pg_temp.registrar('seed: limite_consulta_codigo = 10 fallos / 600 segundos',
   (select valor = '{"fallos": 10, "segundos": 600}'::jsonb from public.configuracion where clave = 'limite_consulta_codigo'));
 
@@ -233,7 +235,7 @@ do $$
 declare ra uuid; r_norm uuid; r_prio uuid; v_base numeric; v_anio integer; v_n integer;
 begin
   v_base := public.config_numero('monto_base_usd');
-  v_anio := extract(year from now() at time zone 'UTC')::integer;
+  v_anio := extract(year from now() at time zone public.config_texto('zona_horaria'))::integer;
   ra := pg_temp.nuevo_referente('Rp', 'rp@t.com');
 
   r_norm := pg_temp.referido_validado(ra, 'm1', false);
@@ -268,7 +270,7 @@ end $$;
 do $$
 declare rh uuid; v_anio integer; v_bonos numeric; r_prev uuid;
 begin
-  v_anio := extract(year from now() at time zone 'UTC')::integer;
+  v_anio := extract(year from now() at time zone public.config_texto('zona_horaria'))::integer;
   rh := pg_temp.nuevo_referente('Rhit', 'rhit@t.com');
 
   perform pg_temp.referido_validado(rh, 'hit1'); perform pg_temp.referido_validado(rh, 'hit2');
@@ -298,7 +300,7 @@ begin
 end $$;
 
 do $$
-declare rc uuid; r1 uuid; r2 uuid; r3 uuid; v_mov uuid; v_pend integer; v_cancel integer; v_ciclo_a text; v_ciclo_b text;
+declare rc uuid; r1 uuid; r2 uuid; r3 uuid; r_pend uuid; v_mov uuid; v_pend integer; v_cancel integer; v_f1 timestamptz;
 begin
   perform pg_temp.espera_error('configuracion: un monto negativo se rechaza',
     $q$update public.configuracion set valor = '-5' where clave = 'monto_base_usd'$q$, 'configuracion_invalida');
@@ -308,6 +310,10 @@ begin
     $q$update public.configuracion set valor = '31' where clave = 'dia_corte_pago'$q$, 'configuracion_invalida');
   perform pg_temp.espera_error('configuracion: hitos mal formados se rechazan',
     $q$update public.configuracion set valor = '[{"referidos": 3}]' where clave = 'hitos'$q$, 'configuracion_invalida');
+  perform pg_temp.espera_error('configuracion: una zona horaria inexistente se rechaza',
+    $q$update public.configuracion set valor = '"Marte/Olympus"' where clave = 'zona_horaria'$q$, 'configuracion_invalida');
+  perform pg_temp.espera_error('configuracion: la zona horaria tiene que ser texto',
+    $q$update public.configuracion set valor = '3' where clave = 'zona_horaria'$q$, 'configuracion_invalida');
   perform pg_temp.espera_error('configuracion: limite_consulta_codigo sin fallos se rechaza',
     $q$update public.configuracion set valor = '{"segundos": 600}' where clave = 'limite_consulta_codigo'$q$, 'configuracion_invalida');
 
@@ -326,20 +332,46 @@ begin
   -- Sanción (decisión 8): cancela lo pendiente, respeta lo pagado y no cambia el estado de los referidos.
   r2 := pg_temp.referido_validado(rc, 'cy2', true);
   r3 := pg_temp.referido_validado(rc, 'cy3');
+  r_pend := pg_temp.nuevo_referido(rc, pg_temp.nuevo_candidato('cy4@t.com'));   -- registrado antes de la sanción
   select count(*) into v_pend from public.movimientos_pago where referente_id = rc and estado = 'pendiente';
+  perform pg_temp.registrar('sanción: antes de sancionar, sancionado_en es nulo',
+    (select sancionado_en is null from public.referentes where id = rc));
   v_cancel := public.sancionar_referente(rc);
   perform pg_temp.registrar('sanción: cancela todos los movimientos pendientes', v_cancel = v_pend and v_cancel > 0, 'canceló ' || v_cancel || ' de ' || v_pend);
   perform pg_temp.registrar('sanción: lo ya pagado queda intacto y no queda nada pendiente',
     (select estado = 'pagado' from public.movimientos_pago where id = v_mov)
     and (select count(*) = 0 from public.movimientos_pago where referente_id = rc and estado = 'pendiente'));
   perform pg_temp.registrar('sanción: el estado de los referidos no cambia',
-    (select count(*) = 3 and bool_and(estado = 'validado') from public.referidos where referente_id = rc));
+    (select count(*) = 4 and count(*) filter (where estado = 'validado') = 3 and count(*) filter (where estado = 'registrado') = 1
+       from public.referidos where referente_id = rc));
   perform pg_temp.espera_error('sanción: un movimiento cancelado no se reactiva',
     format($q$update public.movimientos_pago set estado = 'pendiente' where referente_id = %L and estado = 'cancelado_sancion'$q$, rc), 'movimiento_cerrado');
+
+  -- Un sancionado queda igual que un no colocado para lo nuevo: sin referidos nuevos ni movimientos nuevos.
+  perform pg_temp.registrar('sanción: sancionar_referente marca sancionado_en',
+    (select sancionado_en is not null from public.referentes where id = rc));
+  perform pg_temp.espera_error('sanción: un sancionado no abre referidos nuevos',
+    format($q$insert into public.referidos (referente_id, candidato_id) values (%L, %L)$q$, rc, pg_temp.nuevo_candidato('sa1@t.com')),
+    'referente_sancionado');
+  perform pg_temp.espera_error('sanción: un sancionado no genera movimientos nuevos (inserción directa)',
+    format($q$insert into public.movimientos_pago (referente_id, referido_id, concepto, monto_usd, ciclo_pago, metodo_pago)
+              values (%L, %L, 'extra_prioritario', 5, '2026-10', 'transferencia')$q$, rc, r3),
+    'referente_sancionado');
+  -- El referido que ya estaba registrado se puede validar (el candidato entra al pool), pero no genera premio.
+  perform public.cambiar_estado_referido(r_pend, 'validado');
+  perform pg_temp.registrar('sanción: un referido registrado antes se valida pero no genera movimientos',
+    (select estado = 'validado' from public.referidos where id = r_pend)
+    and (select count(*) = 0 from public.movimientos_pago where referido_id = r_pend)
+    and public.crear_movimientos_validacion(r_pend) = 0
+    and (select count(*) = 0 from public.movimientos_pago where referente_id = rc and estado = 'pendiente'));
+  select sancionado_en into v_f1 from public.referentes where id = rc;
+  perform pg_temp.registrar('sanción: repetirla no cambia la fecha ni cancela nada más',
+    public.sancionar_referente(rc) = 0 and (select sancionado_en = v_f1 from public.referentes where id = rc));
+  perform pg_temp.espera_error('sanción: un referente inexistente da error', $q$select public.sancionar_referente(gen_random_uuid())$q$, 'referente_inexistente');
 end $$;
 
 do $$
-declare rd uuid; rd2 uuid; r1 uuid; r2 uuid; r3 uuid;
+declare rd uuid; rd2 uuid; r1 uuid; r2 uuid; r3 uuid; r4 uuid; v_zona text; d_pp date;
 begin
   -- Decisión 14: si dejó de estar colocado antes de validarse, cobra por transferencia; lo anterior no cambia.
   rd := pg_temp.nuevo_referente('Rd', 'rd@t.com');
@@ -351,18 +383,39 @@ begin
     (select metodo_pago = 'transferencia' from public.movimientos_pago where referido_id = r2 and concepto = 'base')
     and (select metodo_pago = 'liquidacion_sueldo' from public.movimientos_pago where referido_id = r1 and concepto = 'base'));
 
-  -- Ciclo (decisión 11): día de corte 25. Se prueba con un corte dentro y fuera del mes.
+  -- Ciclo (decisión 11) en la zona horaria de la configuración.
+  v_zona := public.config_texto('zona_horaria');
   rd2 := pg_temp.nuevo_referente('Rd2', 'rd2@t.com');
   update public.configuracion set valor = '28' where clave = 'dia_corte_pago';
   r3 := pg_temp.referido_validado(rd2, 'dv3');
   perform pg_temp.registrar('ciclo: validado antes/en el día de corte entra en el mes actual (corte 28)',
-    (select ciclo_pago = to_char(now() at time zone 'UTC', 'YYYY-MM') or extract(day from now() at time zone 'UTC') > 28
+    (select ciclo_pago = to_char(now() at time zone v_zona, 'YYYY-MM') or extract(day from now() at time zone v_zona) > 28
        from public.movimientos_pago where referido_id = r3 and concepto = 'base'));
   update public.configuracion set valor = '1' where clave = 'dia_corte_pago';
   r3 := pg_temp.referido_validado(rd2, 'dv4');
   perform pg_temp.registrar('ciclo: pasado el día de corte entra en el mes siguiente (corte 1)',
-    (select ciclo_pago = to_char((now() at time zone 'UTC') + interval '1 month', 'YYYY-MM') or extract(day from now() at time zone 'UTC') <= 1
+    (select ciclo_pago = to_char((now() at time zone v_zona) + interval '1 month', 'YYYY-MM') or extract(day from now() at time zone v_zona) <= 1
        from public.movimientos_pago where referido_id = r3 and concepto = 'base'));
+
+  -- La zona cuenta: Pago Pago (UTC-11) y Kiritimati (UTC+14) están 25 horas corridas, así que el mismo instante cae
+  -- en días distintos. Con el corte puesto en el día de hoy de Pago Pago, ahí entra en el mes actual y en Kiritimati
+  -- (ya pasado el corte) en el siguiente. Si la zona se ignorara (UTC), alguna de las dos comprobaciones fallaría.
+  d_pp := (now() at time zone 'Pacific/Pago_Pago')::date;
+  if extract(day from d_pp) > 28 then
+    perform pg_temp.registrar('ciclo: la zona horaria cambia el ciclo del mismo instante', true, 'omitida: hoy es día 29-31 en Pago Pago');
+  else
+    update public.configuracion set valor = to_jsonb(extract(day from d_pp)::integer) where clave = 'dia_corte_pago';
+    update public.configuracion set valor = '"Pacific/Pago_Pago"' where clave = 'zona_horaria';
+    r3 := pg_temp.referido_validado(rd2, 'dz1');
+    update public.configuracion set valor = '"Pacific/Kiritimati"' where clave = 'zona_horaria';
+    r4 := pg_temp.referido_validado(rd2, 'dz2');
+    perform pg_temp.registrar('ciclo: la zona horaria cambia el ciclo del mismo instante',
+      (select ciclo_pago from public.movimientos_pago where referido_id = r3 and concepto = 'base') = to_char(d_pp, 'YYYY-MM')
+      and (select ciclo_pago from public.movimientos_pago where referido_id = r4 and concepto = 'base') = to_char(d_pp + interval '1 month', 'YYYY-MM'),
+      format('Pago Pago %s / Kiritimati %s', (select ciclo_pago from public.movimientos_pago where referido_id = r3 and concepto = 'base'),
+                                              (select ciclo_pago from public.movimientos_pago where referido_id = r4 and concepto = 'base')));
+  end if;
+  update public.configuracion set valor = '"America/Argentina/Buenos_Aires"' where clave = 'zona_horaria';
   update public.configuracion set valor = '25' where clave = 'dia_corte_pago';
 end $$;
 
@@ -389,6 +442,10 @@ end $$;
 do $$
 declare
   ra uuid := (select id from public.referentes where email = 'rlsa@t.com');
+  rb uuid := (select id from public.referentes where email = 'rlsb@t.com');
+  rb_referidos uuid[] := array(select id from public.referidos where referente_id = (select id from public.referentes where email = 'rlsb@t.com'));
+  v_b_tiene boolean := (select count(*) > 0 from public.movimientos_pago where referente_id = (select id from public.referentes where email = 'rlsb@t.com'));
+  n_b_mov int; n_b_mis int; n_b_prog int; n_b_ref int; n_b_mis2 int;
   n_ref int; n_cand int; n_refs int; n_hist int; n_mov int; n_mov_ajenos int; n_mis int; v_estados text; v_prog record;
   v_escribe boolean; v_fn boolean; v_cierre boolean; v_cand_cols boolean; v_motivos boolean;
 begin
@@ -401,6 +458,12 @@ begin
   select count(*), count(*) filter (where referente_id <> ra) into n_mov, n_mov_ajenos from public.movimientos_pago;
   select count(*), string_agg(estado_visible, ',' order by estado_visible) into n_mis, v_estados from public.v_mis_referidos;
   select * into v_prog from public.v_progreso_referente;
+  -- Intento de ver lo de otro referente (B), pidiéndolo explícitamente por su id.
+  select count(*) into n_b_mov from public.movimientos_pago where referente_id = rb;
+  select count(*) into n_b_mis from public.v_mis_referidos where referente_id = rb;
+  select count(*) into n_b_mis2 from public.v_mis_referidos where referido_id = any (rb_referidos);
+  select count(*) into n_b_prog from public.v_progreso_referente where referente_id = rb;
+  select count(*) into n_b_ref from public.referentes where id = rb;
   begin insert into public.movimientos_pago (referente_id, referido_id, concepto, monto_usd, ciclo_pago, metodo_pago)
           values (ra, null, 'base', 1, '2026-10', 'transferencia'); v_escribe := true;
   exception when others then v_escribe := not (sqlerrm ilike '%permission denied%'); end;
@@ -421,10 +484,46 @@ begin
   perform pg_temp.registrar('RLS referente: v_progreso_referente = 1 validado, próximo hito 3, faltan 2',
     v_prog.validados_anio = 1 and v_prog.proximo_hito = 3 and v_prog.faltan = 2 and v_prog.proximo_bono_usd = 75,
     format('%s', row_to_json(v_prog)));
+  perform pg_temp.registrar('RLS referente: pedir por id los datos de OTRO referente no devuelve nada (movimientos, vistas y su fila)',
+    v_b_tiene and cardinality(rb_referidos) > 0 and n_b_mov = 0 and n_b_mis = 0 and n_b_mis2 = 0 and n_b_prog = 0 and n_b_ref = 0,
+    format('B tiene datos: %s; vio movimientos %s, vista referidos %s/%s, progreso %s, fila %s', v_b_tiene, n_b_mov, n_b_mis, n_b_mis2, n_b_prog, n_b_ref));
   perform pg_temp.registrar('RLS referente: no puede escribir movimientos', not v_escribe);
   perform pg_temp.registrar('RLS referente: no puede ejecutar funciones de negocio', not v_fn);
   perform pg_temp.registrar('RLS referente: no accede a v_cierre_ciclo', not v_cierre);
   perform pg_temp.registrar('RLS referente: no puede leer los motivos de revisión (tabla referidos cerrada)', n_refs = 0);
+end $$;
+
+-- Vínculo por usuario de Auth (auth.uid()): gana sobre el email, y la vista filtra por ese vínculo.
+do $$
+declare
+  rb uuid := (select id from public.referentes where email = 'rlsb@t.com');
+  u uuid := gen_random_uuid();
+  v_con_conflicto uuid; v_solo_uid uuid; v_mis_b int; v_otro uuid;
+begin
+  insert into auth.users (id) values (u);
+  update public.referentes set auth_user_id = u where id = rb;
+
+  -- Token con el usuario de B y el email de A: el vínculo por usuario de Auth tiene prioridad (resultado determinista).
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'email', 'rlsa@t.com', 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select public.referente_actual_id() into v_con_conflicto;
+  execute 'reset role';
+  -- Token con el usuario de B y otro email cualquiera: sigue siendo B por auth.uid(), y ve solo lo de B.
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'email', 'otro@t.com', 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select public.referente_actual_id() into v_solo_uid;
+  select count(*) into v_mis_b from public.v_mis_referidos where referente_id = rb;
+  execute 'reset role';
+  -- Otro usuario de Auth, sin vínculo ni email conocido: no es nadie.
+  perform set_config('request.jwt.claims', json_build_object('sub', gen_random_uuid(), 'email', 'otro@t.com', 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select public.referente_actual_id() into v_otro;
+  execute 'reset role';
+
+  perform pg_temp.registrar('RLS: con usuario de Auth y email de otro referente, gana auth.uid()', v_con_conflicto = rb, coalesce(v_con_conflicto::text, 'null'));
+  perform pg_temp.registrar('RLS: el vínculo por auth.uid() funciona sin depender del email y la vista lo respeta',
+    v_solo_uid = rb and v_mis_b >= 1, format('id %s, referidos propios %s', v_solo_uid, v_mis_b));
+  perform pg_temp.registrar('RLS: un usuario de Auth sin vínculo no resuelve a ningún referente', v_otro is null);
 end $$;
 
 -- Reclutamiento, referente desconocido, usuario dado de baja y anónimo
@@ -476,7 +575,7 @@ begin
   begin perform 1 from public.v_mis_referidos; v_anon_vista := true;
   exception when others then v_anon_vista := not (sqlerrm ilike '%permission denied%'); end;
   execute 'reset role';
-  perform pg_temp.registrar('RLS anónimo: lee configuracion (montos y plazos públicos)', n_cfg >= 9, 'claves: ' || n_cfg);
+  perform pg_temp.registrar('RLS anónimo: lee configuracion (montos y plazos públicos)', n_cfg >= 10, 'claves: ' || n_cfg);
   perform pg_temp.registrar('RLS anónimo: no accede a referentes ni a las vistas del portal', not v_anon_ref and not v_anon_vista);
 end $$;
 
