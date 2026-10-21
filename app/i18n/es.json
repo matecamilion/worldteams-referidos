@@ -283,10 +283,13 @@
       "visibilidad": "Necesitamos que aceptes este aviso para continuar.",
       "servidor": "No pudimos enviar tu perfil. Revisá tu conexión e intentá de nuevo.",
       "captcha": "No pudimos verificar que sos una persona. Recargá la página e intentá de nuevo.",
+      "captchaVencido": "La verificación venció mientras completabas el formulario. Tus datos siguen acá: reintentá el envío.",
+      "captchaNoDisponible": "No pudimos completar la verificación de seguridad en este momento. Tus datos siguen acá: reintentá en unos segundos.",
       "demasiados": "Hiciste demasiados intentos. Esperá unos minutos y volvé a probar."
     },
     "enviar": "Enviar mi perfil",
     "enviando": "Enviando…",
+    "reintentar": "Reintentar",
     "privacidad": "Usamos tus datos solo para evaluar tu perfil dentro de WorldTeams."
   },
   "confirmacion": {

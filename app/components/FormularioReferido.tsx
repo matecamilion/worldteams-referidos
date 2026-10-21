@@ -25,6 +25,7 @@ const opciones = <T extends string>(campo: string, valores: readonly T[]) =>
 export function FormularioReferido({ codigo, referente }: { codigo: string; referente: string }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "formulario" });
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+  const [reintentable, setReintentable] = useState(false);
 
   const {
     register,
@@ -40,6 +41,7 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
 
   const enviar = handleSubmit(async (datos) => {
     setErrorGeneral(null);
+    setReintentable(false);
     const cuerpo = new FormData();
     cuerpo.set("codigo_referente", codigo);
     for (const [k, v] of Object.entries(datos)) {
@@ -57,8 +59,10 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
       }
       if (r.status === 429) return setErrorGeneral(t("formulario.errores.demasiados"));
       setErrorGeneral(j?.resultado === "error" ? j.mensaje : t("formulario.errores.servidor"));
+      setReintentable(j?.resultado === "error" && j.reintentable === true);
     } catch {
       setErrorGeneral(t("formulario.errores.servidor"));
+      setReintentable(true);
     }
   });
 
@@ -219,6 +223,16 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
             {errorGeneral && (
               <p role="alert" className="rounded-lg border border-error bg-[#fff4f2] p-3 text-sm font-semibold text-error">
                 {errorGeneral}
+                {reintentable && (
+                  <button
+                    type="button"
+                    onClick={() => void enviar()}
+                    disabled={isSubmitting}
+                    className="mt-2 block rounded-lg border-[1.5px] border-error px-4 py-2 font-bold transition-transform active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {t("formulario.reintentar")}
+                  </button>
+                )}
               </p>
             )}
 

@@ -4,6 +4,7 @@ import { emailFallaDemo, emailYaRegistradoDemo } from "@/lib/demo-data";
 import { esDemo } from "@/lib/demo";
 import { esquemaCandidato, normalizarLinkedin } from "@/lib/esquema";
 import { ipDelCliente } from "@/lib/limite";
+import { hostnamesPermitidos, leerPuntajeMinimo, verificarRecaptcha } from "@/lib/recaptcha-servidor";
 import { consultarReferente } from "@/lib/referentes";
 
 /**
@@ -14,14 +15,16 @@ import { consultarReferente } from "@/lib/referentes";
  *   200 { resultado: "registrado" | "ya_registrado" }
  *   404 { resultado: "codigo_invalido" }
  *   422 { resultado: "datos_invalidos", errores: { campo: mensaje } }
+ *   403 { resultado: "error", mensaje, reintentable? }  (reCAPTCHA: sin token, puntaje bajo, acción o dominio distintos, token vencido)
  *   429 { resultado: "error", mensaje }  (demasiados códigos inválidos desde la misma IP)
+ *   503 { resultado: "error", mensaje, reintentable }  (no se pudo consultar a Google)
  *   4xx/5xx { resultado: "error", mensaje }
  */
 export type RespuestaReferir =
   | { resultado: "registrado" | "ya_registrado" }
   | { resultado: "codigo_invalido" }
   | { resultado: "datos_invalidos"; errores: Record<string, string> }
-  | { resultado: "error"; mensaje: string };
+  | { resultado: "error"; mensaje: string; reintentable?: boolean };
 
 const errores = es.formulario.errores;
 const PDF_MAGIC = "%PDF";
@@ -30,28 +33,29 @@ function responder(cuerpo: RespuestaReferir, status = 200) {
   return NextResponse.json(cuerpo, { status });
 }
 
-async function verificarRecaptcha(token: string | null): Promise<"ok" | "falla"> {
-  const secreto = process.env.RECAPTCHA_SECRET_KEY;
-  if (!secreto || !token) return "falla";
-  const minimo = Number(process.env.RECAPTCHA_MIN_SCORE ?? "0.5");
-  try {
-    const r = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-      method: "POST",
-      body: new URLSearchParams({ secret: secreto, response: token }),
-    });
-    const j = (await r.json()) as { success?: boolean; score?: number; action?: string };
-    return j.success && (j.score ?? 0) >= minimo && j.action === "referir" ? "ok" : "falla";
-  } catch {
-    return "falla";
-  }
-}
-
 export async function POST(request: Request) {
   let form: FormData;
   try {
     form = await request.formData();
   } catch {
     return responder({ resultado: "error", mensaje: errores.servidor }, 400);
+  }
+
+  // reCAPTCHA va antes de consultar el código: un fallo del captcha (o de Google) no cuenta como intento de adivinar
+  // códigos, y quien no pasa el captcha no llega a probar ninguno.
+  if (!esDemo) {
+    const captcha = await verificarRecaptcha(String(form.get("recaptcha_token") ?? "") || null, {
+      secreto: process.env.RECAPTCHA_SECRET_KEY,
+      puntajeMinimo: leerPuntajeMinimo(process.env.RECAPTCHA_MIN_SCORE),
+      accion: "referir",
+      hostnames: hostnamesPermitidos(),
+    });
+    if (captcha.tipo === "no_disponible") return responder({ resultado: "error", mensaje: errores.captchaNoDisponible, reintentable: true }, 503);
+    if (captcha.tipo === "vencido") return responder({ resultado: "error", mensaje: errores.captchaVencido, reintentable: true }, 403);
+    if (captcha.tipo === "rechazado") {
+      console.warn("[referir] reCAPTCHA rechazado:", captcha.motivo);
+      return responder({ resultado: "error", mensaje: errores.captcha }, 403);
+    }
   }
 
   const consulta = await consultarReferente(String(form.get("codigo_referente") ?? ""), ipDelCliente(request.headers));
@@ -97,9 +101,6 @@ export async function POST(request: Request) {
     }
     return responder({ resultado: datos.email === emailYaRegistradoDemo ? "ya_registrado" : "registrado" });
   }
-
-  const captcha = await verificarRecaptcha(String(form.get("recaptcha_token") ?? "") || null);
-  if (captcha === "falla") return responder({ resultado: "error", mensaje: errores.captcha }, 403);
 
   const webhook = process.env.N8N_WEBHOOK_URL;
   if (!webhook) {
