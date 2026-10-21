@@ -10,7 +10,7 @@ import { esquemaCandidato, especialidades, nivelesIngles, seniorities, siNo, typ
 import { t } from "@/lib/i18n";
 import { cargarRecaptcha, obtenerTokenRecaptcha } from "@/lib/recaptcha-client";
 import type { RespuestaReferir } from "@/app/api/referir/route";
-import { CargaCv, MensajeError, Segmentado, claseInput } from "./Campos";
+import { Bloque, CargaCv, MensajeError, Segmentado, claseEtiqueta, claseInput } from "./Campos";
 import { ConfirmacionRegistro, YaRegistrado } from "./Confirmacion";
 
 type Entrada = z.input<typeof esquemaCandidato>;
@@ -66,7 +66,7 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
   const campo = (c: string, k: string) => t(`formulario.campos.${c}.${k}`);
 
   return (
-    <div className="sobre-crema rounded-[28px] bg-crema p-6 text-verde shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] sm:p-9">
+    <div className="sobre-crema scheme-light rounded-lg bg-crema p-5 text-verde shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] sm:p-7">
       <AnimatePresence mode="wait" initial={false}>
         {estado.tipo === "formulario" ? (
           <motion.form
@@ -81,142 +81,143 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
             className="grid gap-5"
           >
             <div>
-              <h2 className="font-display text-2xl font-medium tracking-tight">{t("formulario.titulo")}</h2>
-              <p className="mt-1 text-sm text-tinta-suave">{t("formulario.ayudaObligatorios")}</p>
+              <h2 className="font-display text-xl font-medium tracking-tight">{t("formulario.titulo")}</h2>
+              <p className="mt-0.5 text-sm text-tinta-suave">{t("formulario.ayudaObligatorios")}</p>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
+            <Bloque titulo={t("formulario.bloques.datos")}>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="min-w-0">
+                  <label htmlFor="nombre" className={claseEtiqueta}>
+                    {campo("nombre", "label")}
+                  </label>
+                  <input
+                    id="nombre"
+                    autoComplete="given-name"
+                    aria-invalid={errors.nombre ? true : undefined}
+                    aria-describedby={errors.nombre ? "nombre-error" : undefined}
+                    className={claseInput}
+                    {...register("nombre")}
+                  />
+                  <MensajeError id="nombre-error">{msg("nombre")}</MensajeError>
+                </div>
+                <div className="min-w-0">
+                  <label htmlFor="apellido" className={claseEtiqueta}>
+                    {campo("apellido", "label")}
+                  </label>
+                  <input
+                    id="apellido"
+                    autoComplete="family-name"
+                    aria-invalid={errors.apellido ? true : undefined}
+                    aria-describedby={errors.apellido ? "apellido-error" : undefined}
+                    className={claseInput}
+                    {...register("apellido")}
+                  />
+                  <MensajeError id="apellido-error">{msg("apellido")}</MensajeError>
+                </div>
+              </div>
+
               <div>
-                <label htmlFor="nombre" className="mb-2 block text-sm font-bold">
-                  {campo("nombre", "label")}
+                <label htmlFor="email" className={claseEtiqueta}>
+                  {campo("email", "label")}
                 </label>
                 <input
-                  id="nombre"
-                  autoComplete="given-name"
-                  placeholder={campo("nombre", "placeholder")}
-                  aria-invalid={errors.nombre ? true : undefined}
-                  aria-describedby={errors.nombre ? "nombre-error" : undefined}
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  aria-invalid={errors.email ? true : undefined}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                   className={claseInput}
-                  {...register("nombre")}
+                  {...register("email")}
                 />
-                <MensajeError id="nombre-error">{msg("nombre")}</MensajeError>
+                <MensajeError id="email-error">{msg("email")}</MensajeError>
               </div>
+
               <div>
-                <label htmlFor="apellido" className="mb-2 block text-sm font-bold">
-                  {campo("apellido", "label")}
+                <label htmlFor="linkedin_url" className={claseEtiqueta}>
+                  {campo("linkedin_url", "label")}
                 </label>
                 <input
-                  id="apellido"
-                  autoComplete="family-name"
-                  placeholder={campo("apellido", "placeholder")}
-                  aria-invalid={errors.apellido ? true : undefined}
-                  aria-describedby={errors.apellido ? "apellido-error" : undefined}
+                  id="linkedin_url"
+                  inputMode="url"
+                  autoComplete="url"
+                  autoCapitalize="none"
+                  placeholder={campo("linkedin_url", "placeholder")}
+                  aria-invalid={errors.linkedin_url ? true : undefined}
+                  aria-describedby={errors.linkedin_url ? "linkedin_url-error" : undefined}
                   className={claseInput}
-                  {...register("apellido")}
+                  {...register("linkedin_url")}
                 />
-                <MensajeError id="apellido-error">{msg("apellido")}</MensajeError>
+                <MensajeError id="linkedin_url-error">{msg("linkedin_url")}</MensajeError>
               </div>
-            </div>
+            </Bloque>
 
-            <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-bold">
-                {campo("email", "label")}
-              </label>
-              <input
-                id="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                autoCapitalize="none"
-                placeholder={campo("email", "placeholder")}
-                aria-invalid={errors.email ? true : undefined}
-                aria-describedby={errors.email ? "email-error" : undefined}
-                className={claseInput}
-                {...register("email")}
+            <Bloque titulo={t("formulario.bloques.perfil")}>
+              <Segmentado<Entrada>
+                nombre="especialidad"
+                leyenda={campo("especialidad", "label")}
+                opciones={opciones("especialidad", especialidades)}
+                register={register}
+                error={msg("especialidad")}
               />
-              <MensajeError id="email-error">{msg("email")}</MensajeError>
-            </div>
-
-            <div>
-              <label htmlFor="linkedin_url" className="mb-2 block text-sm font-bold">
-                {campo("linkedin_url", "label")}
-              </label>
-              <input
-                id="linkedin_url"
-                inputMode="url"
-                autoComplete="url"
-                autoCapitalize="none"
-                placeholder={campo("linkedin_url", "placeholder")}
-                aria-invalid={errors.linkedin_url ? true : undefined}
-                aria-describedby={errors.linkedin_url ? "linkedin_url-error" : undefined}
-                className={claseInput}
-                {...register("linkedin_url")}
+              <Segmentado<Entrada>
+                nombre="usa_revit"
+                leyenda={campo("usa_revit", "label")}
+                opciones={opciones("usa_revit", siNo)}
+                register={register}
+                error={msg("usa_revit")}
               />
-              <MensajeError id="linkedin_url-error">{msg("linkedin_url")}</MensajeError>
-            </div>
+              <Segmentado<Entrada>
+                nombre="seniority"
+                leyenda={campo("seniority", "label")}
+                opciones={opciones("seniority", seniorities)}
+                register={register}
+                error={msg("seniority")}
+              />
+              <Segmentado<Entrada>
+                nombre="nivel_ingles"
+                leyenda={campo("nivel_ingles", "label")}
+                opciones={opciones("nivel_ingles", nivelesIngles)}
+                register={register}
+                error={msg("nivel_ingles")}
+              />
+            </Bloque>
 
-            <Segmentado<Entrada>
-              nombre="especialidad"
-              leyenda={campo("especialidad", "label")}
-              opciones={opciones("especialidad", especialidades)}
-              register={register}
-              error={msg("especialidad")}
-            />
-            <Segmentado<Entrada>
-              nombre="usa_revit"
-              leyenda={campo("usa_revit", "label")}
-              opciones={opciones("usa_revit", siNo)}
-              register={register}
-              error={msg("usa_revit")}
-            />
-            <Segmentado<Entrada>
-              nombre="seniority"
-              leyenda={campo("seniority", "label")}
-              opciones={opciones("seniority", seniorities)}
-              register={register}
-              error={msg("seniority")}
-              columnas="grid-cols-3"
-            />
-            <Segmentado<Entrada>
-              nombre="nivel_ingles"
-              leyenda={campo("nivel_ingles", "label")}
-              opciones={opciones("nivel_ingles", nivelesIngles)}
-              register={register}
-              error={msg("nivel_ingles")}
-              columnas="grid-cols-2 sm:grid-cols-4"
-            />
+            <Bloque titulo={t("formulario.bloques.cv")}>
+              <Controller
+                control={control}
+                name="cv"
+                render={({ field, fieldState }) => (
+                  <CargaCv
+                    valor={field.value as File | undefined}
+                    alCambiar={(f) => {
+                      field.onChange(f);
+                      field.onBlur();
+                    }}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
 
-            <Controller
-              control={control}
-              name="cv"
-              render={({ field, fieldState }) => (
-                <CargaCv
-                  valor={field.value as File | undefined}
-                  alCambiar={(f) => {
-                    field.onChange(f);
-                    field.onBlur();
-                  }}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            <div>
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-white/70 p-4">
-                <input
-                  type="checkbox"
-                  aria-invalid={errors.acepto_visibilidad ? true : undefined}
-                  aria-describedby={errors.acepto_visibilidad ? "acepto_visibilidad-error" : undefined}
-                  className="mt-0.5 size-5 shrink-0 accent-verde"
-                  {...register("acepto_visibilidad")}
-                />
-                <span className="text-[0.95rem] font-medium leading-snug">{campo("acepto_visibilidad", "label")}</span>
-              </label>
-              <MensajeError id="acepto_visibilidad-error">{msg("acepto_visibilidad")}</MensajeError>
-            </div>
+              <div>
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    aria-invalid={errors.acepto_visibilidad ? true : undefined}
+                    aria-describedby={errors.acepto_visibilidad ? "acepto_visibilidad-error" : undefined}
+                    className="mt-0.5 size-5 shrink-0 accent-verde"
+                    {...register("acepto_visibilidad")}
+                  />
+                  <span className="text-sm font-medium leading-snug">{campo("acepto_visibilidad", "label")}</span>
+                </label>
+                <MensajeError id="acepto_visibilidad-error">{msg("acepto_visibilidad")}</MensajeError>
+              </div>
+            </Bloque>
 
             {errorGeneral && (
-              <p role="alert" className="rounded-xl border border-error bg-[#fff4f2] p-4 text-sm font-semibold text-error">
+              <p role="alert" className="rounded-lg border border-error bg-[#fff4f2] p-3 text-sm font-semibold text-error">
                 {errorGeneral}
               </p>
             )}
@@ -225,7 +226,7 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-lima px-6 text-base font-bold text-verde transition-[transform,background-color] duration-150 hover:bg-[#dcf48f] active:scale-[0.98] disabled:cursor-wait disabled:opacity-80"
+                className="group flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-lima px-6 text-base font-bold text-verde transition-[transform,background-color] duration-150 hover:bg-[#dcf48f] active:scale-[0.98] disabled:cursor-wait disabled:opacity-80"
               >
                 {isSubmitting ? (
                   <>
@@ -241,7 +242,7 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
                   </>
                 )}
               </button>
-              <p className="mt-3 text-center text-xs text-tinta-suave">{t("formulario.privacidad")}</p>
+              <p className="mt-2.5 text-center text-xs text-tinta-suave">{t("formulario.privacidad")}</p>
             </div>
           </motion.form>
         ) : estado.tipo === "registrado" ? (

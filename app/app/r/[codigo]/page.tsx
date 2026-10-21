@@ -16,12 +16,25 @@ export default function Page({ params }: PageProps<"/r/[codigo]">) {
   return (
     <>
       <Encabezado />
-      <main className="px-5 pb-20 sm:px-8 lg:px-14">
+      <main className="mx-auto w-full max-w-[1280px] px-5 pb-20 sm:px-8 lg:px-14">
         <Suspense fallback={<div className="h-[60dvh]" aria-hidden />}>
           <Contenido params={params} />
         </Suspense>
       </main>
     </>
+  );
+}
+
+function Razones({ nombre, className }: { nombre: string; className: string }) {
+  return (
+    <ul className={`max-w-[34rem] divide-y divide-crema/15 border-y border-crema/15 ${className}`}>
+      {es.candidato.razones.map((r) => (
+        <li key={r.titulo} className="py-4">
+          <p className="font-display text-lg font-medium">{r.titulo}</p>
+          <p className="mt-1 text-crema/75">{r.texto.replace("{nombre}", nombre)}</p>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -34,9 +47,10 @@ async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"
   const nombreCompleto = `${referente.nombre} ${referente.apellido}`;
 
   return (
-    <div className="grid gap-10 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:gap-y-12">
-      <section className="lg:col-span-7 xl:pr-10">
-        <h1 className="font-display text-[clamp(2.75rem,7.2vw,6.25rem)] font-medium leading-[0.96] tracking-[-0.035em]">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:items-start lg:gap-16">
+      {/* Escritorio: bienvenida fija a la izquierda mientras se completa el formulario. */}
+      <section className="lg:sticky lg:top-8">
+        <h1 className="font-display text-[clamp(2.5rem,6.4vw,5.5rem)] font-medium leading-[0.96] tracking-[-0.035em]">
           <span className="linea">
             <span style={{ "--retraso": "0ms" } as React.CSSProperties}>{nombreCompleto}</span>
           </span>
@@ -44,22 +58,16 @@ async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"
             <span style={{ "--retraso": "120ms" } as React.CSSProperties}>{t("candidato.titulo")}</span>
           </span>
         </h1>
-        <p className="mt-7 max-w-[34rem] text-lg leading-relaxed text-crema/80">{t("candidato.bajada")}</p>
+        <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-crema/80">{t("candidato.bajada")}</p>
+        <Razones nombre={referente.nombre} className="mt-10 max-lg:hidden" />
       </section>
 
-      {/* En móvil el formulario va antes que las razones: lo primero es poder completarlo. */}
-      <section className="lg:col-span-5 lg:row-span-2 lg:row-start-1 lg:col-start-8" aria-label={t("formulario.titulo")}>
+      <section aria-label={t("formulario.titulo")}>
         <FormularioReferido codigo={referente.codigo} referente={nombreCompleto} />
       </section>
 
-      <ul className="max-w-[34rem] divide-y divide-crema/15 border-y border-crema/15 lg:col-span-7 lg:self-start">
-        {es.candidato.razones.map((r) => (
-          <li key={r.titulo} className="py-5">
-            <p className="font-display text-lg font-medium">{r.titulo}</p>
-            <p className="mt-1 text-crema/75">{r.texto.replace("{nombre}", referente.nombre)}</p>
-          </li>
-        ))}
-      </ul>
+      {/* Móvil: primero el formulario, después las razones. */}
+      <Razones nombre={referente.nombre} className="lg:hidden" />
     </div>
   );
 }
@@ -73,7 +81,7 @@ function CodigoInexistente() {
       <p className="mt-6 text-lg leading-relaxed text-crema/80">{t("candidato.noEncontrado.texto")}</p>
       <Link
         href="/"
-        className="mt-9 inline-flex min-h-14 items-center rounded-full bg-lima px-8 font-bold text-verde transition-transform duration-150 active:scale-[0.98]"
+        className="mt-9 inline-flex h-12 items-center rounded-lg bg-lima px-8 font-bold text-verde transition-transform duration-150 active:scale-[0.98]"
       >
         {t("candidato.noEncontrado.cta")}
       </Link>

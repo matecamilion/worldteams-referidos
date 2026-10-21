@@ -61,7 +61,7 @@ export function YaRegistrado() {
       <p className="mt-3 text-tinta-suave">{t("yaRegistrado.texto")}</p>
       <a
         href="https://worldteams.com/"
-        className="mt-7 inline-flex min-h-12 items-center rounded-full bg-verde px-6 font-bold text-crema transition-transform duration-150 active:scale-[0.98]"
+        className="mt-7 inline-flex min-h-12 items-center rounded-lg bg-verde px-6 font-bold text-crema transition-transform duration-150 active:scale-[0.98]"
       >
         {t("yaRegistrado.cta")}
       </a>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import es from "@/i18n/es.json";
 import "./globals.css";
@@ -18,6 +18,11 @@ const sans = Manrope({
 export const metadata: Metadata = {
   title: es.meta.titulo,
   description: es.meta.descripcion,
+};
+
+export const viewport: Viewport = {
+  themeColor: "#142d2b",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

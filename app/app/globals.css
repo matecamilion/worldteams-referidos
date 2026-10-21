@@ -17,13 +17,17 @@
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* El verde va en html y body con valor literal: cubre todo el ancho, incluido el rebote de scroll en móvil. */
 html {
-  background: var(--color-verde);
-  color: var(--color-crema);
+  background-color: #142d2b;
+  color: #fff7f3;
+  color-scheme: dark;
   scroll-behavior: smooth;
 }
 
 body {
+  background-color: #142d2b;
+  overflow-x: clip;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;

@@ -3,7 +3,7 @@ import { t } from "@/lib/i18n";
 
 export function Encabezado() {
   return (
-    <header className="px-5 py-6 sm:px-8 lg:px-14">
+    <header className="mx-auto w-full max-w-[1280px] px-5 py-6 sm:px-8 lg:px-14">
       <Link href="/" className="inline-block" aria-label={t("marca.nombre")}>
         {/* SVG publicado por WorldTeams en su sitio; next/image no aporta para un SVG. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}

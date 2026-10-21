@@ -22,10 +22,11 @@
   "formulario": {
     "titulo": "Tu perfil",
     "ayudaObligatorios": "Todos los campos son obligatorios.",
+    "bloques": { "datos": "1. Tus datos", "perfil": "2. Tu perfil profesional", "cv": "3. Tu CV" },
     "campos": {
-      "nombre": { "label": "Nombre", "placeholder": "Ana" },
-      "apellido": { "label": "Apellido", "placeholder": "Pérez" },
-      "email": { "label": "Email", "placeholder": "ana@correo.com", "ayuda": "Te escribimos acá." },
+      "nombre": { "label": "Nombre" },
+      "apellido": { "label": "Apellido" },
+      "email": { "label": "Email" },
       "linkedin_url": { "label": "Perfil de LinkedIn", "placeholder": "linkedin.com/in/tu-perfil" },
       "especialidad": {
         "label": "Especialidad",
@@ -45,13 +46,11 @@
       },
       "cv": {
         "label": "CV",
-        "vacio": "Elegí tu CV o arrastralo acá",
-        "ayuda": "PDF, hasta {mb} MB",
-        "cambiar": "Cambiar",
+        "vacio": "Subí tu CV en PDF, hasta {mb} MB",
         "quitar": "Quitar"
       },
       "acepto_visibilidad": {
-        "label": "Quien te recomendó podrá ver tu nombre y el estado de tu registro."
+        "label": "Acepto que quien me recomendó vea mi nombre y el estado de mi registro."
       }
     },
     "errores": {
