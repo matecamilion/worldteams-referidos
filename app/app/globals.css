@@ -54,3 +54,23 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Entrada del titular: una sola vez al cargar, sin JavaScript. */
+@keyframes revelar {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.linea {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+}
+.linea > span {
+  display: block;
+  animation: revelar 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--retraso, 0ms);
+}

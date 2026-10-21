@@ -6,7 +6,7 @@
   "marca": { "nombre": "WorldTeams", "logoAlt": "WorldTeams" },
   "candidato": {
     "tituloPagina": "Te recomendaron para WorldTeams",
-    "titulo": "{nombre} te recomendó para WorldTeams",
+    "titulo": "te recomendó para WorldTeams",
     "bajada": "WorldTeams conecta a profesionales de arquitectura e ingeniería de LATAM con firmas de EE.UU. Completá tu perfil en un par de minutos.",
     "razones": [
       { "titulo": "Alguien de confianza dio la cara", "texto": "{nombre} ya trabaja con una firma a través de WorldTeams y te recomendó por tu trabajo." },
