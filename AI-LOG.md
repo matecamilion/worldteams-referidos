@@ -27,4 +27,6 @@
 | Largo del sufijo del código | Recomendé dejar 6 caracteres (36^6) con el límite por IP como defensa principal | Pidió 8 caracteres (36^8 ≈ 2,8 billones) para que adivinar sea inviable aun sin límite, y dejar el límite por IP como segunda capa (decisión 2). Con ~750 referentes y 6 caracteres, un barrido sin límite acertaba uno cada ~50 minutos |
 | IP del cliente en la consulta del link | Propuse que, con secreto incorrecto, la función usara la IP real del encabezado del borde de Supabase | Pidió verificar si algún encabezado es confiable y, si no, no aplicar ninguna IP del cliente. Quedó más estricto: sin secreto válido la función no responde datos ni guarda nada, así que no hace falta confiar en ningún encabezado (decisión 41) |
 
+| Rendimiento del hero | Seguí optimizando Lighthouse móvil (difería la carga de GSAP/Lenis) hasta pasar de 90, sin mejora clara y con mediciones ruidosas | Pidió cerrar: el criterio de 90 era demasiado rígido y pasa a "sin regresiones graves"; la medición que vale es la del deploy. Revertí la optimización (decisión 43) |
+
 <!-- Claude Code: agregá una fila cada vez que Mateo corrija o rechace algo que propongas. -->

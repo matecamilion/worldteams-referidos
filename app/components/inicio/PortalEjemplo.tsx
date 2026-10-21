@@ -60,7 +60,10 @@ export function PortalEjemplo() {
             <p className="font-display text-2xl font-medium sm:text-3xl">{p.saludo}</p>
             <div className="mt-5 rounded-lg border border-crema/20 p-4">
               <p className="text-sm text-crema/65">{p.linkEtiqueta}</p>
-              <p className="mt-1 whitespace-nowrap font-display text-[0.95rem] font-medium sm:text-lg">{p.linkValor}</p>
+              <p className="mt-1 font-display text-[0.8rem] font-medium sm:text-lg">
+                <span className="block whitespace-nowrap">{p.linkValor.slice(0, p.linkValor.indexOf("/r/") + 3)}</span>
+                <span className="block whitespace-nowrap">{p.linkValor.slice(p.linkValor.indexOf("/r/") + 3)}</span>
+              </p>
             </div>
 
             <div className="mt-6">

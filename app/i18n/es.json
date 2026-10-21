@@ -13,13 +13,19 @@
       "tituloAccesible": "Recomendá a tu excompañera, a un arquitecto senior o a ese ingeniero que admirás",
       "bajada": "Sumá colegas de arquitectura e ingeniería al talent pool de WorldTeams. Cuando su perfil se valida, vos cobrás.",
       "cta": "Calcular mi premio",
-      "linkTitulo": "Tu link personal",
-      "linkEjemplo": "worldteams.com/r/tu-nombre-k7q2m9xd",
-      "linkNota": "Es un ejemplo: tu link real te llega por mail.",
-      "copiar": "Copiar",
-      "copiado": "Copiado",
-      "copiarEtiqueta": "Copiar el link de ejemplo",
-      "copiadoAviso": "Link copiado al portapapeles"
+      "ctaSecundario": "Ver cómo funciona",
+      "cifras": [
+        { "clave": "base", "etiqueta": "por perfil validado" },
+        { "clave": "prioritario", "etiqueta": "por perfil prioritario" },
+        { "clave": "hitos", "etiqueta": "en bonos por hitos", "prefijo": "hasta " }
+      ],
+      "poliedro": {
+        "eventos": [
+          { "clave": "base", "quien": "Camila R.", "que": "perfil validado" },
+          { "clave": "prioritario", "quien": "", "que": "Perfil prioritario" },
+          { "clave": "hito", "quien": "", "que": "Bono de hito" }
+        ]
+      }
     },
     "como": {
       "titulo": "Cómo funciona",
@@ -27,12 +33,12 @@
       "pasos": [
         { "titulo": "Copiás tu link", "texto": "Cada referente tiene un link único. Se lo mandás a quien recomendás, por el canal que prefieras." },
         { "titulo": "La persona completa su perfil", "texto": "Carga ella misma sus datos y su CV. Nadie carga datos de terceros sin que lo sepan." },
-        { "titulo": "Se acredita tu premio", "texto": "Si el perfil cumple las reglas, queda validado sin esperas y lo ves en tu portal. Si hay dudas, lo revisa una persona de reclutamiento." }
+        { "titulo": "Se acredita tu premio", "texto": "Si el perfil cumple las reglas, queda validado al instante o pasa por una revisión breve, y lo ves en tu portal. Si hay dudas, lo revisa una persona de reclutamiento." }
       ],
       "celular": {
         "etiquetaFicticio": "Datos de ejemplo",
         "linkTitulo": "Tu link personal",
-        "linkValor": "worldteams.com/r/andrea-h5t8c2qf",
+        "linkValor": "worldteams-referidos.vercel.app/r/andrea-h5t8c2qf",
         "copiar": "Copiar",
         "copiado": "Copiado",
         "linkAyuda": "Pegalo en un mensaje, un mail o un chat.",
@@ -90,7 +96,7 @@
       "ventana": "Portal del referente",
       "saludo": "Hola, Andrea Quispe",
       "linkEtiqueta": "Tu link",
-      "linkValor": "worldteams.com/r/andrea-h5t8c2qf",
+      "linkValor": "worldteams-referidos.vercel.app/r/andrea-h5t8c2qf",
       "barraTitulo": "Camino al próximo bono",
       "barraTexto": "{validados} de {hito} referidos validados este año. Bono de USD {bono}.",
       "referidosTitulo": "Tus referidos",
