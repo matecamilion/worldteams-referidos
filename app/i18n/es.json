@@ -3,7 +3,7 @@
     "titulo": "Programa de referidos de talento | WorldTeams",
     "descripcion": "Recomendá talento de arquitectura e ingeniería a WorldTeams y ganá cuando su perfil se valide."
   },
-  "marca": { "nombre": "WorldTeams", "logoAlt": "WorldTeams" },
+  "marca": { "nombre": "WorldTeams", "logoAlt": "WorldTeams", "entrar": "Entrar a mi portal" },
   "inicio": {
     "saltar": "Ir al contenido",
     "hero": {
@@ -129,6 +129,87 @@
       "texto": "Si trabajás con una firma a través de WorldTeams, ya tenés tu link personal: te lo enviamos por mail con tu acceso.",
       "nota": "¿No lo encontrás? Escribile a tu contacto en WorldTeams."
     }
+  },
+  "ingreso": {
+    "tituloPagina": "Entrar a mi portal",
+    "etiqueta": "Portal del referente",
+    "titulo": "Entrá a tu portal",
+    "bajada": "Escribí tu email y te mandamos un link para entrar. Sin contraseñas.",
+    "aclaracion": "El acceso es solo para profesionales colocados por WorldTeams.",
+    "campo": { "label": "Tu email", "placeholder": "nombre@ejemplo.com" },
+    "boton": "Enviarme el link",
+    "enviando": "Enviando…",
+    "enviado": {
+      "titulo": "Revisá tu casilla",
+      "texto": "Si tu email está habilitado, te enviamos un link",
+      "ayuda": "Puede tardar un par de minutos; mirá también la carpeta de spam. Abrilo en este mismo navegador.",
+      "otro": "Usar otro email"
+    },
+    "errores": {
+      "emailInvalido": "Revisá el email: no parece una dirección válida.",
+      "limitado": "Hiciste demasiados intentos. Esperá unos minutos y probá de nuevo.",
+      "noDisponible": "El ingreso no está disponible por ahora. Probá de nuevo en un rato.",
+      "enlace": "Ese link no sirve: venció, ya se usó o lo abriste en otro navegador. Pedí uno nuevo."
+    },
+    "volver": "Volver al inicio",
+    "noDisponible": { "titulo": "El portal no está disponible por ahora", "texto": "Estamos con un problema de nuestro lado. Probá de nuevo en un rato.", "cta": "Volver al inicio" }
+  },
+  "portal": {
+    "tituloPagina": "Mi portal",
+    "saludo": "Hola, {nombre}",
+    "salir": "Salir",
+    "link": {
+      "etiqueta": "Tu link personal",
+      "ayuda": "Compartilo con colegas de arquitectura o ingeniería.",
+      "copiar": "Copiar",
+      "copiado": "Copiado",
+      "error": "No pudimos copiarlo. Seleccioná el link y copialo a mano."
+    },
+    "progreso": {
+      "titulo": "Camino al próximo bono",
+      "texto": "{validados} de {hito} referidos validados este año. Bono de USD {bono}.",
+      "falta": "Te falta 1 referido validado.",
+      "faltan": "Te faltan {faltan} referidos validados.",
+      "completo": "Ya alcanzaste todos los hitos de este año: {validados} referidos validados."
+    },
+    "premios": {
+      "titulo": "Tus premios",
+      "pendiente": "Pendiente",
+      "pagado": "Pagado",
+      "corte": "Se paga el día {corte} de cada mes.",
+      "vacio": "Todavía no tenés premios. Aparecen cuando un perfil queda validado.",
+      "detalle": "Detalle",
+      "conceptos": {
+        "base": "Perfil validado",
+        "extra_prioritario": "Extra por perfil prioritario",
+        "bono_hito": "Bono por {umbral} referidos"
+      },
+      "estados": { "pendiente": "Pendiente", "pagado": "Pagado" }
+    },
+    "referidos": {
+      "titulo": "Tus referidos",
+      "estados": { "registrado": "Registrado", "en_revision": "En revisión", "validado": "Validado", "no_avanzo": "No avanzó" },
+      "vacio": {
+        "titulo": "Todavía no recomendaste a nadie",
+        "texto": "Cuando alguien complete el formulario con tu link, aparece acá con el estado de su registro.",
+        "pasos": ["Copiá tu link personal.", "Mandáselo a un colega de arquitectura o ingeniería.", "Seguí acá el estado de su registro."]
+      },
+      "privacidad": "Ves el nombre y el estado de cada persona, nada más."
+    },
+    "cargando": "Cargando tu portal…",
+    "error": { "titulo": "No pudimos cargar tu portal", "texto": "Es un problema de nuestro lado, no tuyo. Probá de nuevo en un momento.", "reintentar": "Reintentar" },
+    "noDisponible": { "titulo": "El portal no está disponible por ahora", "texto": "Estamos con un problema de nuestro lado. Probá de nuevo en un rato.", "cta": "Volver al inicio" },
+    "noHabilitado": {
+      "titulo": "Tu email no está habilitado",
+      "texto": "Entraste con {email}, pero ese email no figura entre los profesionales habilitados del programa. Si creés que es un error, avisale a tu contacto en WorldTeams.",
+      "texto_sin_email": "Ese email no figura entre los profesionales habilitados del programa. Si creés que es un error, avisale a tu contacto en WorldTeams."
+    }
+  },
+  "panel": {
+    "tituloPagina": "Panel de revisión",
+    "etiqueta": "Equipo de reclutamiento",
+    "titulo": "Panel de revisión",
+    "proximamente": "Próximamente: revisión de casos"
   },
   "candidato": {
     "tituloPagina": "Te recomendaron para WorldTeams",

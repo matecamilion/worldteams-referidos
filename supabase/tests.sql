@@ -770,6 +770,108 @@ begin
     and not has_function_privilege('anon', 'public.crear_movimientos_validacion(uuid)', 'execute'));
 end $$;
 
+-- ---------------------------------------------------------------------
+-- 8. Login: email_habilitado (decisión 44) y aislamiento del portal por referente
+--    Requiere email_habilitado.sql aplicado. Reutiliza el secreto de prueba fijado en la sección 7.
+-- ---------------------------------------------------------------------
+select pg_temp.registrar('login: la función email_habilitado existe (aplicá email_habilitado.sql)',
+  to_regprocedure('public.email_habilitado(text,text)') is not null);
+
+do $$
+declare
+  k constant text := 'secreto-de-prueba-0123456789abcdef0123';
+  v_sin text[]; v_mal text[];
+  d_ref boolean; d_eq boolean; d_sec boolean; ok_anon text;
+begin
+  insert into public.referentes (nombre, apellido, email) values ('Log', 'Ok', 'log-ok@t.com');
+  insert into public.referentes (nombre, apellido, email, colocado) values ('Log', 'Nc', 'log-nc@t.com', false);
+  insert into public.referentes (nombre, apellido, email) values ('Log', 'Sa', 'log-sa@t.com');
+  update public.referentes set sancionado_en = now() where email = 'log-sa@t.com';
+  insert into public.equipo_reclutamiento (email, nombre, activo) values ('log-rec@t.com', 'Rec Activo', true);
+  insert into public.equipo_reclutamiento (email, nombre, activo) values ('log-rec-off@t.com', 'Rec Inactivo', false);
+  insert into public.equipo_reclutamiento (email, nombre, activo) values ('log-ambos@t.com', 'Ambos', true);
+  insert into public.referentes (nombre, apellido, email) values ('Log', 'Ambos', 'log-ambos@t.com');
+
+  -- Con secreto correcto
+  perform pg_temp.registrar('login: referente colocado y sin sanción -> referente', public.email_habilitado('log-ok@t.com', k) = 'referente', public.email_habilitado('log-ok@t.com', k));
+  perform pg_temp.registrar('login: el email se normaliza (mayúsculas y espacios)', public.email_habilitado('  LOG-OK@T.com ', k) = 'referente');
+  perform pg_temp.registrar('login: equipo de reclutamiento activo -> reclutamiento', public.email_habilitado('log-rec@t.com', k) = 'reclutamiento');
+  perform pg_temp.registrar('login: reclutamiento inactivo -> ninguno', public.email_habilitado('log-rec-off@t.com', k) = 'ninguno');
+  perform pg_temp.registrar('login: referente no colocado -> ninguno', public.email_habilitado('log-nc@t.com', k) = 'ninguno');
+  perform pg_temp.registrar('login: referente sancionado -> ninguno', public.email_habilitado('log-sa@t.com', k) = 'ninguno');
+  perform pg_temp.registrar('login: email que no está en ninguna lista -> ninguno', public.email_habilitado('nadie@t.com', k) = 'ninguno');
+  perform pg_temp.registrar('login: email vacío o nulo -> ninguno', public.email_habilitado('', k) = 'ninguno' and public.email_habilitado(null, k) = 'ninguno');
+  perform pg_temp.registrar('login: si está en las dos listas gana reclutamiento', public.email_habilitado('log-ambos@t.com', k) = 'reclutamiento');
+  perform pg_temp.registrar('login: los alias del seed responden lo esperado (lucia y martin referente, reclutamiento, andres ninguno)',
+    public.email_habilitado('matecamilion05+lucia@gmail.com', k) = 'referente'
+    and public.email_habilitado('matecamilion05+martin@gmail.com', k) = 'referente'
+    and public.email_habilitado('matecamilion05+reclutamiento@gmail.com', k) = 'reclutamiento'
+    and public.email_habilitado('matecamilion05+andres@gmail.com', k) = 'ninguno');
+
+  -- Sin secreto: no revela nada. Emails que existen y que no existen dan EXACTAMENTE la misma respuesta.
+  select array_agg(public.email_habilitado(e, null)) into v_sin
+    from unnest(array['log-ok@t.com', 'log-rec@t.com', 'log-nc@t.com', 'nadie@t.com', 'matecamilion05+lucia@gmail.com']) e;
+  select array_agg(public.email_habilitado(e, 'secreto-equivocado-0123456789abcdef012')) into v_mal
+    from unnest(array['log-ok@t.com', 'log-rec@t.com', 'log-nc@t.com', 'nadie@t.com', 'matecamilion05+lucia@gmail.com']) e;
+  perform pg_temp.registrar('login: sin secreto responde no_autorizado a todos, existan o no (no revela nada)',
+    (select count(distinct x) = 1 and bool_and(x = 'no_autorizado') from unnest(v_sin) x), array_to_string(v_sin, ','));
+  perform pg_temp.registrar('login: con un secreto equivocado tampoco revela nada',
+    (select count(distinct x) = 1 and bool_and(x = 'no_autorizado') from unnest(v_mal) x), array_to_string(v_mal, ','));
+
+  -- Sin secreto cargado en la base: estado seguro por defecto.
+  delete from public.secretos_internos where clave = 'consulta_codigo';
+  perform pg_temp.registrar('login: si el secreto no está cargado en la base responde no_autorizado incluso a un secreto "válido"',
+    public.email_habilitado('log-ok@t.com', k) = 'no_autorizado');
+  insert into public.secretos_internos (clave, valor) values ('consulta_codigo', k);
+
+  -- Permisos: el anónimo puede llamar a la función, pero no leer las listas.
+  execute 'set local role anon';
+  ok_anon := public.email_habilitado('log-ok@t.com', k);
+  begin perform 1 from public.referentes; d_ref := true; exception when others then d_ref := not (sqlerrm ilike '%permission denied%'); end;
+  begin perform 1 from public.equipo_reclutamiento; d_eq := true; exception when others then d_eq := not (sqlerrm ilike '%permission denied%'); end;
+  begin perform 1 from public.secretos_internos; d_sec := true; exception when others then d_sec := not (sqlerrm ilike '%permission denied%'); end;
+  execute 'reset role';
+  perform pg_temp.registrar('login: el rol anónimo puede llamar a la función (con el secreto)', ok_anon = 'referente', ok_anon);
+  perform pg_temp.registrar('login: el rol anónimo sigue sin leer referentes, equipo_reclutamiento ni secretos', not d_ref and not d_eq and not d_sec);
+  perform pg_temp.registrar('login: la función es SECURITY DEFINER y solo la ejecutan anon, authenticated y service_role (no public)',
+    (select prosecdef from pg_proc where oid = 'public.email_habilitado(text,text)'::regprocedure)
+    and has_function_privilege('anon', 'public.email_habilitado(text,text)', 'execute')
+    and has_function_privilege('authenticated', 'public.email_habilitado(text,text)', 'execute'));
+end $$;
+
+-- 8.2 Portal: un referente con sesión ve solo lo suyo (lo que lee /portal: referentes, v_mis_referidos, v_progreso_referente, movimientos_pago)
+do $$
+declare
+  ra uuid; rb uuid; ca uuid; cb uuid; da uuid; db uuid;
+  v_filas_a int; v_filas_b_de_a int; v_ids_ref uuid[]; v_mov_a int; v_mov_ajenos int; v_prog_ajenos int; v_rec boolean;
+begin
+  ra := pg_temp.nuevo_referente('PortalA', 'portal-a@t.com');
+  rb := pg_temp.nuevo_referente('PortalB', 'portal-b@t.com');
+  ca := pg_temp.nuevo_candidato('cand-portal-a@t.com');
+  cb := pg_temp.nuevo_candidato('cand-portal-b@t.com');
+  insert into public.referidos (referente_id, candidato_id) values (ra, ca) returning id into da;
+  insert into public.referidos (referente_id, candidato_id) values (rb, cb) returning id into db;
+  perform public.cambiar_estado_referido(da, 'validado');   -- genera movimientos pendientes para A
+  perform public.cambiar_estado_referido(db, 'validado');   -- y para B
+
+  perform set_config('request.jwt.claims', json_build_object('sub', gen_random_uuid(), 'email', 'portal-a@t.com', 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into v_filas_a from public.v_mis_referidos;
+  select count(*) into v_filas_b_de_a from public.v_mis_referidos where referente_id = rb;
+  select array_agg(id) into v_ids_ref from public.referentes;
+  select count(*) into v_mov_a from public.movimientos_pago where referente_id = ra;
+  select count(*) into v_mov_ajenos from public.movimientos_pago where referente_id <> ra;
+  select count(*) into v_prog_ajenos from public.v_progreso_referente where referente_id <> ra;
+  v_rec := public.es_reclutamiento();
+  execute 'reset role';
+
+  perform pg_temp.registrar('portal: el referente ve solo sus referidos en v_mis_referidos', v_filas_a = 1 and v_filas_b_de_a = 0, format('%s propios, %s ajenos', v_filas_a, v_filas_b_de_a));
+  perform pg_temp.registrar('portal: el referente ve solo su fila de referentes', v_ids_ref = array[ra], format('%s filas', cardinality(v_ids_ref)));
+  perform pg_temp.registrar('portal: el referente ve sus movimientos y ninguno ajeno', v_mov_a >= 1 and v_mov_ajenos = 0, format('%s propios, %s ajenos', v_mov_a, v_mov_ajenos));
+  perform pg_temp.registrar('portal: el progreso solo trae su fila', v_prog_ajenos = 0);
+  perform pg_temp.registrar('portal: un referente no es reclutamiento', not v_rec);
+end $$;
+
 -- Resultado: el resumen primero y después cada prueba.
 select resultado, prueba, detalle from (
   select 0 as orden, 'RESUMEN' as resultado,

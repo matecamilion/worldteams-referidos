@@ -37,7 +37,7 @@ export default function Page() {
       >
         {inicio.saltar}
       </a>
-      <Encabezado />
+      <Encabezado entrar />
       <main id="contenido" tabIndex={-1} className="outline-none">
         <section
           data-fondo="verde"

@@ -19,6 +19,8 @@ export const config = {
   plazoRevisionDiasHabiles: 3,
   alertaVolumen: { cantidad: 5, dias: 7 },
   limiteConsultaCodigo: { fallosMaximos: 10, ventanaSegundos: 600 },
+  // Pedidos de magic link que acepta /ingresar por ventana. Cuentan todos los intentos, esté o no habilitado el email.
+  limiteIngreso: { intentosPorIp: 5, intentosPorEmail: 3, ventanaSegundos: 600 },
   cvMaxMb: 5,
 } as const;
 
