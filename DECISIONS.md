@@ -90,7 +90,7 @@ Punto de equilibrio: el programa se paga solo si al menos X% de los referidos te
 
 **31. Movimiento reducido** — con `prefers-reduced-motion` no se carga Lenis ni GSAP: no hay fondo interpolado, ni marquesina, ni números que ruedan, ni sección fija. El contenido es el mismo y cada sección lleva su color fijo (verde, crema, lima, verde).
 
-**32. Datos de ejemplo en la landing** — los referentes y candidatos de las maquetas (celular y portal) son ficticios y se rotulan como "datos de ejemplo". Los montos y totales salen de `config` (`lib/premios.ts`), nunca escritos a mano. Sin imágenes, monedas ni logos de clientes de WorldTeams. [supuesto] La franja "+750 profesionales de LATAM · +370 firmas de EE.UU." usa cifras dadas por Mateo; confirmar con WorldTeams antes de publicar.
+**32. Datos de ejemplo en la landing** — los referentes y candidatos de las maquetas (celular y portal) son ficticios y se rotulan como "datos de ejemplo". Los montos y totales salen de `config` (`lib/premios.ts`), nunca escritos a mano. Sin imágenes, monedas ni logos de clientes de WorldTeams. La franja lima dice "+750 profesionales · +370 empresas de EE.UU. y Canadá", con el texto de la web de WorldTeams; las cifras salen de su sitio y conviene reconfirmarlas antes de publicar.
 
 ---
 

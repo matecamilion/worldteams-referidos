@@ -5,6 +5,8 @@ import { t } from "@/lib/i18n";
 
 const c = es.inicio.como.celular;
 const hito = config.hitos[0];
+const corte = c.linkValor.indexOf("/r/") + 3;
+const [host, codigo] = [c.linkValor.slice(0, corte), c.linkValor.slice(corte)];
 
 /** Marco de celular, solo decorativo: el sentido de cada pantalla lo da el texto del paso. */
 export function Celular({ children }: { children: ReactNode }) {
@@ -26,8 +28,11 @@ export function PantallaLink() {
     <div data-pantalla="link" className={pantalla}>
       <p className="font-display text-lg font-medium">{c.linkTitulo}</p>
       <div className="mt-4 rounded-lg border-[1.5px] border-borde/50 bg-white p-3">
-        {/* El espacio de ancho cero tras "/r/" deja cortar la línea ahí y no en mitad de la palabra. */}
-        <p className="font-display text-[0.95rem] font-medium leading-snug">{c.linkValor.replace("/r/", "/r/​")}</p>
+        {/* El link va en dos líneas fijas, cortado justo después de "/r/": nunca a mitad de palabra. */}
+        <p className="font-display text-[0.95rem] font-medium leading-snug">
+          <span className="block whitespace-nowrap">{host}</span>
+          <span className="block whitespace-nowrap">{codigo}</span>
+        </p>
       </div>
       <div className="relative mt-3 h-10">
         <span data-copiar className="absolute inset-0 flex items-center justify-center rounded-lg bg-verde text-sm font-bold text-crema">

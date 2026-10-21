@@ -60,7 +60,7 @@ export function PortalEjemplo() {
             <p className="font-display text-2xl font-medium sm:text-3xl">{p.saludo}</p>
             <div className="mt-5 rounded-lg border border-crema/20 p-4">
               <p className="text-sm text-crema/65">{p.linkEtiqueta}</p>
-              <p className="mt-1 font-display text-base font-medium [overflow-wrap:anywhere] sm:text-lg">{p.linkValor}</p>
+              <p className="mt-1 whitespace-nowrap font-display text-[0.95rem] font-medium sm:text-lg">{p.linkValor}</p>
             </div>
 
             <div className="mt-6">
