@@ -34,8 +34,8 @@ async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"
   const nombreCompleto = `${referente.nombre} ${referente.apellido}`;
 
   return (
-    <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
-      <section className="lg:col-span-7 lg:sticky lg:top-10 lg:self-start xl:pr-10">
+    <div className="grid gap-10 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:gap-y-12">
+      <section className="lg:col-span-7 xl:pr-10">
         <h1 className="font-display text-[clamp(2.75rem,7.2vw,6.25rem)] font-medium leading-[0.96] tracking-[-0.035em]">
           <span className="linea">
             <span style={{ "--retraso": "0ms" } as React.CSSProperties}>{nombreCompleto}</span>
@@ -45,19 +45,21 @@ async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"
           </span>
         </h1>
         <p className="mt-7 max-w-[34rem] text-lg leading-relaxed text-crema/80">{t("candidato.bajada")}</p>
-        <ul className="mt-10 max-w-[34rem] divide-y divide-crema/15 border-y border-crema/15">
-          {es.candidato.razones.map((r) => (
-            <li key={r.titulo} className="py-5">
-              <p className="font-display text-lg font-medium">{r.titulo}</p>
-              <p className="mt-1 text-crema/75">{r.texto.replace("{nombre}", referente.nombre)}</p>
-            </li>
-          ))}
-        </ul>
       </section>
 
-      <section className="lg:col-span-5" aria-label={t("formulario.titulo")}>
+      {/* En móvil el formulario va antes que las razones: lo primero es poder completarlo. */}
+      <section className="lg:col-span-5 lg:row-span-2 lg:row-start-1 lg:col-start-8" aria-label={t("formulario.titulo")}>
         <FormularioReferido codigo={referente.codigo} referente={nombreCompleto} />
       </section>
+
+      <ul className="max-w-[34rem] divide-y divide-crema/15 border-y border-crema/15 lg:col-span-7 lg:self-start">
+        {es.candidato.razones.map((r) => (
+          <li key={r.titulo} className="py-5">
+            <p className="font-display text-lg font-medium">{r.titulo}</p>
+            <p className="mt-1 text-crema/75">{r.texto.replace("{nombre}", referente.nombre)}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

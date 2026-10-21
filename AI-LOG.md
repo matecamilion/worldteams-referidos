@@ -14,5 +14,9 @@
 | Referente desvinculado | Lo planteó como caso a debatir | Lo ganado le pertenece: cobra igual |
 | Privacidad | Mostrar solo nombre de pila | Nombre completo: el referente ya conoce a la persona (con límites y aviso al candidato) |
 | Bienestar | — | Propuse el canje por experiencias para un equipo remoto como mejora de segunda etapa |
+| Identidad visual (landing) | Propuse un toque dorado, copiado de la captura de referencia, y el rosa arena como apoyo | Sin dorado: el rosa arena `#D4B5AA` solo como detalle muy puntual y el lima como único acento fuerte. El CSS real de worldteams.com tampoco usa dorado |
+| Carpeta del proyecto | Creé los archivos en `C:\dev\WroldTeams` (con el nombre mal escrito del CLAUDE.md) | Corrigió el nombre a `C:\dev\WorldTeams`. La carpeta vieja estaba abierta en la sesión y no se podía renombrar: copié los documentos a la nueva y la vieja se borra a mano |
+| Calculadora de premios | Dos controles sueltos: personas a recomendar y cuántas son prioritarias | Pidió que el control de prioritarias nunca supere el total, que el texto diga "por año" (los hitos son por año calendario) y que se aclare que es una estimación (pendiente de construir con la página "/") |
+| Git | Había dejado `git init` para la tarea del miércoles | Pidió hacerlo ya, con `.gitignore` que incluya `.env` y commits chicos por cada paso |
 
 <!-- Claude Code: agregá una fila cada vez que Mateo corrija o rechace algo que propongas. -->

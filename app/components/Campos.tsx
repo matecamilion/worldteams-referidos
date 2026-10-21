@@ -40,7 +40,7 @@ export function Segmentado<T extends FieldValues>({
       <legend className="mb-2 text-sm font-bold">{leyenda}</legend>
       <div className={`grid gap-2 ${columnas}`}>
         {opciones.map((o) => (
-          <label key={o.valor} className="relative cursor-pointer">
+          <label key={o.valor} className="relative flex cursor-pointer">
             <input
               type="radio"
               value={o.valor}
@@ -48,7 +48,7 @@ export function Segmentado<T extends FieldValues>({
               className="peer sr-only"
               {...register(nombre)}
             />
-            <span className="flex min-h-12 items-center justify-center rounded-xl border-[1.5px] border-borde bg-white px-3 py-2 text-center text-[0.95rem] font-semibold transition-[background-color,color,border-color,transform] duration-150 peer-checked:border-verde peer-checked:bg-verde peer-checked:text-crema peer-hover:border-verde peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-verde peer-active:scale-[0.98] peer-data-[invalid=true]:border-error">
+            <span className="flex min-h-12 w-full items-center justify-center rounded-xl border-[1.5px] border-borde bg-white px-3 py-2 text-center text-[0.95rem] font-semibold transition-[background-color,color,border-color,transform] duration-150 peer-checked:border-verde peer-checked:bg-verde peer-checked:text-crema peer-hover:border-verde peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-verde peer-active:scale-[0.98] peer-data-[invalid=true]:border-error">
               {o.etiqueta}
             </span>
           </label>

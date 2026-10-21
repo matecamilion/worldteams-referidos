@@ -33,12 +33,12 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-:focus-visible {
+:focus-visible:not([tabindex="-1"]) {
   outline: 3px solid var(--color-lima);
   outline-offset: 3px;
   border-radius: 4px;
 }
-.sobre-crema :focus-visible {
+.sobre-crema :focus-visible:not([tabindex="-1"]) {
   outline-color: var(--color-verde);
 }
 
