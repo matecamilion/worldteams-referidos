@@ -86,6 +86,12 @@ Punto de equilibrio: el programa se paga solo si al menos X% de los referidos te
 
 **29. Envío vía ruta del servidor** — El formulario envía a una ruta del servidor (`/api/referir`) que verifica reCAPTCHA y reenvía a n8n. La URL del webhook y los secretos nunca llegan al navegador.
 
+**30. Landing "/" con una idea: el hilo que conecta** — referente → candidato → premio. Un hilo lima se dibuja con el scroll en "Cómo funciona" (sección fija con celular de 3 estados, solo en escritorio; en móvil, tres estados apilados con revelado simple). GSAP + ScrollTrigger y Lenis viven solo en "/": el formulario de "/r/[codigo]" queda con scroll nativo y sin animación de scroll. · por qué: una idea fuerte bien ejecutada, no más efectos; el formulario es donde se convierte y no debe tener fricción · descartado: preloader, cursor propio, 3D/WebGL, scroll forzado cerca del formulario.
+
+**31. Movimiento reducido** — con `prefers-reduced-motion` no se carga Lenis ni GSAP: no hay fondo interpolado, ni marquesina, ni números que ruedan, ni sección fija. El contenido es el mismo y cada sección lleva su color fijo (verde, crema, lima, verde).
+
+**32. Datos de ejemplo en la landing** — los referentes y candidatos de las maquetas (celular y portal) son ficticios y se rotulan como "datos de ejemplo". Los montos y totales salen de `config` (`lib/premios.ts`), nunca escritos a mano. Sin imágenes, monedas ni logos de clientes de WorldTeams. [supuesto] La franja "+750 profesionales de LATAM · +370 firmas de EE.UU." usa cifras dadas por Mateo; confirmar con WorldTeams antes de publicar.
+
 ---
 
 ## Especificación del modelo de datos

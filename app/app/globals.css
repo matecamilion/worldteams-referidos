@@ -17,16 +17,51 @@
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Colores que cambian con el scroll en "/": GSAP interpola estas variables entre secciones. */
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-fg: var(--tinta);
+  --color-acento: var(--acento);
+}
+
+:root {
+  --fondo: #142d2b;
+  --tinta: #fff7f3;
+  --acento: #d0ef76;
+  --grano: 0.07;
+}
+
+/* Con movimiento reducido no hay transición: cada sección lleva su color fijo, sin cortes que rompan la lectura. */
+@media (prefers-reduced-motion: reduce) {
+  .grano {
+    display: none;
+  }
+  [data-fondo="crema"] {
+    --fondo: #fff7f3;
+    --tinta: #142d2b;
+    --acento: #142d2b;
+    background-color: var(--fondo);
+    color: var(--tinta);
+  }
+  [data-fondo="lima"] {
+    --fondo: #d0ef76;
+    --tinta: #142d2b;
+    --acento: #142d2b;
+    background-color: var(--fondo);
+    color: var(--tinta);
+  }
+}
+
 /* El verde va en html y body con valor literal: cubre todo el ancho, incluido el rebote de scroll en móvil. */
 html {
-  background-color: #142d2b;
-  color: #fff7f3;
+  background-color: var(--fondo);
+  color: var(--tinta);
   color-scheme: dark;
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #142d2b;
+  background-color: var(--fondo);
   overflow-x: clip;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -38,7 +73,7 @@ body {
 }
 
 :focus-visible:not([tabindex="-1"]) {
-  outline: 3px solid var(--color-lima);
+  outline: 3px solid var(--acento);
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -77,4 +112,29 @@ body {
   display: block;
   animation: revelar 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--retraso, 0ms);
+}
+
+/* Grano: textura muy leve sobre el verde; su opacidad baja a 0 en las secciones claras. */
+.grano {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: var(--grano);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Marquesina lenta: dos copias idénticas desplazándose media pista. */
+@keyframes marquesina {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquesina-pista {
+  animation: marquesina 60s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquesina-pista {
+    animation: none;
+  }
 }

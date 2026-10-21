@@ -5,40 +5,66 @@
   },
   "marca": { "nombre": "WorldTeams", "logoAlt": "WorldTeams" },
   "inicio": {
+    "saltar": "Ir al contenido",
     "hero": {
       "etiqueta": "Programa de referidos de talento",
-      "titulo1": "Tu criterio",
-      "titulo2": "vale premio.",
-      "bajada": "Recomendá a colegas de arquitectura e ingeniería para el talent pool de WorldTeams. Cuando su perfil se valida, vos cobrás.",
+      "titulo": "Recomendá a",
+      "fragmentos": ["tu excompañera", "un arquitecto senior", "ese ingeniero que admirás"],
+      "tituloAccesible": "Recomendá a tu excompañera, a un arquitecto senior o a ese ingeniero que admirás",
+      "bajada": "Sumá colegas de arquitectura e ingeniería al talent pool de WorldTeams. Cuando su perfil se valida, vos cobrás.",
       "cta": "Calcular mi premio",
-      "cta2": "Cómo funciona",
-      "datos": [
-        { "valor": "USD {base}", "texto": "por cada referido validado" },
-        { "valor": "USD {prioritario}", "texto": "si el perfil es prioritario" },
-        { "valor": "hasta USD {hitoMax}", "texto": "de bono por llegar a {hitoMaxReferidos} en el año" }
-      ]
+      "linkTitulo": "Tu link personal",
+      "linkEjemplo": "worldteams.com/r/tu-nombre",
+      "linkNota": "Es un ejemplo: tu link real te llega por mail.",
+      "copiar": "Copiar",
+      "copiado": "Copiado",
+      "copiarEtiqueta": "Copiar el link de ejemplo",
+      "copiadoAviso": "Link copiado al portapapeles"
     },
-    "pasos": {
-      "titulo": "Tres pasos, sin formularios para vos",
-      "items": [
-        { "titulo": "Compartí tu link personal", "texto": "Cada referente tiene un link único. Se lo mandás a quien recomendás, por el canal que prefieras." },
+    "como": {
+      "titulo": "Cómo funciona",
+      "hilo": ["Referente", "Candidato", "Premio"],
+      "pasos": [
+        { "titulo": "Copiás tu link", "texto": "Cada referente tiene un link único. Se lo mandás a quien recomendás, por el canal que prefieras." },
         { "titulo": "La persona completa su perfil", "texto": "Carga ella misma sus datos y su CV. Nadie carga datos de terceros sin que lo sepan." },
-        { "titulo": "Validamos y se acredita tu premio", "texto": "Si el perfil cumple las reglas, queda validado sin esperas. Si hay dudas, lo revisa una persona de reclutamiento." }
-      ]
+        { "titulo": "Se acredita tu premio", "texto": "Si el perfil cumple las reglas, queda validado sin esperas y lo ves en tu portal. Si hay dudas, lo revisa una persona de reclutamiento." }
+      ],
+      "celular": {
+        "etiquetaFicticio": "Datos de ejemplo",
+        "linkTitulo": "Tu link personal",
+        "linkValor": "worldteams.com/r/lucia-ejemplo",
+        "copiar": "Copiar",
+        "copiado": "Copiado",
+        "linkAyuda": "Pegalo en un mensaje, un mail o un chat.",
+        "referidosTitulo": "Tus referidos",
+        "formTitulo": "Te recomendó Lucía Ejemplo",
+        "formCampos": [
+          { "etiqueta": "Nombre", "valor": "Valeria Ejemplo" },
+          { "etiqueta": "Email", "valor": "valeria@ejemplo.com" },
+          { "etiqueta": "LinkedIn", "valor": "linkedin.com/in/valeria-ejemplo" },
+          { "etiqueta": "CV", "valor": "cv-valeria.pdf" }
+        ],
+        "formBoton": "Enviar mi perfil",
+        "portalTitulo": "Tu portal",
+        "portalAviso": "Valeria Ejemplo: perfil validado",
+        "portalBarra": "{validados} de {hito} para el bono de USD {bono}"
+      }
     },
+    "marquesina": "+750 profesionales de LATAM · +370 firmas de EE.UU.",
     "premios": {
       "titulo": "Cuánto se gana",
       "bajada": "Pagos únicos en dólares. No dependen del sueldo de nadie y no tienen tope de referidos.",
-      "baseTitulo": "Por referido validado",
-      "baseMonto": "USD {base}",
-      "baseTexto": "Cada persona que se registra con tu link y cuyo perfil se valida.",
+      "tarjetas": {
+        "unidad": "referidos validados",
+        "unidadUno": "referido validado",
+        "total": "USD",
+        "desglose": "{n} × USD {base}",
+        "desgloseBono": "{n} × USD {base} + bonos USD {bonos}",
+        "prioritario": "Con perfiles prioritarios: hasta USD {total}"
+      },
       "prioritarioTitulo": "Perfil prioritario",
-      "prioritarioMonto": "USD {prioritario}",
-      "prioritarioTexto": "Arquitectura, con Revit, senior y con inglés avanzado o nativo: es el perfil que más buscan las firmas.",
-      "hitosTitulo": "Bono por hitos",
-      "hitosTexto": "Se suma al llegar a cierta cantidad de referidos validados en el año calendario.",
-      "hito": "referidos validados",
-      "hitoBono": "+ USD {bono}"
+      "prioritarioTexto": "Arquitectura, con Revit, senior y con inglés avanzado o nativo: es el perfil que más buscan las firmas. Suma USD {extra} extra por cada uno.",
+      "hitosTexto": "Los bonos se suman al llegar a 3, 6 y 10 referidos validados en el año calendario."
     },
     "calculadora": {
       "titulo": "Hacé tu cuenta",
@@ -56,6 +82,29 @@
       "proximo": "Te faltan {n} para el bono de USD {bono} (hito de {hito}).",
       "completo": "Alcanzaste todos los bonos del año.",
       "aclaracion": "Es una estimación: el premio se confirma cuando cada perfil queda validado."
+    },
+    "portal": {
+      "titulo": "Así se ve tu portal",
+      "bajada": "Tu link, tus referidos con su estado, tus premios y cuánto falta para el próximo bono. Solo lectura, sin planillas.",
+      "ficticio": "Datos de ejemplo: nadie de esta pantalla existe.",
+      "ventana": "Portal del referente",
+      "saludo": "Hola, Lucía Ejemplo",
+      "linkEtiqueta": "Tu link",
+      "linkValor": "worldteams.com/r/lucia-ejemplo",
+      "barraTitulo": "Camino al próximo bono",
+      "barraTexto": "{validados} de {hito} referidos validados este año. Bono de USD {bono}.",
+      "referidosTitulo": "Tus referidos",
+      "estados": { "validado": "Validado", "revision": "En revisión", "noAvanzo": "No avanzó" },
+      "referidos": [
+        { "nombre": "Valeria Ejemplo", "estado": "validado" },
+        { "nombre": "Tomás Muestra", "estado": "revision" },
+        { "nombre": "Nora Prueba", "estado": "validado" },
+        { "nombre": "Iván Demo", "estado": "noAvanzo" }
+      ],
+      "premiosTitulo": "Tus premios",
+      "pendiente": "Pendiente",
+      "pagado": "Pagado",
+      "corte": "Se paga el día {corte} de cada mes."
     },
     "faq": {
       "titulo": "Preguntas frecuentes",

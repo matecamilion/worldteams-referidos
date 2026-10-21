@@ -1,22 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
-import { config, montoPrioritarioUsd } from "@/lib/config";
+import { config } from "@/lib/config";
+import { calcularPremio, extraPrioritarioUsd } from "@/lib/premios";
 import { t } from "@/lib/i18n";
 
 const MAXIMO = 20;
-const extraPrioritarioUsd = montoPrioritarioUsd - config.montoBaseUsd;
 const usd = (n: number) => n.toLocaleString("es-AR");
-
-/** Estimación anual: base por validado, extra por prioritario y bonos de todos los hitos alcanzados. */
-function calcular(total: number, prioritarias: number) {
-  const base = total * config.montoBaseUsd;
-  const extra = prioritarias * extraPrioritarioUsd;
-  const alcanzados = config.hitos.filter((h) => total >= h.referidos);
-  const hitos = alcanzados.reduce((suma, h) => suma + h.bonoUsd, 0);
-  const proximo = config.hitos.find((h) => total < h.referidos);
-  return { base, extra, hitos, total: base + extra + hitos, proximo };
-}
 
 function Deslizador({
   id,
@@ -60,10 +50,10 @@ export function Calculadora() {
   const idPrioritarias = useId();
   const [total, setTotal] = useState(4);
   const [prioritarias, setPrioritarias] = useState(1);
-  const r = calcular(total, prioritarias);
+  const r = calcularPremio(total, prioritarias);
 
   return (
-    <div className="sobre-crema rounded-lg bg-crema p-5 text-verde shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] sm:p-7">
+    <div className="sobre-crema rounded-lg border border-verde/15 bg-white p-5 text-verde shadow-[0_24px_60px_-34px_rgba(20,45,43,0.5)] sm:p-7">
       <div className="grid gap-6">
         <Deslizador
           id={idTotal}
