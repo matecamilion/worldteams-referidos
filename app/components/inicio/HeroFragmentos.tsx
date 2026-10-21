@@ -7,11 +7,11 @@ import { cargarGsap, prefiereMovimientoReducido } from "@/lib/gsap";
 const fragmentos = es.inicio.hero.fragmentos;
 
 /**
- * Titular con el último fragmento rotando, con máscara de entrada por línea.
- * Solo el primer fragmento ocupa lugar; los demás esperan fuera de flujo, así que el alto es siempre el
+ * Titular con el último fragmento rotando, en secuencia: el actual sale (fundido y leve subida, 250 ms) y recién
+ * entonces entra el siguiente mientras el alto de la caja se anima hasta el suyo. Nunca hay dos visibles a la vez.
+ * Solo el primer fragmento ocupa lugar; los demás esperan ocultos y fuera de flujo, así que el alto es siempre el
  * del fragmento visible (sin hueco aunque otro sea más largo y se parta en dos líneas en móvil).
- * Al rotar, el alto se anima hasta el del fragmento que entra. Sin JS o con movimiento reducido queda
- * visible solo el primero; el texto completo va en el h1 accesible.
+ * Sin JS o con movimiento reducido queda visible solo el primero; el texto completo va en el h1 accesible.
  */
 export function HeroFragmentos() {
   const raiz = useRef<HTMLSpanElement>(null);
@@ -39,22 +39,25 @@ export function HeroFragmentos() {
       items.forEach((i) => observador.observe(i));
 
       const ctx = gsap.context(() => {
-        gsap.set(items.slice(1), { yPercent: 110, visibility: "visible" });
         const rotar = () => {
+          const saliente = items[actual];
           const siguiente = (actual + 1) % items.length;
+          const entrante = items[siguiente];
           el.style.height = `${altoDe(actual)}px`;
           animando = true;
           gsap
             .timeline({ onComplete: () => (animando = false) })
-            .to(items[actual], { yPercent: -110, duration: 0.7, ease: "power3.in" })
-            .fromTo(items[siguiente], { yPercent: 110 }, { yPercent: 0, duration: 0.8, ease: "power3.out" }, "-=0.1")
-            .to(el, { height: altoDe(siguiente), duration: 0.6, ease: "power3.inOut" }, "<");
+            .to(saliente, { opacity: 0, y: -10, duration: 0.25, ease: "power1.in" })
+            .set(saliente, { visibility: "hidden" })
+            .set(entrante, { visibility: "visible", opacity: 0, y: 10 })
+            .to(el, { height: altoDe(siguiente), duration: 0.45, ease: "power2.inOut" })
+            .to(entrante, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, "<0.1");
           actual = siguiente;
         };
         const programar = (segundos: number) => {
           llamada = gsap.delayedCall(segundos, () => {
             rotar();
-            programar(3.2);
+            programar(3.4);
           });
         };
         programar(2.6);
@@ -78,7 +81,7 @@ export function HeroFragmentos() {
         <span
           key={f}
           data-fragmento
-          className={`block will-change-transform ${i > 0 ? "invisible absolute inset-x-0 top-0 motion-reduce:hidden" : ""}`}
+          className={`block will-change-[transform,opacity] ${i > 0 ? "invisible absolute inset-x-0 top-0 motion-reduce:hidden" : ""}`}
         >
           {f}
         </span>

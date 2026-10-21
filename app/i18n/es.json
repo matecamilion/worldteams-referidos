@@ -33,7 +33,7 @@
       "pasos": [
         { "titulo": "Copiás tu link", "texto": "Cada referente tiene un link único. Se lo mandás a quien recomendás, por el canal que prefieras." },
         { "titulo": "La persona completa su perfil", "texto": "Carga ella misma sus datos y su CV. Nadie carga datos de terceros sin que lo sepan." },
-        { "titulo": "Se acredita tu premio", "texto": "Si el perfil cumple las reglas, queda validado al instante o pasa por una revisión breve, y lo ves en tu portal. Si hay dudas, lo revisa una persona de reclutamiento." }
+        { "titulo": "Se acredita tu premio", "texto": "Si el perfil cumple las reglas, queda validado al instante o pasa por una revisión breve. Lo ves en tu portal." }
       ],
       "celular": {
         "etiquetaFicticio": "Datos de ejemplo",

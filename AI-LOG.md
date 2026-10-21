@@ -29,4 +29,6 @@
 
 | Rendimiento del hero | Seguí optimizando Lighthouse móvil (difería la carga de GSAP/Lenis) hasta pasar de 90, sin mejora clara y con mediciones ruidosas | Pidió cerrar: el criterio de 90 era demasiado rígido y pasa a "sin regresiones graves"; la medición que vale es la del deploy. Revertí la optimización (decisión 43) |
 
+| Rotación del titular del hero | La salida y la entrada de las frases se animaban a la vez (máscara deslizante), así que por unos instantes se veían dos frases superpuestas; el paso 3 repetía la idea; los links largos de las maquetas los revisé solo con captura | Pidió secuencia (sale en ~250 ms y recién entonces entra la siguiente, con el alto animado, nunca dos visibles), el texto del paso 3 recortado y medir los links con código a 390 y 320 px. Quedó una prueba automática (`npm run test:e2e`) que se verificó contra el código viejo: ahí falla |
+
 <!-- Claude Code: agregá una fila cada vez que Mateo corrija o rechace algo que propongas. -->
