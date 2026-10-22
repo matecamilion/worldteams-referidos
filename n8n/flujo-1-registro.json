@@ -280,7 +280,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: 'WorldTeams Referidos <onboarding@resend.dev>', to: [$json.to], subject: $json.subject, html: $json.html }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: 'WorldTeams Referidos <referidos@mail.signa.net.ar>', to: [$json.to], subject: $json.subject, html: $json.html }) }}",
         "options": {
           "batching": {
             "batch": {
@@ -451,7 +451,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "167d4c06-090e-4b57-92f8-40b5ade3d0c2",
+  "versionId": "6b22cc12-a3d3-4779-a7e7-4e3624999909",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "redactado"

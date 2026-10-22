@@ -206,10 +206,171 @@
     }
   },
   "panel": {
-    "tituloPagina": "Panel de revisión",
-    "etiqueta": "Equipo de reclutamiento",
-    "titulo": "Panel de revisión",
-    "proximamente": "Próximamente: revisión de casos"
+    "tituloPagina": "Revisión · Panel de reclutamiento",
+    "tituloPaginaPool": "Talent pool · Panel de reclutamiento",
+    "navegacion": {
+      "etiqueta": "Secciones del panel",
+      "revision": "Revisión",
+      "pool": "Talent pool"
+    },
+    "cargando": "Cargando el panel…",
+    "metricas": {
+      "etiqueta": "Resumen",
+      "enRevision": "En revisión",
+      "vencidos": "Vencidos",
+      "pool": "Total en el pool",
+      "filtrados": "Coinciden con el filtro"
+    },
+    "errorSeccion": "No pudimos cargar esta sección. Es un problema de nuestro lado. Probá de nuevo en un momento.",
+    "cola": {
+      "titulo": "Cola de revisión",
+      "resumen": "{total} casos en revisión, los más antiguos primero.",
+      "resumen_uno": "1 caso en revisión.",
+      "parcial": "Mostrando los {mostrados} más antiguos de {total}.",
+      "vencidos": "{vencidos} superan el plazo de {plazo} días hábiles.",
+      "vencidos_uno": "1 supera el plazo de {plazo} días hábiles.",
+      "vacio": {
+        "titulo": "No hay casos para revisar",
+        "texto": "Cuando una regla mande un referido a revisión, aparece acá con su motivo."
+      },
+      "vencido": "Vencido",
+      "antiguedad": {
+        "hoy": "Entró hoy",
+        "uno": "Hace 1 día hábil",
+        "otros": "Hace {dias} días hábiles"
+      },
+      "plazoNota": "El plazo cuenta lunes a viernes y no considera feriados.",
+      "motivos": {
+        "etiqueta": "Motivos",
+        "posible_duplicado": "Posible duplicado: ya hay un candidato con el mismo nombre y apellido.",
+        "alerta_volumen": "Alerta de volumen: el referente cargó muchos referidos en pocos días.",
+        "perfil_incompleto": "Perfil incompleto: falta el CV."
+      },
+      "candidato": "Candidato",
+      "referente": "Referente",
+      "campos": {
+        "email": "Email",
+        "linkedin": "LinkedIn",
+        "especialidad": "Especialidad",
+        "revit": "Revit",
+        "seniority": "Seniority",
+        "ingles": "Inglés"
+      },
+      "linkedinAbrir": "Ver perfil",
+      "sinLinkedin": "Sin perfil válido",
+      "prioritario": "Perfil prioritario",
+      "cv": {
+        "ver": "Ver CV",
+        "nuevaPestana": "Se abre en una pestaña nueva",
+        "sin": "Sin CV"
+      }
+    },
+    "pool": {
+      "titulo": "Talent pool",
+      "ayuda": "Todos los candidatos, con el estado de su referido más reciente. Solo lectura.",
+      "buscar": {
+        "etiqueta": "Buscar por nombre, apellido o email",
+        "placeholder": "Ej.: ana paz",
+        "boton": "Buscar",
+        "limpiar": "Limpiar"
+      },
+      "filtro": {
+        "etiqueta": "Estado",
+        "todos": "Todos"
+      },
+      "resumen": "{total} candidatos. Mostrando del {desde} al {hasta}.",
+      "resumen_uno": "1 candidato.",
+      "vacio": {
+        "titulo": "No hay candidatos con esos filtros",
+        "texto": "Probá con otra búsqueda o quitá el filtro de estado."
+      },
+      "columnas": {
+        "candidato": "Candidato",
+        "email": "Email",
+        "especialidad": "Especialidad",
+        "estado": "Estado",
+        "referente": "Referente",
+        "ingreso": "Ingreso"
+      },
+      "directo": "Directo",
+      "sinReferente": "Sin referente",
+      "paginacion": {
+        "etiqueta": "Paginación del talent pool",
+        "anterior": "Anterior",
+        "siguiente": "Siguiente",
+        "pagina": "Página {pagina} de {total}"
+      }
+    },
+    "estados": {
+      "registrado": "Registrado",
+      "en_revision": "En revisión",
+      "validado": "Validado",
+      "rechazado": "Rechazado",
+      "descartado": "Ya estaba en el pool"
+    },
+    "especialidades": {
+      "arquitectura": "Arquitectura",
+      "ingenieria": "Ingeniería"
+    },
+    "seniorities": {
+      "junior": "Junior",
+      "semi_senior": "Semi senior",
+      "senior": "Senior"
+    },
+    "ingles": {
+      "basico": "Básico",
+      "intermedio": "Intermedio",
+      "avanzado": "Avanzado",
+      "nativo": "Nativo"
+    },
+    "acciones": {
+      "aprobar": {
+        "boton": "Aprobar",
+        "titulo": "¿Aprobar a {nombre}?",
+        "texto": "El caso pasa a validado y se generan los pagos del referente. No se puede deshacer.",
+        "confirmar": "Sí, aprobar"
+      },
+      "rechazar": {
+        "boton": "Rechazar",
+        "titulo": "¿Rechazar a {nombre}?",
+        "texto": "El caso pasa a rechazado y no genera pagos. Después se puede reabrir desde el talent pool.",
+        "confirmar": "Sí, rechazar",
+        "motivo": "Motivo (opcional)",
+        "motivoAyuda": "Queda en el historial del caso."
+      },
+      "reabrir": {
+        "boton": "Reabrir",
+        "titulo": "¿Reabrir a {nombre}?",
+        "texto": "El caso vuelve a la cola de revisión, con los mismos motivos con que entró.",
+        "confirmar": "Reabrir caso",
+        "motivo": "Motivo de la reapertura",
+        "motivoAyuda": "Es obligatorio y queda en el historial del caso."
+      },
+      "cancelar": "Cancelar",
+      "guardando": "Guardando…",
+      "cerrarAviso": "Cerrar aviso",
+      "errores": {
+        "sin_permiso": "Tu cuenta no tiene permiso para resolver casos. Si creés que es un error, avisale al equipo.",
+        "motivo_requerido": "Escribí el motivo para reabrir el caso.",
+        "motivo_demasiado_largo": "El motivo admite hasta 500 caracteres.",
+        "ya_resuelto": "Otra persona ya resolvió este caso. Actualizamos la lista.",
+        "estado_invalido": "El caso ya no está en el estado que esperábamos, así que no se aplicó el cambio. Actualizamos la lista.",
+        "referido_inexistente": "No encontramos este caso. Actualizamos la lista.",
+        "generico": "No pudimos guardar el cambio. Es un problema de nuestro lado. Probá de nuevo en un momento."
+      },
+      "avisos": {
+        "aprobado": "Caso aprobado.",
+        "aprobado_monto": "Caso aprobado. Se generó el pago de USD {monto}.",
+        "aprobado_sin_pago": "Caso aprobado, pero el referente tiene una sanción: no se generó ningún pago.",
+        "rechazado": "Caso rechazado.",
+        "reabierto": "Caso reabierto. Volvió a la cola de revisión.",
+        "ya_resuelto": "Otra persona ya resolvió este caso. Actualizamos la lista.",
+        "estado_invalido": "El caso ya no estaba en el estado esperado, así que no se aplicó el cambio.",
+        "referido_inexistente": "No encontramos ese caso."
+      }
+    },
+    "si": "Sí",
+    "no": "No"
   },
   "candidato": {
     "tituloPagina": "Te recomendaron para WorldTeams",

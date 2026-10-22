@@ -36,4 +36,6 @@
 | Vistas `UNRESTRICTED` en Supabase | Alerté que `v_mis_referidos` y `v_progreso_referente` estaban expuestas | Era diseño: corren con permisos del dueño, filtran por `referente_actual_id()` y los tests prueban el aislamiento (decisión 56) |
 | Función `registrar_referido`: primera versión | Concatené el texto de los motivos al array con el operador de concatenación (dos barras verticales) y un literal sin tipo; falló en la base real con `malformed array literal` (22P02) en el primer caso de revisión. Después, al re-correr, el error siguió porque la base tenía la función vieja sin re-aplicar | Reportó el error con el mensaje exacto; se cambió a `array_append` y se re-aplicó el archivo antes de volver a correr. Los tests pasaron (decisiones 51 y 58) |
 
+| Cómo resolver un caso fuera del panel | Con la decisión 18 como respaldo, propuse un mail diario con botones Aprobar/Rechazar por caso | Lo corrigió: no escala (con 500 candidatos por mes, el volumen de revisiones llenaría la casilla de mails con un botón por caso, sin control de permisos propio ni estado compartido). La resolución pasa a una función de la base ejecutada desde el panel con la sesión del revisor (decisiones 63 a 66) |
+
 <!-- Claude Code: agregá una fila cada vez que Mateo corrija o rechace algo que propongas. -->

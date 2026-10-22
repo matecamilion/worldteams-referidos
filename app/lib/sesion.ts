@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { decidirRol, resolverAcceso, type Rol, type RolRequerido } from "./roles";
 import { crearClienteSesion, supabaseConfigurado, type ClienteSesion } from "./supabase-sesion";
 
@@ -14,7 +15,7 @@ export type Sesion =
  * Quién es y qué rol tiene, comprobado en el servidor: `getUser()` valida el token con Auth (no confía en la cookie)
  * y el rol sale de funciones y filas que la propia RLS le deja ver a esa persona.
  */
-export async function leerSesion(): Promise<Sesion> {
+async function resolverSesion(): Promise<Sesion> {
   if (!supabaseConfigurado()) return { tipo: "no_disponible" };
   // Fuera del try: `cookies()` marca la página como dinámica lanzando una señal que no hay que atrapar.
   const supabase = await crearClienteSesion();
@@ -60,6 +61,9 @@ export async function leerSesion(): Promise<Sesion> {
     return { tipo: "error" };
   }
 }
+
+/** Memorizada por pedido: el layout del panel y la página llaman a `exigirRol` y la sesión se resuelve una sola vez. */
+export const leerSesion = cache(resolverSesion);
 
 export type AccesoRuta =
   | { estado: "mostrar"; sesion: Extract<Sesion, { tipo: "activa" }> }

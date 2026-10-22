@@ -1,5 +1,5 @@
 -- =====================================================================
--- tests.sql — Pruebas del esquema (se corren después de schema.sql y seed.sql)
+-- tests.sql — Pruebas del esquema (se corren después de schema.sql, seed.sql, registrar_referido.sql y panel_resolver.sql)
 --
 -- Todo ocurre dentro de una transacción que termina en ROLLBACK: no deja datos.
 -- Cada prueba registra OK / FALLA; el resultado final es una tabla con el resumen arriba.
@@ -182,7 +182,7 @@ begin
     format($q$update public.referidos set estado = 'rechazado' where id = %L$q$, r2), 'transicion_invalida');
   perform public.cambiar_estado_referido(r2, 'en_revision', 'sistema', null, 'perfil incompleto', array['perfil_incompleto']);
   perform public.cambiar_estado_referido(r2, 'rechazado', 'reclutamiento', null, 'no cumple');
-  perform pg_temp.espera_error('referido: un estado final no cambia (rechazado -> validado)',
+  perform pg_temp.espera_error('referido: rechazado solo se reabre a en_revision; rechazado -> validado sigue prohibido (decisión 63)',
     format($q$update public.referidos set estado = 'validado' where id = %L$q$, r2), 'transicion_invalida');
 
   r3 := pg_temp.referido_validado(ra, 'c4');
@@ -1123,6 +1123,238 @@ begin
   perform pg_temp.registrar('registrar_referido j: no es SECURITY DEFINER y fija search_path = public, pg_temp',
     (select not prosecdef and exists (select 1 from unnest(proconfig) c where c like 'search_path=%public%pg_temp%')
        from pg_proc where oid = v_sig));
+end $$;
+
+-- ---------------------------------------------------------------------
+-- 10. Resolución desde el panel: reapertura y resolver_referido (decisiones 63 a 66; panel_resolver.sql)
+-- ---------------------------------------------------------------------
+-- Ejecuta resolver_referido como una persona con sesión (rol authenticated y email en el JWT) y devuelve el
+-- resultado, o {"error": "<mensaje>"} si falló. El rol vuelve a postgres antes de salir.
+create function pg_temp.resolver_como(p_email text, p_referido uuid, p_decision text, p_motivo text default null) returns jsonb
+language plpgsql as $$
+declare v jsonb;
+begin
+  perform set_config('request.jwt.claims', json_build_object('sub', gen_random_uuid(), 'email', p_email, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  begin
+    v := public.resolver_referido(p_referido, p_decision, p_motivo);
+  exception when others then
+    v := jsonb_build_object('error', sqlerrm);
+  end;
+  execute 'reset role';
+  return v;
+end $$;
+
+-- Cuántos movimientos y qué suma tiene un referido (para comprobar que no se duplican ni se tocan).
+create function pg_temp.pagos_de(p_referido uuid) returns text
+language sql as $$
+  select count(*) || ' mov / ' || coalesce(sum(monto_usd), 0) || ' USD / ' || coalesce(string_agg(distinct estado::text, ','), '-')
+    from public.movimientos_pago where referido_id = p_referido $$;
+
+do $$
+declare
+  ra uuid; rs uuid; rev uuid; rev_baja uuid;
+  c_pri uuid; c_norm uuid; c_rech uuid; c_reab uuid; c_reg uuid; c_desc uuid; c_san uuid; c_largo uuid; c_ref uuid; c_perm uuid;
+  v jsonb; v_antes text; v_motivos text[]; v_msg text;
+begin
+  insert into public.equipo_reclutamiento (email, nombre) values ('res-rev@t.com', 'Revisor Resolver') returning id into rev;
+  insert into public.equipo_reclutamiento (email, nombre, activo) values ('res-baja@t.com', 'Revisor de baja', false) returning id into rev_baja;
+  ra := pg_temp.nuevo_referente('Resa', 'resa@t.com');
+  rs := pg_temp.nuevo_referente('Ress', 'ress@t.com');
+
+  -- Casos en revisión (con motivos de revisión que no deben pisarse).
+  c_pri := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-pri@t.com', true));
+  perform public.cambiar_estado_referido(c_pri, 'en_revision', 'sistema', null, null, array['posible_duplicado', 'alerta_volumen']);
+  c_norm := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-norm@t.com'));
+  perform public.cambiar_estado_referido(c_norm, 'en_revision', 'sistema', null, null, array['perfil_incompleto']);
+
+  -- 10.1 Transiciones de la base (nivel trigger).
+  c_rech := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-rech@t.com'));
+  perform public.cambiar_estado_referido(c_rech, 'en_revision');
+  perform public.cambiar_estado_referido(c_rech, 'rechazado');
+  update public.referidos set estado = 'en_revision' where id = c_rech;
+  perform pg_temp.registrar('reapertura (trigger): rechazado -> en_revision está permitido',
+    (select estado = 'en_revision' and validado_en is null from public.referidos where id = c_rech));
+  perform public.cambiar_estado_referido(c_rech, 'rechazado');
+  perform pg_temp.espera_error('reapertura (trigger): rechazado -> validado sigue prohibido',
+    format($q$update public.referidos set estado = 'validado' where id = %L$q$, c_rech), 'transicion_invalida');
+  perform pg_temp.espera_error('reapertura (trigger): rechazado -> registrado sigue prohibido',
+    format($q$update public.referidos set estado = 'registrado' where id = %L$q$, c_rech), 'transicion_invalida');
+  perform pg_temp.espera_error('reapertura (trigger): rechazado -> descartado sigue prohibido',
+    format($q$update public.referidos set estado = 'descartado' where id = %L$q$, c_rech), 'transicion_invalida');
+  perform pg_temp.espera_error('reapertura (trigger): registrado -> rechazado sigue prohibido',
+    format($q$update public.referidos set estado = 'rechazado' where id = %L$q$, pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-t1@t.com'))), 'transicion_invalida');
+
+  -- 10.2 Aprobar: prioritario (100 = 50 base + 50 extra), con actor y revisor en el historial.
+  v := pg_temp.resolver_como(' RES-REV@t.com ', c_pri, 'aprobar');
+  perform pg_temp.registrar('resolver aprobar: queda validado, devuelve estado, referido_id y monto 100 sin sin_pago',
+    v ->> 'estado' = 'validado' and (v ->> 'referido_id')::uuid = c_pri and (v ->> 'monto_usd')::numeric = 100 and (v ->> 'sin_pago')::boolean = false
+    and (select estado = 'validado' and validado_en is not null from public.referidos where id = c_pri), v::text);
+  perform pg_temp.registrar('resolver aprobar: crea los pagos por el trigger (base 50 + extra 50, pendientes)',
+    (select count(*) = 2 and sum(monto_usd) = 100 and bool_and(estado = 'pendiente')
+        and bool_or(concepto = 'base' and monto_usd = 50) and bool_or(concepto = 'extra_prioritario' and monto_usd = 50)
+       from public.movimientos_pago where referido_id = c_pri), pg_temp.pagos_de(c_pri));
+  perform pg_temp.registrar('resolver aprobar: el historial registra actor reclutamiento y el id del revisor (email en otro formato)',
+    (select count(*) = 1 from public.historial_estados
+      where referido_id = c_pri and estado_anterior = 'en_revision' and estado_nuevo = 'validado' and actor_tipo = 'reclutamiento' and actor_id = rev));
+  perform pg_temp.registrar('resolver aprobar: no pisa motivos_revision',
+    (select motivos_revision = array['posible_duplicado', 'alerta_volumen'] from public.referidos where id = c_pri));
+
+  -- Aprobar uno común: 50.
+  v := pg_temp.resolver_como('res-rev@t.com', c_norm, 'aprobar');
+  perform pg_temp.registrar('resolver aprobar: un caso común paga 50',
+    (v ->> 'monto_usd')::numeric = 50 and pg_temp.pagos_de(c_norm) like '1 mov / 50%', v::text);
+
+  -- 10.3 Resolver dos veces no duplica pagos.
+  v_antes := pg_temp.pagos_de(c_pri);
+  v := pg_temp.resolver_como('res-rev@t.com', c_pri, 'aprobar');
+  perform pg_temp.registrar('resolver dos veces: la segunda da ya_resuelto y no duplica pagos',
+    v ->> 'error' like 'ya_resuelto%' and pg_temp.pagos_de(c_pri) = v_antes, v::text || ' / ' || pg_temp.pagos_de(c_pri));
+  v := pg_temp.resolver_como('res-rev@t.com', c_pri, 'rechazar');
+  perform pg_temp.registrar('resolver: rechazar un validado da ya_resuelto y no cambia nada',
+    v ->> 'error' like 'ya_resuelto%' and pg_temp.pagos_de(c_pri) = v_antes
+    and (select estado = 'validado' from public.referidos where id = c_pri), v::text);
+
+  -- 10.4 Rechazar: sin pagos, con motivo opcional.
+  c_reab := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-reab@t.com'));
+  perform public.cambiar_estado_referido(c_reab, 'en_revision', 'sistema', null, null, array['perfil_incompleto']);
+  v := pg_temp.resolver_como('res-rev@t.com', c_reab, 'rechazar', '  No cumple el perfil  ');
+  perform pg_temp.registrar('resolver rechazar: queda rechazado, sin pagos, monto nulo y sin sin_pago',
+    v ->> 'estado' = 'rechazado' and v -> 'monto_usd' = 'null'::jsonb and (v ->> 'sin_pago')::boolean = false
+    and pg_temp.pagos_de(c_reab) like '0 mov%', v::text);
+  perform pg_temp.registrar('resolver rechazar: el historial guarda actor, revisor y el motivo recortado',
+    (select count(*) = 1 from public.historial_estados
+      where referido_id = c_reab and estado_nuevo = 'rechazado' and actor_tipo = 'reclutamiento' and actor_id = rev and motivo = 'No cumple el perfil'));
+  c_ref := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-sinmot@t.com'));
+  perform public.cambiar_estado_referido(c_ref, 'en_revision', 'sistema', null, null, array['alerta_volumen']);
+  v := pg_temp.resolver_como('res-rev@t.com', c_ref, 'rechazar');
+  perform pg_temp.registrar('resolver rechazar: el motivo es opcional', v ->> 'estado' = 'rechazado', v::text);
+
+  -- 10.5 Reabrir: motivo obligatorio.
+  v_motivos := (select motivos_revision from public.referidos where id = c_reab);
+  v := pg_temp.resolver_como('res-rev@t.com', c_reab, 'reabrir');
+  perform pg_temp.registrar('resolver reabrir: sin motivo falla (motivo_requerido) y no cambia el estado',
+    v ->> 'error' like 'motivo_requerido%' and (select estado = 'rechazado' from public.referidos where id = c_reab), v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_reab, 'reabrir', '   ');
+  perform pg_temp.registrar('resolver reabrir: un motivo en blanco cuenta como vacío',
+    v ->> 'error' like 'motivo_requerido%' and (select estado = 'rechazado' from public.referidos where id = c_reab), v::text);
+
+  -- 10.6 Reabrir un rechazado y aprobarlo después.
+  v := pg_temp.resolver_como('res-rev@t.com', c_reab, 'reabrir', 'Llegó el CV que faltaba');
+  perform pg_temp.registrar('resolver reabrir: el rechazado vuelve a en_revision con motivos_revision intactos y sin pagos',
+    v ->> 'estado' = 'en_revision'
+    and (select estado = 'en_revision' and motivos_revision = v_motivos and validado_en is null from public.referidos where id = c_reab)
+    and pg_temp.pagos_de(c_reab) like '0 mov%', v::text);
+  perform pg_temp.registrar('resolver reabrir: el historial guarda rechazado -> en_revision con actor, revisor y motivo',
+    (select count(*) = 1 from public.historial_estados
+      where referido_id = c_reab and estado_anterior = 'rechazado' and estado_nuevo = 'en_revision'
+        and actor_tipo = 'reclutamiento' and actor_id = rev and motivo = 'Llegó el CV que faltaba'));
+  v := pg_temp.resolver_como('res-rev@t.com', c_reab, 'reabrir', 'otra vez');
+  perform pg_temp.registrar('resolver reabrir: un caso que ya está en revisión da estado_invalido', v ->> 'error' like 'estado_invalido%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_reab, 'aprobar');
+  perform pg_temp.registrar('resolver: el reabierto se aprueba y paga 50 una sola vez',
+    v ->> 'estado' = 'validado' and (v ->> 'monto_usd')::numeric = 50 and pg_temp.pagos_de(c_reab) like '1 mov / 50%',
+    v::text || ' / ' || pg_temp.pagos_de(c_reab));
+  perform pg_temp.registrar('resolver: el historial completo del reabierto tiene los 5 pasos en orden',
+    (select string_agg(coalesce(estado_anterior::text, 'alta') || '>' || estado_nuevo, ' ' order by id) =
+            'alta>registrado registrado>en_revision en_revision>rechazado rechazado>en_revision en_revision>validado'
+       from public.historial_estados where referido_id = c_reab));
+
+  -- 10.7 Un validado no se reabre, ni por la función ni por la base, y sus pagos no se tocan.
+  v_antes := pg_temp.pagos_de(c_pri);
+  v := pg_temp.resolver_como('res-rev@t.com', c_pri, 'reabrir', 'me arrepentí');
+  perform pg_temp.registrar('resolver reabrir: un validado da estado_invalido y no toca los pagos',
+    v ->> 'error' like 'estado_invalido%' and pg_temp.pagos_de(c_pri) = v_antes
+    and (select estado = 'validado' from public.referidos where id = c_pri), v::text);
+  perform pg_temp.espera_error('reapertura (trigger): validado -> en_revision da transicion_invalida',
+    format($q$update public.referidos set estado = 'en_revision' where id = %L$q$, c_pri), 'transicion_invalida');
+  perform pg_temp.registrar('reapertura (trigger): tras el intento los pagos del validado siguen iguales',
+    pg_temp.pagos_de(c_pri) = v_antes and (select estado = 'validado' from public.referidos where id = c_pri));
+
+  -- 10.8 Estados que no se resuelven y entradas inválidas.
+  c_reg := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-reg@t.com'));
+  insert into public.referidos (referente_id, candidato_id, estado, motivos_revision)
+    values (ra, pg_temp.nuevo_candidato('res-desc@t.com'), 'descartado', array['duplicado']) returning id into c_desc;
+  v := pg_temp.resolver_como('res-rev@t.com', c_reg, 'aprobar');
+  perform pg_temp.registrar('resolver: aprobar un registrado da estado_invalido', v ->> 'error' like 'estado_invalido%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_reg, 'rechazar');
+  perform pg_temp.registrar('resolver: rechazar un registrado da estado_invalido', v ->> 'error' like 'estado_invalido%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_desc, 'aprobar');
+  perform pg_temp.registrar('resolver: aprobar un descartado da estado_invalido', v ->> 'error' like 'estado_invalido%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_desc, 'reabrir', 'probar');
+  perform pg_temp.registrar('resolver: reabrir un descartado da estado_invalido', v ->> 'error' like 'estado_invalido%', v::text);
+  perform pg_temp.registrar('resolver: los registrados y descartados no cambiaron',
+    (select count(*) = 2 from public.referidos where id in (c_reg, c_desc) and estado in ('registrado', 'descartado')));
+  v := pg_temp.resolver_como('res-rev@t.com', c_reab, 'rechazar');
+  perform pg_temp.registrar('resolver: rechazar uno ya validado da ya_resuelto', v ->> 'error' like 'ya_resuelto%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_ref, 'aprobar');
+  perform pg_temp.registrar('resolver: aprobar uno ya rechazado da ya_resuelto', v ->> 'error' like 'ya_resuelto%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_norm, 'borrar');
+  perform pg_temp.registrar('resolver: una decisión desconocida da decision_invalida', v ->> 'error' like 'decision_invalida%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', null, 'aprobar');
+  perform pg_temp.registrar('resolver: un id nulo da referido_inexistente', v ->> 'error' like 'referido_inexistente%', v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', gen_random_uuid(), 'aprobar');
+  perform pg_temp.registrar('resolver: un id que no existe da referido_inexistente', v ->> 'error' like 'referido_inexistente%', v::text);
+  c_largo := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-largo@t.com'));
+  perform public.cambiar_estado_referido(c_largo, 'en_revision');
+  v := pg_temp.resolver_como('res-rev@t.com', c_largo, 'rechazar', repeat('x', 501));
+  perform pg_temp.registrar('resolver: un motivo de más de 500 caracteres da motivo_demasiado_largo y no cambia nada',
+    v ->> 'error' like 'motivo_demasiado_largo%' and (select estado = 'en_revision' from public.referidos where id = c_largo), v::text);
+  v := pg_temp.resolver_como('res-rev@t.com', c_largo, 'rechazar', repeat('x', 500));
+  perform pg_temp.registrar('resolver: un motivo de exactamente 500 caracteres se acepta', v ->> 'estado' = 'rechazado', v::text);
+
+  -- 10.9 Permisos: la base decide, no el botón.
+  c_perm := pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('res-perm@t.com'));
+  perform public.cambiar_estado_referido(c_perm, 'en_revision');
+  v := pg_temp.resolver_como('resa@t.com', c_perm, 'aprobar');
+  perform pg_temp.registrar('resolver permisos: un referente con sesión recibe sin_permiso y el caso no cambia',
+    v ->> 'error' like 'sin_permiso%' and (select estado = 'en_revision' from public.referidos where id = c_perm)
+    and pg_temp.pagos_de(c_perm) like '0 mov%', v::text);
+  v := pg_temp.resolver_como('nadie@t.com', c_perm, 'rechazar');
+  perform pg_temp.registrar('resolver permisos: un usuario sin vínculo recibe sin_permiso', v ->> 'error' like 'sin_permiso%', v::text);
+  v := pg_temp.resolver_como('res-baja@t.com', c_perm, 'aprobar');
+  perform pg_temp.registrar('resolver permisos: una persona de reclutamiento dada de baja recibe sin_permiso', v ->> 'error' like 'sin_permiso%', v::text);
+  v := pg_temp.resolver_como('', c_perm, 'aprobar');
+  perform pg_temp.registrar('resolver permisos: una sesión sin email recibe sin_permiso', v ->> 'error' like 'sin_permiso%', v::text);
+  v := pg_temp.resolver_como('res-baja@t.com', gen_random_uuid(), 'aprobar');
+  perform pg_temp.registrar('resolver permisos: sin permiso no se revela si el referido existe (mismo error)', v ->> 'error' like 'sin_permiso%', v::text);
+  perform pg_temp.registrar('resolver permisos: tras los intentos sin permiso el caso sigue en revisión',
+    (select estado = 'en_revision' from public.referidos where id = c_perm));
+
+  perform set_config('request.jwt.claims', '', true);
+  execute 'set local role anon';
+  begin perform public.resolver_referido(c_perm, 'aprobar'); v_msg := null;
+  exception when others then v_msg := sqlerrm; end;
+  execute 'reset role';
+  perform pg_temp.registrar('resolver permisos: anon no puede ejecutarla (permission denied) y el caso no cambia',
+    v_msg ilike '%permission denied%' and (select estado = 'en_revision' from public.referidos where id = c_perm), v_msg);
+  execute 'set local role service_role';
+  begin perform public.resolver_referido(c_perm, 'aprobar'); v_msg := null;
+  exception when others then v_msg := sqlerrm; end;
+  execute 'reset role';
+  perform pg_temp.registrar('resolver permisos: la service role tampoco puede ejecutarla', v_msg ilike '%permission denied%', v_msg);
+
+  perform pg_temp.registrar('resolver permisos: privilegios: authenticated sí; anon, service_role y public no',
+    has_function_privilege('authenticated', 'public.resolver_referido(uuid, text, text)', 'execute')
+    and not has_function_privilege('anon', 'public.resolver_referido(uuid, text, text)', 'execute')
+    and not has_function_privilege('service_role', 'public.resolver_referido(uuid, text, text)', 'execute')
+    and not exists (select 1 from pg_proc p, aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+                     where p.oid = 'public.resolver_referido(uuid, text, text)'::regprocedure and a.grantee = 0 and a.privilege_type = 'EXECUTE'));
+  perform pg_temp.registrar('resolver: es SECURITY DEFINER y fija search_path = public, pg_temp',
+    (select prosecdef and exists (select 1 from unnest(proconfig) c where c like 'search_path=%public%pg_temp%')
+       from pg_proc where oid = 'public.resolver_referido(uuid, text, text)'::regprocedure));
+  -- La única puerta para quien tiene sesión es resolver_referido: las funciones de negocio siguen cerradas.
+  perform pg_temp.registrar('resolver: authenticated sigue sin poder llamar a cambiar_estado_referido directamente',
+    not has_function_privilege('authenticated', 'public.cambiar_estado_referido(uuid, public.tipo_estado_referido, public.tipo_actor, uuid, text, text[])', 'execute'));
+
+  -- 10.10 Referente sancionado (decisión 39): se valida, pero no se genera ningún pago.
+  c_san := pg_temp.nuevo_referido(rs, pg_temp.nuevo_candidato('res-san@t.com', true));
+  perform public.cambiar_estado_referido(c_san, 'en_revision', 'sistema', null, null, array['alerta_volumen']);
+  perform public.sancionar_referente(rs);
+  v := pg_temp.resolver_como('res-rev@t.com', c_san, 'aprobar');
+  perform pg_temp.registrar('resolver sancionado: aprobar valida, devuelve sin_pago = true, monto 0 y no crea movimientos',
+    v ->> 'estado' = 'validado' and (v ->> 'sin_pago')::boolean and (v ->> 'monto_usd')::numeric = 0
+    and pg_temp.pagos_de(c_san) like '0 mov%' and (select estado = 'validado' from public.referidos where id = c_san), v::text);
 end $$;
 
 -- Resultado: el resumen primero y después cada prueba.

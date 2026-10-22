@@ -18,7 +18,7 @@
 create type public.tipo_especialidad  as enum ('arquitectura', 'ingenieria');
 create type public.tipo_seniority     as enum ('junior', 'semi_senior', 'senior');
 create type public.tipo_nivel_ingles  as enum ('basico', 'intermedio', 'avanzado', 'nativo');
--- Estados del referido (decisión 15 y especificación): inicio -> descartado | registrado;
+-- Estados del referido (decisión 15 y especificación; rechazado -> en_revision se agrega en panel_resolver.sql, decisión 63): inicio -> descartado | registrado;
 -- registrado -> validado | en_revision; en_revision -> validado | rechazado. Finales: validado, rechazado, descartado.
 create type public.tipo_estado_referido as enum ('registrado', 'validado', 'en_revision', 'rechazado', 'descartado');
 create type public.tipo_actor         as enum ('sistema', 'reclutamiento');

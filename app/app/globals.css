@@ -12,6 +12,8 @@
   --color-tinta-suave: #4a5f5b;
   --color-borde: #7a8e89;
   --color-error: #b3261e;
+  /* Único tono nuevo del panel: casos vencidos y rechazados. */
+  --color-alerta: #ff9f7a;
 
   --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
