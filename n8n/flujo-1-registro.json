@@ -1,0 +1,462 @@
+{
+  "name": "WT Flujo 1 - Registro de referido",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "registro-referido",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a8a16b57-6220-4392-8249-7a983beda086",
+      "name": "Webhook registro",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        144,
+        96
+      ],
+      "webhookId": "wt-registro-referido",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OUQUB6Qi1Cp0po3g",
+          "name": "WT Webhook Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Normalizaciones mínimas. es_prioritario NO se calcula acá: lo calcula la base (columna generada).\nconst b = $json.body ?? {};\nconst t = (v) => String(v ?? '').trim();\nif (!$input.item.binary?.cv) throw new Error('Falta el archivo cv');\n// UUID v4 sin require('crypto') (bloqueado en n8n Cloud). Solo nombra el archivo: el bucket es privado.\nconst uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {\n  const r = Math.floor(Math.random() * 16);\n  return (c === 'x' ? r : (r & 3) | 8).toString(16);\n});\nconst usaRevit = t(b.usa_revit).toLowerCase();\nreturn {\n  json: {\n    codigo: t(b.codigo_referente).toLowerCase(),\n    nombre: t(b.nombre),\n    apellido: t(b.apellido),\n    email: t(b.email).toLowerCase(),\n    linkedin_url: t(b.linkedin_url),\n    especialidad: t(b.especialidad),\n    usa_revit: usaRevit === 'si' || usaRevit === 'true',\n    seniority: t(b.seniority),\n    nivel_ingles: t(b.nivel_ingles),\n    acepto_visibilidad: t(b.acepto_visibilidad) === 'true',\n    cv_ruta: uuid + '.pdf',\n  },\n  binary: $input.item.binary,\n};"
+      },
+      "id": "def32c1f-59ad-4074-b582-30cbf9f1af2a",
+      "name": "Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://wvesxhttltaorgtjvieo.supabase.co/storage/v1/object/cvs/{{ $json.cv_ruta }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/pdf"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "cv",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "c2ef19eb-4fa4-4f5b-a874-0e9662a85c68",
+      "name": "Subir CV",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        96
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "cK4dgqT7iuJkp9jI",
+          "name": "WT Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://wvesxhttltaorgtjvieo.supabase.co/rest/v1/rpc/registrar_referido",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const p = $('Preparar').first().json; return JSON.stringify({ p_codigo: p.codigo, p_nombre: p.nombre, p_apellido: p.apellido, p_email: p.email, p_linkedin_url: p.linkedin_url, p_especialidad: p.especialidad, p_usa_revit: p.usa_revit, p_seniority: p.seniority, p_nivel_ingles: p.nivel_ingles, p_acepto_visibilidad: p.acepto_visibilidad, p_cv_url: p.cv_ruta }); })() }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "ee094112-20c1-4a05-adb2-0fc798905718",
+      "name": "Registrar referido",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        816,
+        96
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "cK4dgqT7iuJkp9jI",
+          "name": "WT Supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ ['registrado', 'ya_registrado', 'codigo_invalido', 'autorreferido'].includes($json.resultado) }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "236500bf-7ee2-458e-9832-3d5d4242910b",
+      "name": "¿Respondió la función?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Traduce el resultado de la función a lo que entiende la app y decide qué hacer con el CV.\nconst r = $json;\nconst prep = $('Preparar').first().json;\nconst registradoNuevo = r.resultado === 'registrado' && r.repetido !== true;\nreturn {\n  json: {\n    ...r,\n    // La función devuelve \"autorreferido\"; la app solo conoce registrado | ya_registrado | codigo_invalido.\n    resultado_app: r.resultado === 'autorreferido' ? 'ya_registrado' : r.resultado,\n    borrar_cv: !registradoNuevo,\n    cv_ruta: prep.cv_ruta,\n  },\n};"
+      },
+      "id": "985969c5-b43e-49ad-b9ca-52d3d299dd6e",
+      "name": "Normalizar resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.borrar_cv }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "d8958b66-4cf4-419f-8f50-b82c90405c1d",
+      "name": "¿Borrar CV?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://wvesxhttltaorgtjvieo.supabase.co/storage/v1/object/cvs/{{ $('Normalizar resultado').first().json.cv_ruta }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "6e13b32c-72d7-4c0c-8bc2-9497991025d4",
+      "name": "Borrar CV huérfano",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1696,
+        -112
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "cK4dgqT7iuJkp9jI",
+          "name": "WT Supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ resultado: $('Normalizar resultado').first().json.resultado_app }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "5444d57d-f7b8-408c-a1df-43fe0efbaa5e",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1904,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ resultado: 'error' }) }}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "9ac623bd-4697-4f2b-9714-784b0cbf7921",
+      "name": "Responder error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://wvesxhttltaorgtjvieo.supabase.co/rest/v1/configuracion",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "clave",
+              "value": "eq.plazo_respuesta_candidato_dias_habiles"
+            },
+            {
+              "name": "select",
+              "value": "valor"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "7dfcf0a0-6c46-410f-b379-20a270c92bad",
+      "name": "Leer plazo de respuesta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2128,
+        -16
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "cK4dgqT7iuJkp9jI",
+          "name": "WT Supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Arma los mails (0 a 2). Todo lo que se muestra sale del JSON de la función; no se recalcula nada.\nconst SITIO = 'https://worldteams-referidos.vercel.app';\nconst C = { verde: '#142d2b', lima: '#d0ef76', crema: '#fff7f3', suave: '#4a5f5b' };\nconst esc = (s) => String(s ?? '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst usd = (n) => 'USD ' + Number(n).toFixed(2).replace(/\\.00$/, '');\nconst plantilla = (titulo, parrafos, boton) =>\n  '<!doctype html><html lang=\"es\"><body style=\"margin:0;background:' + C.crema + ';font-family:Arial,Helvetica,sans-serif;color:' + C.verde + '\">' +\n  '<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:' + C.crema + '\"><tr><td align=\"center\" style=\"padding:24px 12px\">' +\n  '<table role=\"presentation\" width=\"560\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:560px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden\">' +\n  '<tr><td style=\"background:' + C.verde + ';padding:20px 28px;color:' + C.lima + ';font-size:18px;font-weight:bold\">WorldTeams · Programa de referidos</td></tr>' +\n  '<tr><td style=\"padding:28px\"><h1 style=\"margin:0 0 16px;font-size:22px;color:' + C.verde + '\">' + titulo + '</h1>' +\n  parrafos.map((p) => '<p style=\"margin:0 0 14px;font-size:16px;line-height:1.5\">' + p + '</p>').join('') +\n  (boton ? '<p style=\"margin:20px 0 0\"><a href=\"' + boton.url + '\" style=\"display:inline-block;background:' + C.lima + ';color:' + C.verde + ';text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:8px\">' + boton.texto + '</a></p>' : '') +\n  '</td></tr><tr><td style=\"padding:16px 28px;background:' + C.crema + ';font-size:12px;color:' + C.suave + '\">Mensaje automático del programa de referidos de WorldTeams.</td></tr>' +\n  '</table></td></tr></table></body></html>';\n\nconst r = $('Normalizar resultado').first().json;\n// El plazo sale de configuracion (nada hardcodeado); si la lectura falló, se usa un texto sin número.\nconst dias = Number($input.first()?.json?.valor);\nconst plazo = Number.isFinite(dias) && dias > 0 ? 'en hasta ' + dias + ' días hábiles' : 'en los próximos días hábiles';\nconst mails = [];\n\nif (r.resultado === 'registrado' && r.repetido !== true) {\n  // (2) Confirmación al candidato, nombrando a quien lo recomendó (decisión 23).\n  mails.push({ json: {\n    to: r.candidato.email,\n    subject: 'Recibimos tu perfil, ' + r.candidato.nombre,\n    html: plantilla('Recibimos tu perfil', [\n      'Hola ' + esc(r.candidato.nombre) + ', <strong>' + esc(r.referente.nombre) + '</strong> te recomendó para el talent pool de WorldTeams.',\n      'Revisamos tu perfil y te contactamos ' + plazo + '.',\n    ]),\n  } });\n  // (3) Referido validado -> referente, con el bono de hito en el mismo mail si corresponde (decisión 24).\n  // Si quedó en revisión no se avisa: se ve en el portal.\n  if (r.estado === 'validado') {\n    const p = [\n      'Tu referido <strong>' + esc(r.candidato.nombre + ' ' + r.candidato.apellido) + '</strong> fue validado y ya forma parte del talent pool.',\n      'Sumás <strong>' + usd(r.monto_usd) + '</strong>' + (r.ciclo_pago ? ' (ciclo de pago ' + esc(r.ciclo_pago) + ')' : '') + '.',\n    ];\n    if (Number(r.bono_hito_usd) > 0) p.push('Además alcanzaste un hito: <strong>bono de ' + usd(r.bono_hito_usd) + '</strong>.');\n    p.push(r.proximo_hito\n      ? 'Llevás ' + r.validados_anio + ' validados este año. Te faltan <strong>' + r.proximo_hito.faltan + '</strong> para el próximo bono de ' + usd(r.proximo_hito.bono_usd) + '.'\n      : 'Llevás ' + r.validados_anio + ' validados este año y completaste todos los hitos.');\n    mails.push({ json: {\n      to: r.referente.email,\n      subject: 'Tu referido ' + r.candidato.nombre + ' fue validado',\n      html: plantilla('¡Tu referido fue validado!', p, { url: SITIO + '/ingresar', texto: 'Ver mi portal' }),\n    } });\n  }\n} else if (r.resultado === 'ya_registrado') {\n  // (4) No cuenta -> referente, para que no sienta que su recomendación se perdió (decisión 6).\n  mails.push({ json: {\n    to: r.referente.email,\n    subject: 'Tu recomendación no cuenta como referido',\n    html: plantilla('Esta recomendación no suma', [\n      'La persona que recomendaste ya estaba en nuestra base, así que no cuenta como referido.',\n      'Gracias igual por pensar en WorldTeams: seguí compartiendo tu link con otros profesionales.',\n    ], { url: SITIO + '/ingresar', texto: 'Ver mi portal' }),\n  } });\n}\nreturn mails;"
+      },
+      "id": "73cd950f-c8a9-4958-85c2-e3455b283dfb",
+      "name": "Armar mails",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2352,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: 'WorldTeams Referidos <onboarding@resend.dev>', to: [$json.to], subject: $json.subject, html: $json.html }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 600
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "3aafeec1-4e1a-4b79-86d4-4319ca236ce6",
+      "name": "Enviar mail (Resend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2576,
+        -16
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UvCaY9TKUC59Vl6O",
+          "name": "WT Resend"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook registro": {
+      "main": [
+        [
+          {
+            "node": "Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar": {
+      "main": [
+        [
+          {
+            "node": "Subir CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir CV": {
+      "main": [
+        [
+          {
+            "node": "Registrar referido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar referido": {
+      "main": [
+        [
+          {
+            "node": "¿Respondió la función?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Respondió la función?": {
+      "main": [
+        [
+          {
+            "node": "Normalizar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar resultado": {
+      "main": [
+        [
+          {
+            "node": "¿Borrar CV?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Borrar CV?": {
+      "main": [
+        [
+          {
+            "node": "Borrar CV huérfano",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Borrar CV huérfano": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder": {
+      "main": [
+        [
+          {
+            "node": "Leer plazo de respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer plazo de respuesta": {
+      "main": [
+        [
+          {
+            "node": "Armar mails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar mails": {
+      "main": [
+        [
+          {
+            "node": "Enviar mail (Resend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "167d4c06-090e-4b57-92f8-40b5ade3d0c2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "redactado"
+  },
+  "nodeGroups": [],
+  "id": "9jkPT8EeigP6s0HZ",
+  "tags": []
+}

@@ -31,4 +31,9 @@
 
 | Rotación del titular del hero | La salida y la entrada de las frases se animaban a la vez (máscara deslizante), así que por unos instantes se veían dos frases superpuestas; el paso 3 repetía la idea; los links largos de las maquetas los revisé solo con captura | Pidió secuencia (sale en ~250 ms y recién entonces entra la siguiente, con el alto animado, nunca dos visibles), el texto del paso 3 recortado y medir los links con código a 390 y 320 px. Quedó una prueba automática (`npm run test:e2e`) que se verificó contra el código viejo: ahí falla |
 
+| Registro del referido en n8n | Planteé tres escrituras sueltas (crear candidato, crear referido, cambiar estado). Si fallaba la tercera quedaba un referido a medias y el reintento respondía `ya_registrado` por un error técnico | Pidió una sola función de la base, `registrar_referido`, en una transacción; n8n solo sube el CV, la llama por RPC, responde y manda mails (decisión 51) |
+| `es_prioritario` | Asumí que lo calculaba n8n | Es una columna generada de `candidatos`: vive en la base y n8n no la calcula ni la envía (decisión 52) |
+| Vistas `UNRESTRICTED` en Supabase | Alerté que `v_mis_referidos` y `v_progreso_referente` estaban expuestas | Era diseño: corren con permisos del dueño, filtran por `referente_actual_id()` y los tests prueban el aislamiento (decisión 56) |
+| Función `registrar_referido`: primera versión | Concatené el texto de los motivos al array con el operador de concatenación (dos barras verticales) y un literal sin tipo; falló en la base real con `malformed array literal` (22P02) en el primer caso de revisión. Después, al re-correr, el error siguió porque la base tenía la función vieja sin re-aplicar | Reportó el error con el mensaje exacto; se cambió a `array_append` y se re-aplicó el archivo antes de volver a correr. Los tests pasaron (decisiones 51 y 58) |
+
 <!-- Claude Code: agregá una fila cada vez que Mateo corrija o rechace algo que propongas. -->

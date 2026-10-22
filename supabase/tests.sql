@@ -872,6 +872,259 @@ begin
   perform pg_temp.registrar('portal: un referente no es reclutamiento', not v_rec);
 end $$;
 
+-- ---------------------------------------------------------------------
+-- 9. registrar_referido: alta atómica del referido (decisión 51)
+--    Requiere registrar_referido.sql aplicado.
+-- ---------------------------------------------------------------------
+select pg_temp.registrar('registrar_referido: la función existe (aplicá registrar_referido.sql)',
+  to_regprocedure('public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text)') is not null);
+
+-- Llama a la función como lo hace n8n. Prioritario = arquitectura + Revit + senior + inglés avanzado.
+create function pg_temp.rr(p_codigo text, p_nombre text, p_apellido text, p_email text, p_linkedin text,
+                           p_prioritario boolean default false, p_cv text default 'cv-test.pdf') returns jsonb
+language sql as $$
+  select public.registrar_referido(p_codigo, p_nombre, p_apellido, p_email, p_linkedin,
+    (case when p_prioritario then 'arquitectura' else 'ingenieria' end)::public.tipo_especialidad, p_prioritario,
+    (case when p_prioritario then 'senior' else 'junior' end)::public.tipo_seniority, 'avanzado', true, p_cv) $$;
+
+create function pg_temp.codigo_de(p_referente uuid) returns text
+language sql as $$ select codigo_referido from public.referentes where id = p_referente $$;
+
+-- a) y b) Candidato nuevo: prioritario (100) y no prioritario (50)
+do $$
+declare ra uuid; cod text; j jsonb; k jsonb; v_ref uuid;
+begin
+  ra := pg_temp.nuevo_referente('Rra', 'rra@t.com');
+  cod := pg_temp.codigo_de(ra);
+
+  j := pg_temp.rr(cod, 'Zoilo', 'Quispe', ' Zoilo.Quispe@T.com ', 'https://www.linkedin.com/in/zoilo-quispe/', true);
+  v_ref := (j ->> 'referido_id')::uuid;
+  perform pg_temp.registrar('registrar_referido a: nuevo prioritario -> registrado, validado, USD 100, faltan 2 para el hito de 3',
+    j ->> 'resultado' = 'registrado' and j ->> 'estado' = 'validado' and (j ->> 'repetido')::boolean = false
+    and (j ->> 'monto_usd')::numeric = 100 and (j ->> 'bono_hito_usd')::numeric = 0
+    and (j ->> 'validados_anio')::int = 1 and (j -> 'proximo_hito' ->> 'referidos')::int = 3
+    and (j -> 'proximo_hito' ->> 'faltan')::int = 2 and (j -> 'proximo_hito' ->> 'bono_usd')::numeric = 75
+    and (j ->> 'ciclo_pago') ~ '^[0-9]{4}-[0-9]{2}$' and j -> 'motivos' = '[]'::jsonb
+    and j -> 'referente' ->> 'email' = 'rra@t.com' and j -> 'candidato' ->> 'email' = 'zoilo.quispe@t.com', j::text);
+  perform pg_temp.registrar('registrar_referido a: el candidato queda normalizado, con CV, origen referido y es_prioritario = true',
+    (select email = 'zoilo.quispe@t.com' and linkedin_url = 'https://www.linkedin.com/in/zoilo-quispe'
+            and cv_url = 'cv-test.pdf' and origen = 'referido' and acepto_visibilidad and es_prioritario
+       from public.candidatos c join public.referidos r on r.candidato_id = c.id where r.id = v_ref));
+  perform pg_temp.registrar('registrar_referido a: 2 filas de historial (null -> registrado, registrado -> validado) y 2 movimientos que suman 100',
+    (select count(*) = 2 and bool_or(estado_anterior is null and estado_nuevo = 'registrado')
+        and bool_or(estado_anterior = 'registrado' and estado_nuevo = 'validado' and actor_tipo = 'sistema')
+       from public.historial_estados where referido_id = v_ref)
+    and (select count(*) = 2 and sum(monto_usd) = 100 from public.movimientos_pago where referido_id = v_ref));
+
+  k := pg_temp.rr(cod, 'Wilfredo', 'Anccasi', 'wilfredo.a@t.com', 'linkedin.com/in/wilfredo-anccasi', false);
+  perform pg_temp.registrar('registrar_referido b: nuevo no prioritario -> validado, USD 50, un solo movimiento (base), faltan 1',
+    k ->> 'resultado' = 'registrado' and k ->> 'estado' = 'validado' and (k ->> 'monto_usd')::numeric = 50
+    and (select count(*) = 1 and bool_and(concepto = 'base') from public.movimientos_pago where referido_id = (k ->> 'referido_id')::uuid)
+    and (k ->> 'validados_anio')::int = 2 and (k -> 'proximo_hito' ->> 'faltan')::int = 1, k::text);
+
+  -- El tercero valida y dispara el bono del hito (3 -> +75): se informa en bono_hito_usd.
+  k := pg_temp.rr(cod, 'Ximena', 'Huaman', 'ximena.h@t.com', 'linkedin.com/in/ximena-huaman', false);
+  perform pg_temp.registrar('registrar_referido b: el tercer validado informa el bono del hito (75) y apunta al hito de 6',
+    (k ->> 'bono_hito_usd')::numeric = 75 and (k ->> 'validados_anio')::int = 3
+    and (k -> 'proximo_hito' ->> 'referidos')::int = 6 and (k -> 'proximo_hito' ->> 'faltan')::int = 3, k::text);
+end $$;
+
+-- c) Ya registrado con otro referente (por email y por LinkedIn) y d) reintento del mismo referente
+do $$
+declare r1 uuid; r2 uuid; r3 uuid; j jsonb; k jsonb; v_ref1 uuid; v_ref2 uuid;
+begin
+  r1 := pg_temp.nuevo_referente('Rrc1', 'rrc1@t.com');
+  r2 := pg_temp.nuevo_referente('Rrc2', 'rrc2@t.com');
+  r3 := pg_temp.nuevo_referente('Rrc3', 'rrc3@t.com');
+
+  j := pg_temp.rr(pg_temp.codigo_de(r1), 'Efrain', 'Mamani', 'efrain.m@t.com', 'linkedin.com/in/efrain-mamani');
+  v_ref1 := (j ->> 'referido_id')::uuid;
+
+  -- d) el mismo referente repite el envío (doble clic, reintento)
+  k := pg_temp.rr(pg_temp.codigo_de(r1), 'Efrain', 'Mamani', 'EFRAIN.M@t.com', 'linkedin.com/in/efrain-mamani');
+  perform pg_temp.registrar('registrar_referido d: el reintento del mismo referente -> registrado con repetido = true, mismo referido',
+    k ->> 'resultado' = 'registrado' and (k ->> 'repetido')::boolean and (k ->> 'referido_id')::uuid = v_ref1 and k ->> 'estado' = 'validado', k::text);
+  perform pg_temp.registrar('registrar_referido d: sigue habiendo un solo referido, un solo candidato y los mismos movimientos',
+    (select count(*) = 1 from public.referidos where candidato_id = (select candidato_id from public.referidos where id = v_ref1))
+    and (select count(*) = 1 from public.candidatos where email = 'efrain.m@t.com')
+    and (select count(*) = 1 from public.movimientos_pago where referido_id = v_ref1));
+
+  -- c) otro referente envía al mismo candidato (con el email en otro formato)
+  k := pg_temp.rr(pg_temp.codigo_de(r2), 'Efrain', 'Mamani', ' Efrain.M@T.com', 'linkedin.com/in/otro-efrain');
+  v_ref2 := (k ->> 'referido_id')::uuid;
+  perform pg_temp.registrar('registrar_referido c: ya está en el pool (otro referente) -> ya_registrado, estado descartado',
+    k ->> 'resultado' = 'ya_registrado' and k ->> 'estado' = 'descartado' and k -> 'motivos' = '["ya_en_pool"]'::jsonb
+    and k -> 'referente' ->> 'email' = 'rrc2@t.com' and (k ->> 'monto_usd')::numeric = 0, k::text);
+  perform pg_temp.registrar('registrar_referido c: un solo candidato con ese email, 0 movimientos para el descartado, el referido original intacto',
+    (select count(*) = 1 from public.candidatos where email = 'efrain.m@t.com')
+    and (select count(*) = 0 from public.movimientos_pago where referido_id = v_ref2)
+    and (select estado = 'descartado' and motivos_revision = array['ya_en_pool'] from public.referidos where id = v_ref2)
+    and (select estado = 'validado' from public.referidos where id = v_ref1));
+  perform pg_temp.registrar('registrar_referido c: el historial del descartado deja el motivo ya_en_pool (sistema)',
+    (select count(*) = 1 and bool_and(estado_anterior is null and estado_nuevo = 'descartado' and motivo = 'ya_en_pool' and actor_tipo = 'sistema')
+       from public.historial_estados where referido_id = v_ref2));
+
+  -- d) el que quedó descartado lo vuelve a enviar: no se duplica el descartado y sigue siendo ya_registrado
+  k := pg_temp.rr(pg_temp.codigo_de(r2), 'Efrain', 'Mamani', 'efrain.m@t.com', 'linkedin.com/in/efrain-mamani');
+  perform pg_temp.registrar('registrar_referido d: reintento de un descartado -> ya_registrado, sin referidos nuevos',
+    k ->> 'resultado' = 'ya_registrado' and (k ->> 'repetido')::boolean = false and (k ->> 'referido_id')::uuid = v_ref2
+    and (select count(*) = 1 from public.referidos where referente_id = r2), k::text);
+
+  -- c) por LinkedIn: otro email, mismo perfil (en otra forma de escribirlo)
+  k := pg_temp.rr(pg_temp.codigo_de(r3), 'Efrain', 'Mamani', 'efrain.otro@t.com', 'https://es.linkedin.com/in/Efrain-Mamani/?utm=1');
+  perform pg_temp.registrar('registrar_referido c: mismo LinkedIn con otro email -> ya_registrado, sin candidato nuevo',
+    k ->> 'resultado' = 'ya_registrado' and k ->> 'estado' = 'descartado'
+    and (select count(*) = 0 from public.candidatos where email = 'efrain.otro@t.com')
+    and (select count(*) = 1 from public.candidatos where linkedin_url = 'https://www.linkedin.com/in/efrain-mamani'), k::text);
+end $$;
+
+-- e) Autorreferido, f) código inválido, g) sin aviso de visibilidad, y LinkedIn inválido
+do $$
+declare ra uuid; rn uuid; rs uuid; j jsonb; n_antes int; n_despues int;
+begin
+  ra := pg_temp.nuevo_referente('Rfx', 'rfx@t.com');     -- LinkedIn de la ficha: https://www.linkedin.com/in/ref-rfx
+  select count(*) into n_antes from public.candidatos;
+
+  j := pg_temp.rr(pg_temp.codigo_de(ra), 'Otro', 'Nombre', ' RFX@T.com ', 'linkedin.com/in/alguien-mas');
+  perform pg_temp.registrar('registrar_referido e: autorreferido por email -> autorreferido, sin candidato', j ->> 'resultado' = 'autorreferido', j::text);
+  j := pg_temp.rr(pg_temp.codigo_de(ra), 'Otro', 'Nombre', 'otro.rfx@t.com', 'https://www.linkedin.com/in/ref-rfx/?utm=1');
+  perform pg_temp.registrar('registrar_referido e: autorreferido por LinkedIn en otro formato -> autorreferido', j ->> 'resultado' = 'autorreferido', j::text);
+  select count(*) into n_despues from public.candidatos;
+  perform pg_temp.registrar('registrar_referido e: el autorreferido no crea candidato ni referido ni pago',
+    n_antes = n_despues and (select count(*) = 0 from public.referidos where referente_id = ra)
+    and (select count(*) = 0 from public.movimientos_pago where referente_id = ra));
+
+  -- f) códigos que no abren referidos
+  rn := pg_temp.nuevo_referente('Rfn', 'rfn@t.com', false);
+  rs := pg_temp.nuevo_referente('Rfs', 'rfs@t.com');
+  update public.referentes set sancionado_en = now() where id = rs;
+  perform pg_temp.registrar('registrar_referido f: código inexistente -> codigo_invalido',
+    pg_temp.rr('inexistente-00000000', 'Aa', 'Bb', 'f1@t.com', 'linkedin.com/in/f1') ->> 'resultado' = 'codigo_invalido');
+  perform pg_temp.registrar('registrar_referido f: código con formato roto o nulo -> codigo_invalido',
+    pg_temp.rr('', 'Aa', 'Bb', 'f1@t.com', 'linkedin.com/in/f1') ->> 'resultado' = 'codigo_invalido'
+    and pg_temp.rr(null, 'Aa', 'Bb', 'f1@t.com', 'linkedin.com/in/f1') ->> 'resultado' = 'codigo_invalido');
+  perform pg_temp.registrar('registrar_referido f: referente no colocado -> codigo_invalido',
+    pg_temp.rr(pg_temp.codigo_de(rn), 'Aa', 'Bb', 'f2@t.com', 'linkedin.com/in/f2') ->> 'resultado' = 'codigo_invalido');
+  perform pg_temp.registrar('registrar_referido f: referente sancionado -> codigo_invalido',
+    pg_temp.rr(pg_temp.codigo_de(rs), 'Aa', 'Bb', 'f3@t.com', 'linkedin.com/in/f3') ->> 'resultado' = 'codigo_invalido');
+  perform pg_temp.registrar('registrar_referido f: ninguno de los casos inválidos creó candidatos',
+    (select count(*) = 0 from public.candidatos where email in ('f1@t.com', 'f2@t.com', 'f3@t.com')));
+  perform pg_temp.registrar('registrar_referido f: el código se acepta en mayúsculas y con espacios',
+    pg_temp.rr('  ' || upper(pg_temp.codigo_de(ra)) || ' ', 'Casimiro', 'Yupanqui', 'casimiro.y@t.com', 'linkedin.com/in/casimiro-yupanqui') ->> 'resultado' = 'registrado');
+
+  -- g) sin aceptar el aviso de visibilidad: error, y no se crea nada
+  perform pg_temp.espera_error('registrar_referido g: acepto_visibilidad = false se rechaza',
+    format($q$select public.registrar_referido(%L, 'Aa', 'Bb', 'g1@t.com', 'linkedin.com/in/g1', 'arquitectura', true, 'senior', 'avanzado', false, 'cv.pdf')$q$,
+           pg_temp.codigo_de(ra)), 'acepto_visibilidad_requerido');
+  perform pg_temp.espera_error('registrar_referido g: acepto_visibilidad nulo también se rechaza',
+    format($q$select public.registrar_referido(%L, 'Aa', 'Bb', 'g2@t.com', 'linkedin.com/in/g2', 'arquitectura', true, 'senior', 'avanzado', null, 'cv.pdf')$q$,
+           pg_temp.codigo_de(ra)), 'acepto_visibilidad_requerido');
+  perform pg_temp.espera_error('registrar_referido g: un LinkedIn que no es un perfil se rechaza',
+    format($q$select public.registrar_referido(%L, 'Aa', 'Bb', 'g3@t.com', 'https://example.com/in/g3', 'arquitectura', true, 'senior', 'avanzado', true, 'cv.pdf')$q$,
+           pg_temp.codigo_de(ra)), 'linkedin_invalido');
+  perform pg_temp.registrar('registrar_referido g: los rechazados no dejaron candidatos',
+    (select count(*) = 0 from public.candidatos where email in ('g1@t.com', 'g2@t.com', 'g3@t.com')));
+end $$;
+
+-- h) Posible duplicado por nombre y apellido, y perfil incompleto
+do $$
+declare ra uuid; j jsonb; k jsonb; m jsonb;
+begin
+  ra := pg_temp.nuevo_referente('Rrh', 'rrh@t.com');
+  j := pg_temp.rr(pg_temp.codigo_de(ra), 'Genoveva', 'Cusi', 'genoveva.c1@t.com', 'linkedin.com/in/genoveva-cusi-1');
+  k := pg_temp.rr(pg_temp.codigo_de(ra), ' GENOVEVA ', 'cusi', 'genoveva.c2@t.com', 'linkedin.com/in/genoveva-cusi-2');
+  perform pg_temp.registrar('registrar_referido h: mismo nombre y apellido (otras mayúsculas) con otro email -> en_revision por posible_duplicado, 0 pagos',
+    j ->> 'estado' = 'validado' and k ->> 'resultado' = 'registrado' and k ->> 'estado' = 'en_revision'
+    and k -> 'motivos' = '["posible_duplicado"]'::jsonb and (k ->> 'monto_usd')::numeric = 0 and k ->> 'ciclo_pago' is null
+    and (select count(*) = 0 from public.movimientos_pago where referido_id = (k ->> 'referido_id')::uuid)
+    and (select count(*) = 1 from public.candidatos where email = 'genoveva.c2@t.com'), k::text);
+  perform pg_temp.registrar('registrar_referido h: el historial deja registrado -> en_revision con el motivo, y el referido guarda los motivos',
+    (select count(*) = 2 and bool_or(estado_anterior = 'registrado' and estado_nuevo = 'en_revision' and motivo = 'posible_duplicado')
+       from public.historial_estados where referido_id = (k ->> 'referido_id')::uuid)
+    and (select motivos_revision = array['posible_duplicado'] from public.referidos where id = (k ->> 'referido_id')::uuid));
+
+  -- perfil_incompleto (defensiva): sin CV
+  m := pg_temp.rr(pg_temp.codigo_de(ra), 'Hortensia', 'Ccori', 'hortensia.c@t.com', 'linkedin.com/in/hortensia-ccori', false, null);
+  perform pg_temp.registrar('registrar_referido h: sin CV -> en_revision por perfil_incompleto',
+    m ->> 'estado' = 'en_revision' and m -> 'motivos' = '["perfil_incompleto"]'::jsonb, m::text);
+end $$;
+
+-- i) Alerta de volumen: el tope sale de configuracion (5 en 7 días); los descartados no cuentan
+do $$
+declare ra uuid; cod text; j5 jsonb; j6 jsonb; i int; j jsonb; rd uuid;
+begin
+  ra := pg_temp.nuevo_referente('Rvol', 'rvol@t.com');
+  cod := pg_temp.codigo_de(ra);
+  for i in 1..4 loop perform pg_temp.nuevo_referido(ra, pg_temp.nuevo_candidato('vol' || i || '@t.com')); end loop;
+
+  j5 := pg_temp.rr(cod, 'Ladislao', 'Ticona', 'ladislao.t@t.com', 'linkedin.com/in/ladislao-ticona');
+  perform pg_temp.registrar('registrar_referido i: el 5.º referido (en el tope) todavía se valida', j5 ->> 'estado' = 'validado', j5::text);
+  j6 := pg_temp.rr(cod, 'Nemesio', 'Choque', 'nemesio.c@t.com', 'linkedin.com/in/nemesio-choque');
+  perform pg_temp.registrar('registrar_referido i: con 5 referidos no descartados, el 6.º va a en_revision con alerta_volumen',
+    j6 ->> 'estado' = 'en_revision' and j6 -> 'motivos' = '["alerta_volumen"]'::jsonb and (j6 ->> 'monto_usd')::numeric = 0, j6::text);
+
+  -- Los descartados (ya en el pool) no suman al volumen.
+  rd := pg_temp.nuevo_referente('Rvol2', 'rvol2@t.com');
+  for i in 1..6 loop
+    perform pg_temp.rr(pg_temp.codigo_de(rd), 'Dup', 'Existente', 'ladislao.t@t.com', 'linkedin.com/in/ladislao-ticona');   -- repite: no crea nada
+  end loop;
+  perform pg_temp.registrar('registrar_referido i: los descartados no cuentan para la alerta (1 descartado, no 6)',
+    (select count(*) = 1 from public.referidos where referente_id = rd));
+  j := pg_temp.rr(pg_temp.codigo_de(rd), 'Aurelio', 'Pari', 'aurelio.p@t.com', 'linkedin.com/in/aurelio-pari');
+  perform pg_temp.registrar('registrar_referido i: tras los descartados, un referido nuevo se valida normal', j ->> 'estado' = 'validado', j::text);
+
+  -- El tope se lee de configuracion: con 1 en 7 días, el segundo ya va a revisión.
+  update public.configuracion set valor = '{"cantidad": 1, "dias": 7}' where clave = 'alerta_volumen';
+  j := pg_temp.rr(pg_temp.codigo_de(rd), 'Belisario', 'Pari', 'belisario.p@t.com', 'linkedin.com/in/belisario-pari');
+  perform pg_temp.registrar('registrar_referido i: el tope sale de configuracion (cantidad 1 -> el segundo va a revisión)',
+    j ->> 'estado' = 'en_revision' and j -> 'motivos' = '["alerta_volumen"]'::jsonb, j::text);
+  update public.configuracion set valor = '{"cantidad": 5, "dias": 7}' where clave = 'alerta_volumen';
+end $$;
+
+-- j) Permisos: solo la service role ejecuta la función
+do $$
+declare
+  ra uuid; cod text; v_sig regprocedure :=
+    'public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text)'::regprocedure;
+  v_anon boolean; v_auth boolean; v_sr jsonb; v_sr_err text; n_antes int;
+begin
+  ra := pg_temp.nuevo_referente('Rperm', 'rperm@t.com');
+  cod := pg_temp.codigo_de(ra);
+  select count(*) into n_antes from public.candidatos;
+
+  execute 'set local role anon';
+  begin perform pg_temp.rr(cod, 'Pa', 'Anon', 'perm.anon@t.com', 'linkedin.com/in/perm-anon'); v_anon := true;
+  exception when others then v_anon := not (sqlerrm ilike '%permission denied%'); end;
+  execute 'reset role';
+
+  execute 'set local role authenticated';
+  begin perform pg_temp.rr(cod, 'Pa', 'Auth', 'perm.auth@t.com', 'linkedin.com/in/perm-auth'); v_auth := true;
+  exception when others then v_auth := not (sqlerrm ilike '%permission denied%'); end;
+  execute 'reset role';
+
+  execute 'set local role service_role';
+  begin v_sr := pg_temp.rr(cod, 'Pa', 'Servicio', 'perm.sr@t.com', 'linkedin.com/in/perm-sr');
+  exception when others then v_sr_err := sqlerrm; end;
+  execute 'reset role';
+
+  perform pg_temp.registrar('registrar_referido j: anon no puede ejecutarla (permission denied) y no creó nada', not v_anon
+    and (select count(*) = 0 from public.candidatos where email = 'perm.anon@t.com'));
+  perform pg_temp.registrar('registrar_referido j: authenticated no puede ejecutarla (permission denied) y no creó nada', not v_auth
+    and (select count(*) = 0 from public.candidatos where email = 'perm.auth@t.com'));
+  perform pg_temp.registrar('registrar_referido j: service_role la ejecuta de punta a punta (alta, validación y pagos)',
+    v_sr ->> 'resultado' = 'registrado' and v_sr ->> 'estado' = 'validado' and (v_sr ->> 'monto_usd')::numeric = 50,
+    coalesce(v_sr_err, v_sr::text));
+  perform pg_temp.registrar('registrar_referido j: privilegios: service_role sí; anon, authenticated y public no',
+    has_function_privilege('service_role', v_sig, 'execute')
+    and not has_function_privilege('anon', v_sig, 'execute')
+    and not has_function_privilege('authenticated', v_sig, 'execute')
+    and not exists (select 1 from pg_proc p, aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+                     where p.oid = v_sig and a.grantee = 0 and a.privilege_type = 'EXECUTE'));
+  perform pg_temp.registrar('registrar_referido j: no es SECURITY DEFINER y fija search_path = public, pg_temp',
+    (select not prosecdef and exists (select 1 from unnest(proconfig) c where c like 'search_path=%public%pg_temp%')
+       from pg_proc where oid = v_sig));
+end $$;
+
 -- Resultado: el resumen primero y después cada prueba.
 select resultado, prueba, detalle from (
   select 0 as orden, 'RESUMEN' as resultado,
