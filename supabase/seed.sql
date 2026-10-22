@@ -2,8 +2,9 @@
 -- seed.sql — Datos iniciales del programa de referidos (WorldTeams)
 -- Se aplica después de schema.sql. Es re-ejecutable: no pisa lo que ya se editó.
 --
--- Los emails usan el alias +nombre de la casilla de pruebas de Mateo (matecamilion05+lucia@gmail.com, etc.): todos
--- llegan a la misma bandeja, así se prueba el ingreso por magic link con cada rol.
+-- Los emails usan la casilla de pruebas de Mateo: Lucía la casilla sin alias (matecamilion05@gmail.com) y el resto
+-- el alias +nombre (matecamilion05+martin@gmail.com, etc.). Todos llegan a la misma bandeja, así se prueba el
+-- ingreso por magic link con cada rol. Lucía queda igual que en la base real (decisión 68).
 -- =====================================================================
 
 -- Configuración inicial (DECISIONS.md, decisiones 10-12, 17, 23, 26 y 2).
@@ -31,7 +32,7 @@ on conflict (email) do nothing;
 -- así la landing en NEXT_PUBLIC_DEMO=false abre los mismos links. El cuarto referente ya no está colocado:
 -- sirve para probar que no puede referir y que, si ganó algo, cobra por transferencia (decisión 14).
 insert into public.referentes (nombre, apellido, email, linkedin_url, codigo_referido, colocado) values
-  ('Lucía',  'Gómez',    'matecamilion05+lucia@gmail.com',    'https://www.linkedin.com/in/lucia-gomez-demo',    'lucia-k7q2m9xd',  true),
+  ('Lucía',  'Gómez',    'matecamilion05@gmail.com',          'https://www.linkedin.com/in/lucia-gomez-demo',    'lucia-k7q2m9xd',  true),
   ('Martín', 'Ferreyra', 'matecamilion05+martin@gmail.com', 'https://www.linkedin.com/in/martin-ferreyra-demo', 'martin-x4d8w1bn', true),
   ('Camila', 'Duarte',   'matecamilion05+camila@gmail.com',   'https://www.linkedin.com/in/camila-duarte-demo',   'camila-p3n6z5ht', true),
   ('Andrés', 'Paredes',  'matecamilion05+andres@gmail.com',  'https://www.linkedin.com/in/andres-paredes-demo',  'andres-m2w5q8vc', false)

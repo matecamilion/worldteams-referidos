@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>1. Esquema del programa</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<!-- contenido -->
+<section class="seccion s1">
+  <header class="titulo-seccion">
+    <span class="num">1</span>
+    <h1>Esquema del programa</h1>
+  </header>
+
+  <div class="bloque destacado">
+    <h2>Objetivo</h2>
+    <p>Llevar los ingresos al talent pool de 500 a 1.000 por mes. La meta se mide en personas que se registran y entran a la base, no en colocaciones. El perfil más buscado: arquitectos senior con Revit y buen inglés.</p>
+  </div>
+
+  <div class="columnas-2">
+    <div class="bloque">
+      <h2>Quién refiere</h2>
+      <p>Solo profesionales <strong>colocados</strong> por WorldTeams en una firma cliente y sin sanción: tienen sueldo donde cobrar, su criterio ya fue validado y no están en un proceso de selección (sin conflicto de intereses). Entran por una lista que carga WorldTeams; no hay registro público.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>Cómo se refiere</h2>
+      <p>Cada referente tiene un link personal, <code>/r/{nombre}-{8 caracteres}</code> (ej.: <code>/r/lucia-k7q2m9xd</code>), con un sufijo aleatorio no adivinable. La persona recomendada carga sus propios datos y su CV en PDF, y acepta que quien la recomendó vea su nombre y el estado de su registro. El formulario tiene reCAPTCHA. El referente sigue sus referidos y premios en un portal con login por magic link.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>Incentivo</h2>
+      <p>En efectivo: en una consulta informal a 6 personas, 5 lo eligieron sobre créditos.</p>
+      <table>
+        <thead><tr><th>Concepto</th><th class="der">USD</th></tr></thead>
+        <tbody>
+          <tr><td>Referido validado</td><td class="monto">50</td></tr>
+          <tr><td>Perfil prioritario: arquitectura + Revit + senior + inglés avanzado o nativo (base + extra de 50)</td><td class="monto">100</td></tr>
+          <tr><td>Bono por hito, acumulativo en el año calendario: 3 · 6 · 10 validados</td><td class="monto">+75 · +150 · +300</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bloque">
+      <h2>Cuándo se paga</h2>
+      <p>El premio nace cuando el perfil se <strong>valida</strong>, no cuando la persona es colocada: la meta es el ingreso al pool. Es un pago único que se liquida una vez por mes con el sueldo: lo validado hasta el día 25 (hora de Buenos Aires) entra en ese ciclo. Si el referente deja de estar colocado, cobra igual lo ganado, por transferencia.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>Validación</h2>
+      <p>Automática por reglas: si el perfil cumple todo, queda validado sin intervención humana. Va a revisión solo ante un <strong>posible duplicado</strong> (mismo nombre y apellido que otro candidato), una <strong>alerta de volumen</strong> (más de 5 referidos del mismo referente en 7 días; no hay tope de referidos) o un <strong>perfil sin CV</strong> (red de seguridad: el formulario ya lo exige). Reclutamiento resuelve desde un panel en 3 días hábiles; a la persona se le promete respuesta en 5.</p>
+    </div>
+
+    <div class="bloque partible">
+      <h2>Reglas contra abusos</h2>
+      <ul>
+        <li><strong>Autorreferido bloqueado:</strong> el email o el LinkedIn de la persona no puede ser el del referente.</li>
+        <li><strong>Sin duplicados:</strong> email y LinkedIn únicos; quien ya estaba en el pool no cuenta y el referente recibe un aviso.</li>
+        <li><strong>Link no adivinable</strong> (36<sup>8</sup> combinaciones) y tope de 10 códigos inexistentes por IP cada 10 minutos.</li>
+        <li><strong>Sanción:</strong> autorreferirse o cargar referidos falsos cancela los premios pendientes y puede llevar a la expulsión.</li>
+        <li><strong>Trazabilidad:</strong> historial de estados de solo inserción, un solo pago por referido y concepto, y montos, umbrales y plazos en una tabla de configuración.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h2>Meta y límites</h2>
+    <div class="texto-tabla">
+      <div>
+        <p>Si hubiera 750 referentes (supuesto a confirmar con WorldTeams), sumar 500 ingresos por mes exige 0,67 validados por referente por mes con el 100 % participando. El cuello de botella es cuántos referentes participan, no el costo.</p>
+        <p>WorldTeams no definió presupuesto: los montos son una propuesta y se ajustan desde la configuración. El programa se paga solo si al menos X % de los referidos termina colocado (X&nbsp;=&nbsp;costo por referido ÷ ingreso por colocación, dato a pedir).</p>
+      </div>
+      <div>
+        <table class="sin-corte-1">
+          <thead><tr><th>Escenario</th><th class="der">Activos</th><th class="der">Por activo</th><th class="der">Ingresos</th><th class="der">Costo</th></tr></thead>
+          <tbody>
+            <tr><td>Conservador · 10 %</td><td class="der">75</td><td class="der">0,5</td><td class="der">~38</td><td class="monto">~USD 2.400</td></tr>
+            <tr><td>Base · 25 %</td><td class="der">~190</td><td class="der">0,5</td><td class="der">~95</td><td class="monto">~USD 6.200</td></tr>
+            <tr><td>Optimista · 50 %</td><td class="der">375</td><td class="der">1</td><td class="der">~375</td><td class="monto">~USD 24.400</td></tr>
+            <tr><td>Meta · 100 %</td><td class="der">750</td><td class="der">0,67</td><td class="der">500</td><td class="monto">~USD 32.500</td></tr>
+          </tbody>
+        </table>
+        <p class="nota">Por mes. "Por activo": validados por referente activo. USD 65 promedio por validado (30 % prioritarios, sin hitos). La participación es un supuesto.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /contenido -->
+</body>
+</html>

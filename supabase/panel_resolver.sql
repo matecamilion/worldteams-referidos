@@ -1,7 +1,7 @@
 -- =====================================================================
 -- panel_resolver.sql — Resolución de casos desde el panel (decisiones 63 a 66)
 --
--- Se aplica después de schema.sql, seed.sql y registrar_referido.sql. Es re-ejecutable
+-- Se aplica después de schema.sql y seed.sql (la función registrar_referido vive en evaluacion_cv.sql). Es re-ejecutable
 -- (create or replace; revoke/grant idempotentes).
 --
 -- 1. Amplía trg_referido_reglas: rechazado -> en_revision (reapertura). Ninguna otra transición cambia;

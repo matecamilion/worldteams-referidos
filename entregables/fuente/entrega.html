@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>WorldTeams — Programa de referidos de talento</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<!-- Generado por entregables/generar.mjs: no editar a mano. -->
+
+<section class="portada">
+  <img class="logo" src="recursos/logo-crema.svg" alt="WorldTeams">
+
+  <div class="centro">
+    <span class="etiqueta">Ejercicio práctico — Web &amp; Automation Developer</span>
+    <h1>Programa de referidos <span>de talento</span></h1>
+    <p class="bajada">Diseño del sistema para pasar de 500 a 1.000 ingresos por mes al talent pool, con la landing, la base y el primer flujo de automatización funcionando.</p>
+
+    <div class="datos">
+      <div>
+        <div class="dato-titulo">Presenta</div>
+        <div class="dato">Mateo Camilion<br>23/10/2026</div>
+      </div>
+      <div>
+        <div class="dato-titulo">Links</div>
+        <div class="dato">
+          Landing · <a class="url" href="https://worldteams-referidos.vercel.app">worldteams-referidos.vercel.app</a><br>
+          Link de referente de ejemplo · <a class="url" href="https://worldteams-referidos.vercel.app/r/lucia-k7q2m9xd">/r/lucia-k7q2m9xd</a><br>
+          Repositorio · <a class="url" href="https://github.com/matecamilion/worldteams-referidos">github.com/matecamilion/worldteams-referidos</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="contenidos">
+      <div><b>1</b>Esquema del programa</div>
+      <div><b>2</b>Modelo de datos</div>
+      <div><b>3</b>Landing para referir</div>
+      <div><b>4</b>Flujo de automatización</div>
+      <div><b>5</b>Nota de decisiones</div>
+    </div>
+  </div>
+</section>
+
+
+<section class="seccion s1">
+  <header class="titulo-seccion">
+    <span class="num">1</span>
+    <h1>Esquema del programa</h1>
+  </header>
+
+  <div class="bloque destacado">
+    <h2>Objetivo</h2>
+    <p>Llevar los ingresos al talent pool de 500 a 1.000 por mes. La meta se mide en personas que se registran y entran a la base, no en colocaciones. El perfil más buscado: arquitectos senior con Revit y buen inglés.</p>
+  </div>
+
+  <div class="columnas-2">
+    <div class="bloque">
+      <h2>Quién refiere</h2>
+      <p>Solo profesionales <strong>colocados</strong> por WorldTeams en una firma cliente y sin sanción: tienen sueldo donde cobrar, su criterio ya fue validado y no están en un proceso de selección (sin conflicto de intereses). Entran por una lista que carga WorldTeams; no hay registro público.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>Cómo se refiere</h2>
+      <p>Cada referente tiene un link personal, <code>/r/{nombre}-{8 caracteres}</code> (ej.: <code>/r/lucia-k7q2m9xd</code>), con un sufijo aleatorio no adivinable. La persona recomendada carga sus propios datos y su CV en PDF, y acepta que quien la recomendó vea su nombre y el estado de su registro. El formulario tiene reCAPTCHA. El referente sigue sus referidos y premios en un portal con login por magic link.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>Incentivo</h2>
+      <p>En efectivo: en una consulta informal a 6 personas, 5 lo eligieron sobre créditos.</p>
+      <table>
+        <thead><tr><th>Concepto</th><th class="der">USD</th></tr></thead>
+        <tbody>
+          <tr><td>Referido validado</td><td class="monto">50</td></tr>
+          <tr><td>Perfil prioritario: arquitectura + Revit + senior + inglés avanzado o nativo (base + extra de 50)</td><td class="monto">100</td></tr>
+          <tr><td>Bono por hito, acumulativo en el año calendario: 3 · 6 · 10 validados</td><td class="monto">+75 · +150 · +300</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bloque">
+      <h2>Cuándo se paga</h2>
+      <p>El premio nace cuando el perfil se <strong>valida</strong>, no cuando la persona es colocada: la meta es el ingreso al pool. Es un pago único que se liquida una vez por mes con el sueldo: lo validado hasta el día 25 (hora de Buenos Aires) entra en ese ciclo. Si el referente deja de estar colocado, cobra igual lo ganado, por transferencia.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>Validación</h2>
+      <p>Automática por reglas: si el perfil cumple todo, queda validado sin intervención humana. Va a revisión solo ante un <strong>posible duplicado</strong> (mismo nombre y apellido que otro candidato), una <strong>alerta de volumen</strong> (más de 5 referidos del mismo referente en 7 días; no hay tope de referidos) o un <strong>perfil sin CV</strong> (red de seguridad: el formulario ya lo exige). Reclutamiento resuelve desde un panel en 3 días hábiles; a la persona se le promete respuesta en 5.</p>
+    </div>
+
+    <div class="bloque partible">
+      <h2>Reglas contra abusos</h2>
+      <ul>
+        <li><strong>Autorreferido bloqueado:</strong> el email o el LinkedIn de la persona no puede ser el del referente.</li>
+        <li><strong>Sin duplicados:</strong> email y LinkedIn únicos; quien ya estaba en el pool no cuenta y el referente recibe un aviso.</li>
+        <li><strong>Link no adivinable</strong> (36<sup>8</sup> combinaciones) y tope de 10 códigos inexistentes por IP cada 10 minutos.</li>
+        <li><strong>Sanción:</strong> autorreferirse o cargar referidos falsos cancela los premios pendientes y puede llevar a la expulsión.</li>
+        <li><strong>Trazabilidad:</strong> historial de estados de solo inserción, un solo pago por referido y concepto, y montos, umbrales y plazos en una tabla de configuración.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h2>Meta y límites</h2>
+    <div class="texto-tabla">
+      <div>
+        <p>Si hubiera 750 referentes (supuesto a confirmar con WorldTeams), sumar 500 ingresos por mes exige 0,67 validados por referente por mes con el 100 % participando. El cuello de botella es cuántos referentes participan, no el costo.</p>
+        <p>WorldTeams no definió presupuesto: los montos son una propuesta y se ajustan desde la configuración. El programa se paga solo si al menos X % de los referidos termina colocado (X&nbsp;=&nbsp;costo por referido ÷ ingreso por colocación, dato a pedir).</p>
+      </div>
+      <div>
+        <table class="sin-corte-1">
+          <thead><tr><th>Escenario</th><th class="der">Activos</th><th class="der">Por activo</th><th class="der">Ingresos</th><th class="der">Costo</th></tr></thead>
+          <tbody>
+            <tr><td>Conservador · 10 %</td><td class="der">75</td><td class="der">0,5</td><td class="der">~38</td><td class="monto">~USD 2.400</td></tr>
+            <tr><td>Base · 25 %</td><td class="der">~190</td><td class="der">0,5</td><td class="der">~95</td><td class="monto">~USD 6.200</td></tr>
+            <tr><td>Optimista · 50 %</td><td class="der">375</td><td class="der">1</td><td class="der">~375</td><td class="monto">~USD 24.400</td></tr>
+            <tr><td>Meta · 100 %</td><td class="der">750</td><td class="der">0,67</td><td class="der">500</td><td class="monto">~USD 32.500</td></tr>
+          </tbody>
+        </table>
+        <p class="nota">Por mes. "Por activo": validados por referente activo. USD 65 promedio por validado (30 % prioritarios, sin hitos). La participación es un supuesto.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="seccion s2 flujo">
+  <header class="titulo-seccion">
+    <span class="num">2</span>
+    <h1>Modelo de datos</h1>
+    <span class="bajada">Postgres en Supabase · fuente: <code>supabase/schema.sql</code></span>
+  </header>
+
+  <p class="intro">Siete tablas de negocio, dos internas y tres vistas. Las reglas que no se pueden romper (unicidad, estados, pagos y permisos) las impone la base.</p>
+
+  <figure>
+<!-- er:inicio -->
+<svg class="diagrama" viewBox="0 0 900 658" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama entidad-relación generado desde supabase/schema.sql"><path d="M280,190.5 C300.0,190.5 300.0,504.5 320,504.5" fill="none" stroke="#58958c" stroke-width="1.3"/><text x="283" y="187.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">N</text><text x="311" y="501.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">1</text><path d="M320,71.5 C300.0,71.5 300.0,54.5 280,54.5" fill="none" stroke="#58958c" stroke-width="1.3"/><text x="311" y="68.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">N</text><text x="283" y="51.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">1</text><path d="M580,88.5 C600.0,88.5 600.0,54.5 620,54.5" fill="none" stroke="#58958c" stroke-width="1.3"/><text x="583" y="85.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">N</text><text x="611" y="51.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">1</text><path d="M320,339.5 H308 V54.5 H320" fill="none" stroke="#58958c" stroke-width="1.3"/><text x="311" y="336.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">N</text><text x="311" y="51.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">1</text><path d="M20,339.5 H8 V54.5 H20" fill="none" stroke="#58958c" stroke-width="1.3"/><text x="11" y="336.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">N</text><text x="11" y="51.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">1</text><path d="M280,356.5 C300.0,356.5 300.0,54.5 320,54.5" fill="none" stroke="#58958c" stroke-width="1.3"/><text x="283" y="353.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">N</text><text x="311" y="51.5" font-family="Space Grotesk, sans-serif" font-size="9" font-weight="600" fill="#58958c">1</text><rect x="620" y="334" width="260" height="115" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" /><path d="M620,339 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#142d2b"/><text x="630" y="351" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#fff7f3">configuracion</text><text x="630" y="372" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">clave</text><text x="790" y="372" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="738" y="363.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="748.2" y="372" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="628" x2="872" y1="377" y2="377" stroke="#eef1f0"/><text x="630" y="389" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">valor</text><text x="790" y="389" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">jsonb</text><line x1="628" x2="872" y1="394" y2="394" stroke="#eef1f0"/><text x="630" y="406" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">descripcion</text><text x="790" y="406" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="411" y2="411" stroke="#eef1f0"/><text x="630" y="423" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">actualizado_en</text><text x="790" y="423" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><line x1="628" x2="872" y1="428" y2="428" stroke="#eef1f0"/><text x="630" y="440" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">actualizado_por</text><text x="790" y="440" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="320" y="548" width="260" height="98" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" /><path d="M320,553 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#142d2b"/><text x="330" y="565" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#fff7f3">equipo_reclutamiento</text><text x="330" y="586" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">id</text><text x="490" y="586" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="438" y="577.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="448.2" y="586" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="328" x2="572" y1="591" y2="591" stroke="#eef1f0"/><text x="330" y="603" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">email</text><text x="490" y="603" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="438" y="594.5" width="20.4" height="11" rx="2" fill="#f1ebe7"/><text x="448.2" y="603" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">UQ</text><line x1="328" x2="572" y1="608" y2="608" stroke="#eef1f0"/><text x="330" y="620" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">nombre</text><text x="490" y="620" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="328" x2="572" y1="625" y2="625" stroke="#eef1f0"/><text x="330" y="637" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">activo</text><text x="490" y="637" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">boolean</text><rect x="20" y="20" width="260" height="200" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" /><path d="M20,25 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#142d2b"/><text x="30" y="37" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#fff7f3">referentes</text><text x="30" y="58" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">id</text><text x="190" y="58" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="138" y="49.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="148.2" y="58" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="28" x2="272" y1="63" y2="63" stroke="#eef1f0"/><text x="30" y="75" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">nombre</text><text x="190" y="75" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="28" x2="272" y1="80" y2="80" stroke="#eef1f0"/><text x="30" y="92" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">apellido</text><text x="190" y="92" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="28" x2="272" y1="97" y2="97" stroke="#eef1f0"/><text x="30" y="109" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">email</text><text x="190" y="109" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="138" y="100.5" width="20.4" height="11" rx="2" fill="#f1ebe7"/><text x="148.2" y="109" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">UQ</text><line x1="28" x2="272" y1="114" y2="114" stroke="#eef1f0"/><text x="30" y="126" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">linkedin_url</text><text x="190" y="126" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="28" x2="272" y1="131" y2="131" stroke="#eef1f0"/><text x="30" y="143" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">codigo_referido</text><text x="190" y="143" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="138" y="134.5" width="20.4" height="11" rx="2" fill="#f1ebe7"/><text x="148.2" y="143" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">UQ</text><line x1="28" x2="272" y1="148" y2="148" stroke="#eef1f0"/><text x="30" y="160" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">colocado</text><text x="190" y="160" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">boolean</text><line x1="28" x2="272" y1="165" y2="165" stroke="#eef1f0"/><text x="30" y="177" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">sancionado_en</text><text x="190" y="177" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><line x1="28" x2="272" y1="182" y2="182" stroke="#eef1f0"/><text x="30" y="194" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">auth_user_id</text><text x="190" y="194" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="138" y="185.5" width="20.4" height="11" rx="2" fill="#dceeea"/><text x="148.2" y="194" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">FK</text><rect x="161.4" y="185.5" width="20.4" height="11" rx="2" fill="#f1ebe7"/><text x="171.6" y="194" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">UQ</text><line x1="28" x2="272" y1="199" y2="199" stroke="#eef1f0"/><text x="30" y="211" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">creado_en</text><text x="190" y="211" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><rect x="620" y="20" width="260" height="268" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" /><path d="M620,25 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#142d2b"/><text x="630" y="37" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#fff7f3">candidatos</text><text x="630" y="58" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">id</text><text x="790" y="58" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="738" y="49.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="748.2" y="58" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="628" x2="872" y1="63" y2="63" stroke="#eef1f0"/><text x="630" y="75" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">nombre</text><text x="790" y="75" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="80" y2="80" stroke="#eef1f0"/><text x="630" y="92" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">apellido</text><text x="790" y="92" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="97" y2="97" stroke="#eef1f0"/><text x="630" y="109" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">email</text><text x="790" y="109" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="738" y="100.5" width="20.4" height="11" rx="2" fill="#f1ebe7"/><text x="748.2" y="109" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">UQ</text><line x1="628" x2="872" y1="114" y2="114" stroke="#eef1f0"/><text x="630" y="126" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">linkedin_url</text><text x="790" y="126" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="738" y="117.5" width="20.4" height="11" rx="2" fill="#f1ebe7"/><text x="748.2" y="126" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">UQ</text><line x1="628" x2="872" y1="131" y2="131" stroke="#eef1f0"/><text x="630" y="143" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">especialidad</text><text x="790" y="143" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">especialidad</text><line x1="628" x2="872" y1="148" y2="148" stroke="#eef1f0"/><text x="630" y="160" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">usa_revit</text><text x="790" y="160" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">boolean</text><line x1="628" x2="872" y1="165" y2="165" stroke="#eef1f0"/><text x="630" y="177" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">seniority</text><text x="790" y="177" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">seniority</text><line x1="628" x2="872" y1="182" y2="182" stroke="#eef1f0"/><text x="630" y="194" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">nivel_ingles</text><text x="790" y="194" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">nivel_ingles</text><line x1="628" x2="872" y1="199" y2="199" stroke="#eef1f0"/><text x="630" y="211" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">cv_url</text><text x="790" y="211" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="216" y2="216" stroke="#eef1f0"/><text x="630" y="228" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">acepto_visibilidad</text><text x="790" y="228" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">boolean</text><line x1="628" x2="872" y1="233" y2="233" stroke="#eef1f0"/><text x="630" y="245" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">origen</text><text x="790" y="245" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="250" y2="250" stroke="#eef1f0"/><text x="630" y="262" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">creado_en</text><text x="790" y="262" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><line x1="628" x2="872" y1="267" y2="267" stroke="#eef1f0"/><text x="630" y="279" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">es_prioritario</text><text x="790" y="279" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">boolean</text><rect x="738" y="270.5" width="26.6" height="11" rx="2" fill="#f1ebe7"/><text x="751.3" y="279" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">GEN</text><rect x="320" y="20" width="260" height="149" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" /><path d="M320,25 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#142d2b"/><text x="330" y="37" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#fff7f3">referidos</text><text x="330" y="58" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">id</text><text x="490" y="58" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="438" y="49.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="448.2" y="58" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="328" x2="572" y1="63" y2="63" stroke="#eef1f0"/><text x="330" y="75" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">referente_id</text><text x="490" y="75" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="438" y="66.5" width="20.4" height="11" rx="2" fill="#dceeea"/><text x="448.2" y="75" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">FK</text><line x1="328" x2="572" y1="80" y2="80" stroke="#eef1f0"/><text x="330" y="92" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">candidato_id</text><text x="490" y="92" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="438" y="83.5" width="20.4" height="11" rx="2" fill="#dceeea"/><text x="448.2" y="92" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">FK</text><line x1="328" x2="572" y1="97" y2="97" stroke="#eef1f0"/><text x="330" y="109" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">estado</text><text x="490" y="109" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">estado_referido</text><line x1="328" x2="572" y1="114" y2="114" stroke="#eef1f0"/><text x="330" y="126" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">motivos_revision</text><text x="490" y="126" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text[]</text><line x1="328" x2="572" y1="131" y2="131" stroke="#eef1f0"/><text x="330" y="143" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">validado_en</text><text x="490" y="143" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><line x1="328" x2="572" y1="148" y2="148" stroke="#eef1f0"/><text x="330" y="160" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">creado_en</text><text x="490" y="160" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><rect x="320" y="288" width="260" height="166" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" /><path d="M320,293 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#142d2b"/><text x="330" y="305" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#fff7f3">historial_estados</text><text x="330" y="326" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">id</text><text x="490" y="326" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">bigint</text><rect x="438" y="317.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="448.2" y="326" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="328" x2="572" y1="331" y2="331" stroke="#eef1f0"/><text x="330" y="343" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">referido_id</text><text x="490" y="343" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="438" y="334.5" width="20.4" height="11" rx="2" fill="#dceeea"/><text x="448.2" y="343" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">FK</text><line x1="328" x2="572" y1="348" y2="348" stroke="#eef1f0"/><text x="330" y="360" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">estado_anterior</text><text x="490" y="360" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">estado_referido</text><line x1="328" x2="572" y1="365" y2="365" stroke="#eef1f0"/><text x="330" y="377" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">estado_nuevo</text><text x="490" y="377" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">estado_referido</text><line x1="328" x2="572" y1="382" y2="382" stroke="#eef1f0"/><text x="330" y="394" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">actor_tipo</text><text x="490" y="394" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">actor</text><line x1="328" x2="572" y1="399" y2="399" stroke="#eef1f0"/><text x="330" y="411" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">actor_id</text><text x="490" y="411" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><line x1="328" x2="572" y1="416" y2="416" stroke="#eef1f0"/><text x="330" y="428" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">motivo</text><text x="490" y="428" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="328" x2="572" y1="433" y2="433" stroke="#eef1f0"/><text x="330" y="445" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">creado_en</text><text x="490" y="445" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><rect x="20" y="288" width="260" height="251" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" /><path d="M20,293 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#142d2b"/><text x="30" y="305" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#fff7f3">movimientos_pago</text><text x="30" y="326" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">id</text><text x="190" y="326" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="138" y="317.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="148.2" y="326" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="28" x2="272" y1="331" y2="331" stroke="#eef1f0"/><text x="30" y="343" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">referente_id</text><text x="190" y="343" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="138" y="334.5" width="20.4" height="11" rx="2" fill="#dceeea"/><text x="148.2" y="343" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">FK</text><line x1="28" x2="272" y1="348" y2="348" stroke="#eef1f0"/><text x="30" y="360" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">referido_id</text><text x="190" y="360" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="138" y="351.5" width="20.4" height="11" rx="2" fill="#dceeea"/><text x="148.2" y="360" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">FK</text><line x1="28" x2="272" y1="365" y2="365" stroke="#eef1f0"/><text x="30" y="377" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">concepto</text><text x="190" y="377" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">concepto_pago</text><line x1="28" x2="272" y1="382" y2="382" stroke="#eef1f0"/><text x="30" y="394" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">hito_umbral</text><text x="190" y="394" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">integer</text><line x1="28" x2="272" y1="399" y2="399" stroke="#eef1f0"/><text x="30" y="411" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">periodo_hito</text><text x="190" y="411" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">integer</text><line x1="28" x2="272" y1="416" y2="416" stroke="#eef1f0"/><text x="30" y="428" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">monto_usd</text><text x="190" y="428" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">numeric</text><line x1="28" x2="272" y1="433" y2="433" stroke="#eef1f0"/><text x="30" y="445" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">estado</text><text x="190" y="445" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">estado_pago</text><line x1="28" x2="272" y1="450" y2="450" stroke="#eef1f0"/><text x="30" y="462" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">ciclo_pago</text><text x="190" y="462" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="28" x2="272" y1="467" y2="467" stroke="#eef1f0"/><text x="30" y="479" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">metodo_pago</text><text x="190" y="479" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">metodo_pago</text><line x1="28" x2="272" y1="484" y2="484" stroke="#eef1f0"/><text x="30" y="496" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">preferencia_cobro</text><text x="190" y="496" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="28" x2="272" y1="501" y2="501" stroke="#eef1f0"/><text x="30" y="513" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">pagado_en</text><text x="190" y="513" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><line x1="28" x2="272" y1="518" y2="518" stroke="#eef1f0"/><text x="30" y="530" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">creado_en</text><text x="190" y="530" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><rect x="620" y="470" width="260" height="81" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" stroke-dasharray="4 3"/><path d="M620,475 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#e6ebe9"/><text x="630" y="487" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#142d2b">secretos_internos</text><text x="870" y="487" text-anchor="end" font-family="Manrope, sans-serif" font-size="9" font-weight="600" fill="#4a5f5b">interna</text><text x="630" y="508" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">clave</text><text x="790" y="508" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><rect x="738" y="499.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="748.2" y="508" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text><line x1="628" x2="872" y1="513" y2="513" stroke="#eef1f0"/><text x="630" y="525" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">valor</text><text x="790" y="525" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="530" y2="530" stroke="#eef1f0"/><text x="630" y="542" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">actualizado_en</text><text x="790" y="542" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><rect x="620" y="560" width="260" height="81" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" stroke-dasharray="4 3"/><path d="M620,565 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#e6ebe9"/><text x="630" y="577" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#142d2b">intentos_consulta_codigo</text><text x="870" y="577" text-anchor="end" font-family="Manrope, sans-serif" font-size="9" font-weight="600" fill="#4a5f5b">interna</text><text x="630" y="598" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">ip</text><text x="790" y="598" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="603" y2="603" stroke="#eef1f0"/><text x="630" y="615" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">codigo</text><text x="790" y="615" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">text</text><line x1="628" x2="872" y1="620" y2="620" stroke="#eef1f0"/><text x="630" y="632" font-family="Manrope, sans-serif" font-size="10.5" font-weight="500" fill="#142d2b">creado_en</text><text x="790" y="632" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">timestamptz</text><rect x="320" y="470" width="260" height="47" rx="5" fill="#fff" stroke="#142d2b" stroke-width="1" stroke-dasharray="4 3"/><path d="M320,475 a5,5 0 0 1 5,-5 h250 a5,5 0 0 1 5,5 v21 h-260 z" fill="#e6ebe9"/><text x="330" y="487" font-family="Space Grotesk, sans-serif" font-size="12" font-weight="600" fill="#142d2b">auth.users</text><text x="570" y="487" text-anchor="end" font-family="Manrope, sans-serif" font-size="9" font-weight="600" fill="#4a5f5b">Supabase Auth</text><text x="330" y="508" font-family="Manrope, sans-serif" font-size="10.5" font-weight="700" fill="#142d2b">id</text><text x="490" y="508" font-family="Manrope, sans-serif" font-size="9.5" fill="#4a5f5b">uuid</text><rect x="438" y="499.5" width="20.4" height="11" rx="2" fill="#d0ef76"/><text x="448.2" y="508" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="7.5" font-weight="700" fill="#142d2b">PK</text></svg>
+<!-- er:fin -->
+    <figcaption>Generado desde <code>supabase/schema.sql</code> y <code>supabase/consulta_referente.sql</code>. PK: clave primaria · FK: clave foránea · UQ: única · GEN: columna generada por la base. N y 1 marcan cada extremo de la relación. En línea punteada, tablas internas o de Supabase Auth.</figcaption>
+  </figure>
+
+  <h2>Entidades</h2>
+  <p class="nota">Además de lo listado, cada tabla tiene <code>id</code> (uuid, PK) y <code>creado_en</code>, salvo que se indique otra cosa.</p>
+
+  <div class="entidad">
+    <h3>referentes</h3>
+    <p>Profesionales colocados que pueden referir. Los carga WorldTeams.</p>
+    <table class="campos">
+      <thead><tr><th>Campo</th><th>Tipo y restricción</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>nombre, apellido</td><td>text · no vacíos</td><td>Se muestran al candidato en el link.</td></tr>
+        <tr><td>email</td><td>text · único, normalizado</td><td>Acceso al portal y detección de autorreferido.</td></tr>
+        <tr><td>linkedin_url</td><td>text · forma canónica</td><td>Detección de autorreferido.</td></tr>
+        <tr><td>codigo_referido</td><td>text · único, formato validado</td><td>El link <code>/r/{código}</code>. Lo genera un trigger y no se puede cambiar.</td></tr>
+        <tr><td>colocado</td><td>boolean</td><td>Solo un colocado abre referidos. Si deja de estarlo, cobra por transferencia.</td></tr>
+        <tr><td>sancionado_en</td><td>timestamptz · nulo = sin sanción</td><td>Un sancionado no abre referidos ni genera pagos nuevos.</td></tr>
+        <tr><td>auth_user_id</td><td>uuid · único, FK a auth.users</td><td>Vínculo con la sesión del portal.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entidad">
+    <h3>candidatos <span class="tag">talent pool</span></h3>
+    <p>Cada persona en la base, haya llegado por un referido o directo.</p>
+    <table class="campos">
+      <thead><tr><th>Campo</th><th>Tipo y restricción</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>nombre, apellido</td><td>text · no vacíos</td><td>Lo único que ve el referente, junto con el estado.</td></tr>
+        <tr><td>email</td><td>text · único, normalizado</td><td>Evita duplicados en el pool.</td></tr>
+        <tr><td>linkedin_url</td><td>text · único, forma canónica</td><td>Segundo control de duplicados.</td></tr>
+        <tr><td>especialidad</td><td>enum · arquitectura | ingenieria</td><td>Perfil y prioridad.</td></tr>
+        <tr><td>usa_revit</td><td>boolean</td><td>Perfil y prioridad.</td></tr>
+        <tr><td>seniority</td><td>enum · junior | semi_senior | senior</td><td>Perfil y prioridad.</td></tr>
+        <tr><td>nivel_ingles</td><td>enum · basico … nativo</td><td>Perfil y prioridad.</td></tr>
+        <tr><td>cv_url</td><td>text · ruta en el bucket privado <code>cvs</code></td><td>CV en PDF, hasta 5 MB. Solo lo lee reclutamiento.</td></tr>
+        <tr><td>acepto_visibilidad</td><td>boolean · obligatorio si llegó referido</td><td>Consentimiento para que el referente vea su nombre y estado.</td></tr>
+        <tr><td>origen</td><td>text · referido | directo</td><td>Distingue a quien ya estaba en el pool.</td></tr>
+        <tr><td>es_prioritario</td><td>boolean · GENERATED</td><td>Arquitectura + Revit + senior + inglés avanzado o nativo. Lo calcula la base.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entidad">
+    <h3>referidos</h3>
+    <p>Une a un candidato con el referente cuyo link usó. Lleva el estado del caso.</p>
+    <table class="campos">
+      <thead><tr><th>Campo</th><th>Tipo y restricción</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>referente_id</td><td>uuid · FK, no se puede cambiar</td><td>A quién se le atribuye el premio.</td></tr>
+        <tr><td>candidato_id</td><td>uuid · FK, no se puede cambiar</td><td>Un solo referido vigente por candidato (índice único parcial, sin contar los descartados).</td></tr>
+        <tr><td>estado</td><td>enum · transiciones controladas por trigger</td><td>registrado, validado, en_revision, rechazado o descartado.</td></tr>
+        <tr><td>motivos_revision</td><td>text[]</td><td>Por qué entró a revisión o se descartó.</td></tr>
+        <tr><td>validado_en</td><td>timestamptz · solo si está validado</td><td>Define el ciclo de pago y el año de los hitos.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entidad">
+    <h3>movimientos_pago</h3>
+    <p>El libro de pagos: cada monto es una fila, con el valor copiado de la configuración al crearse.</p>
+    <table class="campos">
+      <thead><tr><th>Campo</th><th>Tipo y restricción</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>referente_id</td><td>uuid · FK</td><td>A quién se le paga.</td></tr>
+        <tr><td>referido_id</td><td>uuid · FK, nulo en los bonos</td><td>Qué referido lo generó.</td></tr>
+        <tr><td>concepto</td><td>enum · base | extra_prioritario | bono_hito</td><td>Cada concepto es una fila que se audita por separado.</td></tr>
+        <tr><td>hito_umbral, periodo_hito</td><td>integer · solo en bono_hito</td><td>Qué hito (3, 6 o 10) y de qué año.</td></tr>
+        <tr><td>monto_usd</td><td>numeric · mayor que 0, inmutable</td><td>El monto vigente al validar; cambiar la configuración después no lo toca.</td></tr>
+        <tr><td>estado</td><td>enum · pendiente | pagado | cancelado_sancion</td><td>Un movimiento cerrado ya no se modifica.</td></tr>
+        <tr><td>ciclo_pago</td><td>text · AAAA-MM</td><td>Mes de liquidación según el día de corte.</td></tr>
+        <tr><td>metodo_pago</td><td>enum · liquidacion_sueldo | transferencia</td><td>Transferencia si el referente ya no está colocado.</td></tr>
+        <tr><td>preferencia_cobro</td><td>text · por defecto 'efectivo'</td><td>Previsto para el canje de la segunda etapa.</td></tr>
+        <tr><td>pagado_en</td><td>timestamptz · solo si está pagado</td><td>Fecha de pago.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entidad">
+    <h3>historial_estados <span class="tag">solo inserción</span></h3>
+    <table class="campos">
+      <thead><tr><th>Campo</th><th>Tipo y restricción</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>id</td><td>bigint · PK identity</td><td>Orden de los cambios.</td></tr>
+        <tr><td>referido_id</td><td>uuid · FK</td><td>De qué caso.</td></tr>
+        <tr><td>estado_anterior, estado_nuevo</td><td>enum · el anterior es nulo en el alta</td><td>Cada alta y cada cambio de estado.</td></tr>
+        <tr><td>actor_tipo, actor_id</td><td>enum sistema | reclutamiento · uuid</td><td>Quién decidió; el id es el del revisor.</td></tr>
+        <tr><td>motivo</td><td>text</td><td>Por qué.</td></tr>
+        <tr><td>creado_en</td><td>timestamptz</td><td>Cuándo.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entidad">
+    <h3>Configuración, reclutamiento, internas y vistas</h3>
+    <table class="campos">
+      <thead><tr><th>Objeto</th><th>Forma</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>configuracion</td><td>clave text PK · valor jsonb · descripcion · actualizado_en/por</td><td>Montos, hitos, día de corte, zona horaria, plazos, alerta de volumen y límite por IP. Un trigger valida cada valor al guardarlo y registra quién lo cambió.</td></tr>
+        <tr><td>equipo_reclutamiento</td><td>email único · nombre · activo</td><td>Quién entra al panel. Sin políticas de lectura: se consulta con <code>es_reclutamiento()</code>.</td></tr>
+        <tr><td>secretos_internos</td><td>tabla interna</td><td>El secreto de aplicación que exigen las dos funciones que llama la landing. Sin permisos para anónimo ni autenticado.</td></tr>
+        <tr><td>intentos_consulta_codigo</td><td>tabla interna · PK (ip, código)</td><td>Códigos inexistentes que probó cada IP, para el tope de 10 cada 600 s.</td></tr>
+        <tr><td>v_mis_referidos</td><td>vista del portal</td><td>Nombre y estado de los referidos propios; rechazado y descartado se ven como "no avanzó".</td></tr>
+        <tr><td>v_progreso_referente</td><td>vista del portal</td><td>Validados del año, próximo hito y cuántos faltan.</td></tr>
+        <tr><td>v_cierre_ciclo</td><td>vista de n8n</td><td>Movimientos pendientes por ciclo, referente y método de pago, para el cierre mensual.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Tipos enumerados</h2>
+  <p><code>estado_referido</code> (registrado · validado · en_revision · rechazado · descartado) · <code>concepto_pago</code> (base · extra_prioritario · bono_hito) · <code>estado_pago</code> (pendiente · pagado · cancelado_sancion) · <code>metodo_pago</code> (liquidacion_sueldo · transferencia) · <code>actor</code> (sistema · reclutamiento) · y los del perfil: <code>especialidad</code> (arquitectura · ingenieria), <code>seniority</code> (junior · semi_senior · senior) y <code>nivel_ingles</code> (basico · intermedio · avanzado · nativo). Todos llevan el prefijo <code>tipo_</code> en la base.</p>
+
+  <h2>Restricciones que importan</h2>
+  <table class="compacta">
+    <tbody>
+      <tr><td>Sin duplicados</td><td><code>UNIQUE</code> en email y LinkedIn de candidatos, normalizados por trigger antes de guardar.</td></tr>
+      <tr><td>Un referido vigente</td><td>Índice único parcial <code>referidos (candidato_id) where estado &lt;&gt; 'descartado'</code>: el premio va a un solo referente.</td></tr>
+      <tr><td>Prioridad calculada</td><td><code>es_prioritario</code> es <code>GENERATED ALWAYS … STORED</code>: nadie la escribe.</td></tr>
+      <tr><td>Formato del código</td><td><code>CHECK</code> <code>^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{8}$</code>; único e inmutable.</td></tr>
+      <tr><td>Un pago por concepto</td><td><code>UNIQUE (referido_id, concepto)</code>: repetir la validación no duplica el pago.</td></tr>
+      <tr><td>Un hito por año</td><td><code>UNIQUE (referente_id, hito_umbral, periodo_hito)</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Triggers</h2>
+  <table class="compacta">
+    <tbody>
+      <tr><td>Normalización</td><td>Email en minúsculas y sin espacios; LinkedIn a <code>https://www.linkedin.com/in/usuario</code> (o error si no es un perfil).</td></tr>
+      <tr><td>Código del referente</td><td>Se genera al crear (nombre + 8 caracteres base36 del generador criptográfico de Postgres) y no se puede cambiar.</td></tr>
+      <tr><td>Reglas del referido</td><td>Nace registrado o descartado; solo lo abre un referente colocado y sin sanción; bloquea el autorreferido; transiciones permitidas: de registrado a validado o en_revision, de en_revision a validado o rechazado, y de rechazado a en_revision (reabrir).</td></tr>
+      <tr><td>Historial</td><td>Cada alta y cada cambio de estado escribe una fila. Otro trigger impide modificarla o borrarla, y a la service role se le quitó el permiso.</td></tr>
+      <tr><td>Pagos al validar</td><td>Al pasar a validado se ejecuta <code>crear_movimientos_validacion</code>.</td></tr>
+      <tr><td>Movimientos</td><td>Monto y concepto inmutables; un movimiento pagado o cancelado no se toca; un sancionado no genera nuevos.</td></tr>
+      <tr><td>Configuración</td><td>Valida tipo y rango de cada clave al guardarla (por ejemplo, el día de corte va de 1 a 28 y la zona horaria tiene que existir).</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Funciones de negocio</h2>
+  <table class="compacta">
+    <thead><tr><th>Función</th><th>Qué hace</th><th>Quién la ejecuta</th></tr></thead>
+    <tbody>
+      <tr><td>registrar_referido</td><td>En una transacción: normaliza, bloquea por email y LinkedIn, valida el código, detecta autorreferido y candidato existente, evalúa las reglas de revisión, inserta y valida o manda a revisión. Devuelve un JSON con resultado, estado, monto, bono, ciclo y próximo hito.</td><td>service_role (n8n)</td></tr>
+      <tr><td>resolver_referido</td><td>Aprobar, rechazar o reabrir un caso. Verifica <code>es_reclutamiento()</code> adentro, bloquea la fila y deja al revisor en el historial.</td><td>authenticated (panel)</td></tr>
+      <tr><td>cambiar_estado_referido</td><td>Cambia el estado y deja actor y motivo en el historial.</td><td>service_role</td></tr>
+      <tr><td>crear_movimientos_validacion</td><td>Base, extra prioritario y bonos de hito con los montos de <code>configuracion</code>; ciclo según el día de corte y la zona horaria. Idempotente.</td><td>trigger</td></tr>
+      <tr><td>sancionar_referente</td><td>Marca la sanción y cancela los movimientos pendientes; no toca lo pagado ni los estados.</td><td>service_role</td></tr>
+      <tr><td>consultar_referente_por_codigo</td><td>Valida el link desde la landing: responde ok, no_existe o bloqueada (tope por IP). Sin el secreto de aplicación, no_autorizado.</td><td>anon, con secreto</td></tr>
+      <tr><td>email_habilitado</td><td>¿Este email puede entrar? Responde referente, reclutamiento o ninguno. Sin el secreto, no_autorizado.</td><td>anon, con secreto</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Permisos por rol (RLS activada en todas las tablas)</h2>
+  <table class="compacta">
+    <thead><tr><th>Rol</th><th>Puede</th></tr></thead>
+    <tbody>
+      <tr><td>Anónimo (landing)</td><td>Leer <code>configuracion</code> (montos y plazos públicos) y llamar a las dos funciones con secreto. No lee ninguna otra tabla.</td></tr>
+      <tr><td>Referente</td><td>Su fila de <code>referentes</code>, sus <code>movimientos_pago</code> y las vistas <code>v_mis_referidos</code> y <code>v_progreso_referente</code>, filtradas por <code>referente_actual_id()</code>. No lee candidatos ni referidos en crudo.</td></tr>
+      <tr><td>Reclutamiento</td><td>Leer referentes, candidatos, referidos, historial y movimientos; leer los CV del bucket; ejecutar <code>resolver_referido</code>.</td></tr>
+      <tr><td>service_role (n8n)</td><td>El único con escritura directa sobre las tablas; ejecuta <code>registrar_referido</code>, <code>cambiar_estado_referido</code> y <code>sancionar_referente</code>. No puede modificar ni borrar el historial ni ejecutar <code>resolver_referido</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Por qué así</h2>
+  <ul>
+    <li><strong>Las garantías viven en la base y n8n solo orquesta:</strong> un flujo repetido o una llamada directa no saltea una restricción ni un trigger.</li>
+    <li><strong><code>es_prioritario</code> lo calcula la base:</strong> la regla está en un solo lugar y la app, el flujo y la base no pueden discrepar.</li>
+    <li><strong>Los pagos los crea un trigger al validar:</strong> "se paga si y solo si se validó" no depende de que n8n recuerde cada concepto, y las claves únicas evitan pagar dos veces.</li>
+    <li><strong>El historial es de solo inserción:</strong> cada decisión queda con actor y motivo, y nadie, tampoco n8n, la reescribe.</li>
+    <li><strong>Los casos se resuelven con una función que verifica el permiso:</strong> <code>resolver_referido</code> corre con la sesión de la persona y exige <code>es_reclutamiento()</code>. El permiso lo controla la base, no el botón.</li>
+  </ul>
+</section>
+
+
+<section class="seccion s3 flujo">
+  <header class="titulo-seccion">
+    <span class="num">3</span>
+    <h1>Landing para referir</h1>
+    <span class="bajada"><a href="https://worldteams-referidos.vercel.app" style="color:inherit">worldteams-referidos.vercel.app</a> · Next.js en Vercel</span>
+  </header>
+
+  <p class="intro">Una sola app: la página del programa para el referente, el formulario para la persona recomendada, y el portal y el panel, cada uno con su rol.</p>
+
+  <div class="capturas">
+    <figure>
+      <img src="recursos/captura-inicio-escritorio.png" alt="Inicio del programa en escritorio">
+      <figcaption>"/" en escritorio, el sitio publicado.</figcaption>
+    </figure>
+    <figure>
+      <img src="recursos/captura-link-celular.png" alt="Formulario del link de referido en celular">
+      <figcaption>/r/lucia-k7q2m9xd, celular.</figcaption>
+    </figure>
+  </div>
+
+  <table class="compacta">
+    <thead><tr><th>Pantalla</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td>/</td><td>El programa para el referente: cómo funciona, premios e hitos, una calculadora de premios por año, preguntas frecuentes y el acceso al portal. Los montos salen de la configuración, no están escritos a mano.</td></tr>
+      <tr><td>/r/{código}</td><td>El formulario para la persona recomendada: nombra a quien la recomendó, pide datos, perfil y CV en PDF, el aviso de visibilidad y reCAPTCHA v3. Al enviar muestra la confirmación con los próximos pasos o, si ya estaba en la base, un mensaje neutro. Un link inexistente o una IP bloqueada ven una pantalla propia.</td></tr>
+      <tr><td>/ingresar</td><td>Login por magic link, solo para emails habilitados. Siempre responde lo mismo, esté o no habilitado el email.</td></tr>
+      <tr><td>/portal</td><td>El referente ve su link para copiar, sus referidos con nombre y estado, sus premios pendientes y pagados y la barra al próximo hito. Solo lectura.</td></tr>
+      <tr><td>/panel</td><td>Reclutamiento: la cola de casos en revisión con sus motivos y el plazo vencido, el talent pool con búsqueda y filtro, el CV con un link firmado por 60 segundos, y Aprobar, Rechazar o Reabrir.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="par-panel">
+    <img src="recursos/captura-panel-cola.png" alt="Cola de revisión del panel con datos ficticios">
+    <img src="recursos/captura-panel-pool.png" alt="Talent pool del panel con datos ficticios">
+  </div>
+  <figcaption>Panel de reclutamiento: cola de revisión y talent pool. Capturas de <code>/dev/panel</code>, con datos ficticios.</figcaption>
+
+  <h2>Límites conocidos</h2>
+  <ul class="lista-2">
+    <li>El magic link se tiene que abrir en el mismo navegador en que se pidió (PKCE guarda el verificador en una cookie).</li>
+    <li>Los topes de <code>/ingresar</code> (5 por IP y 3 por email cada 10 minutos) viven en la memoria de cada instancia: con varias, se multiplican. El tope de códigos del link vive en la base.</li>
+    <li>En el talent pool, con JavaScript apagado la tabla se queda en el esqueleto de carga, y al filtrar por estado un candidato aparece si alguno de sus referidos tiene ese estado.</li>
+    <li>Las cifras de la franja de "/" (+750 profesionales, +370 empresas) son un dato público de worldteams.com, sin verificar.</li>
+  </ul>
+</section>
+
+
+<section class="seccion s4 flujo">
+  <header class="titulo-seccion">
+    <span class="num">4</span>
+    <h1>Flujo de automatización</h1>
+    <span class="bajada">n8n · flujo 1, registro de un referido</span>
+  </header>
+
+  <p class="intro">Cuando la persona recomendada envía el formulario, la app verifica reCAPTCHA y reenvía los datos a un webhook de n8n. El flujo sube el CV, registra todo en la base con una sola llamada, responde a la app y manda los mails. El JSON importable (<code>flujo-1-registro.json</code>) va adjunto aparte.</p>
+
+  <figure>
+<!-- flujo:inicio -->
+<svg class="diagrama" viewBox="0 0 1012 288" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Secuencia de nodos del flujo 1, generada desde n8n/flujo-1-registro.json"><defs><marker id="punta" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#58958c"/></marker></defs><path d="M156,41.0 C174,41.0 160,41.0 178,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M324,41.0 C342,41.0 328,41.0 346,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M492,41.0 C510,41.0 496,41.0 514,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M660,41.0 C678,41.0 664,41.0 682,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M828,41.0 C846,41.0 832,41.0 850,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="832" y="36.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">sí</text><path d="M828,41.0 C846,41.0 832,123.0 850,123.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="832" y="57.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">no</text><path d="M996,41.0 H1006 V180 H83.0 V196" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M156,227.0 C174,227.0 160,227.0 178,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="160" y="222.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">sí</text><path d="M83.0,258 V274 H419.0 V258" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="89.0" y="271" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">no</text><path d="M324,227.0 C342,227.0 328,227.0 346,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M492,227.0 C510,227.0 496,227.0 514,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M660,227.0 C678,227.0 664,227.0 682,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M828,227.0 C846,227.0 832,227.0 850,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><rect x="10" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="24" cy="24" r="8.5" fill="#d0ef76"/><text x="24" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">1</text><text x="38" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Webhook</text><text x="20" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Webhook registro</text><rect x="178" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="192" cy="24" r="8.5" fill="#d0ef76"/><text x="192" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">2</text><text x="206" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="188" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Preparar</text><rect x="346" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="360" cy="24" r="8.5" fill="#d0ef76"/><text x="360" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">3</text><text x="374" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="356" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Subir CV</text><rect x="514" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="528" cy="24" r="8.5" fill="#d0ef76"/><text x="528" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">4</text><text x="542" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="524" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Registrar</text><text x="524" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">referido</text><rect x="682" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="696" cy="24" r="8.5" fill="#d0ef76"/><text x="696" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">5</text><text x="710" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Condición</text><text x="692" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">¿Respondió la</text><text x="692" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">función?</text><rect x="850" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="864" cy="24" r="8.5" fill="#d0ef76"/><text x="864" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">6</text><text x="878" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="860" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Normalizar</text><text x="860" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">resultado</text><rect x="850" y="92" width="146" height="62" rx="6" fill="#fff1ec" stroke="#142d2b" stroke-width="1.1" /><circle cx="864" cy="106" r="8.5" fill="#d0ef76"/><text x="864" y="109.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">7</text><text x="878" y="110" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Respuesta</text><text x="860" y="130" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Responder error</text><rect x="10" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="24" cy="210" r="8.5" fill="#d0ef76"/><text x="24" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">8</text><text x="38" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Condición</text><text x="20" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">¿Borrar CV?</text><rect x="178" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="192" cy="210" r="8.5" fill="#d0ef76"/><text x="192" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">9</text><text x="206" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="188" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Borrar CV</text><text x="188" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">huérfano</text><rect x="346" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="360" cy="210" r="8.5" fill="#d0ef76"/><text x="360" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">10</text><text x="374" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Respuesta</text><text x="356" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Responder</text><rect x="514" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="528" cy="210" r="8.5" fill="#d0ef76"/><text x="528" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">11</text><text x="542" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="524" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Leer plazo de</text><text x="524" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">respuesta</text><rect x="682" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="696" cy="210" r="8.5" fill="#d0ef76"/><text x="696" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">12</text><text x="710" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="692" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Armar mails</text><rect x="850" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="864" cy="210" r="8.5" fill="#d0ef76"/><text x="864" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">13</text><text x="878" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="860" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Enviar mail</text><text x="860" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">(Resend)</text></svg>
+<!-- flujo:fin -->
+    <figcaption>Generado desde <code>n8n/flujo-1-registro.json</code>: nodos, orden y conexiones salen del archivo exportado. Borde punteado: el nodo sigue aunque falle. Fondo rosado: respuesta de error.</figcaption>
+  </figure>
+
+  <h2>Nodo por nodo</h2>
+  <table class="compacta">
+    <tbody>
+      <tr><td>1 · Webhook registro</td><td>Recibe el <code>POST</code> multipart con los datos y el CV. Exige el encabezado secreto (credencial Header Auth) y responde desde un nodo posterior.</td></tr>
+      <tr><td>2 · Preparar</td><td>Limpia espacios, pasa <code>usa_revit</code> de "si/no" a booleano y nombra el archivo con un UUID. No calcula <code>es_prioritario</code>. Si falta el CV, corta.</td></tr>
+      <tr><td>3 · Subir CV</td><td>Sube el PDF a <code>cvs/{uuid}.pdf</code>, un bucket privado. Si falla, el flujo se corta sin llamar a la base y la app responde un error.</td></tr>
+      <tr><td>4 · Registrar referido</td><td>Una llamada RPC a <code>registrar_referido</code>. Toda la lógica del registro ocurre ahí, en una transacción.</td></tr>
+      <tr><td>5 · ¿Respondió la función?</td><td>Si el resultado es uno de los conocidos, sigue. Si hubo un error o se agotó el tiempo, va al 7.</td></tr>
+      <tr><td>6 · Normalizar resultado</td><td>Traduce <code>autorreferido</code> a <code>ya_registrado</code>, porque la app conoce tres resultados y una pantalla propia le avisaría a quien intenta hacer trampa. Marca si hay que borrar el CV: se borra siempre que no sea un registro nuevo.</td></tr>
+      <tr><td>7 · Responder error</td><td>502 con <code>{"resultado":"error"}</code>. El CV no se borra, porque no se sabe si la base confirmó.</td></tr>
+      <tr><td>8 · ¿Borrar CV?</td><td>Bifurca según la marca del paso 6.</td></tr>
+      <tr><td>9 · Borrar CV huérfano</td><td>Borra el archivo que sobra. Si el borrado falla, sigue igual.</td></tr>
+      <tr><td>10 · Responder</td><td>200 con el resultado para la app. Se responde antes de mandar mails: un mail caído no rompe el registro.</td></tr>
+      <tr><td>11 · Leer plazo de respuesta</td><td>Lee de <code>configuracion</code> los días hábiles que se le prometen al candidato. Si falla, el mail dice "en los próximos días hábiles".</td></tr>
+      <tr><td>12 · Armar mails</td><td>De 0 a 2 mails, con todo lo que muestran sacado del JSON de la función: confirmación al candidato nuevo; "referido validado" al referente, con monto, bono y avance; "no cuenta" al referente si la persona ya estaba en el pool.</td></tr>
+      <tr><td>13 · Enviar mail (Resend)</td><td>Uno por uno, a un mail por cada 600 ms. Si un envío falla, sigue.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Estado</h2>
+  <p>Verificado el 22/10: el flujo importado en n8n Cloud pasó <code>n8n/probar-flujo-1.mjs</code> (12 de 12), y el formulario real anduvo de punta a punta, en local y en el sitio publicado: registro, referido visible en el portal y mails. Con el dominio verificado llegan el mail al candidato y el del referente.</p>
+
+  <h2>Contrato con la app</h2>
+  <div class="decide">
+    <div>
+      <h3>Entrada</h3>
+      <p><code>POST</code> · <code>multipart/form-data</code> · encabezado <code>x-webhook-secret</code>. Campos: <code>codigo_referente</code>, <code>nombre</code>, <code>apellido</code>, <code>email</code> (en minúsculas), <code>linkedin_url</code> (normalizada), <code>especialidad</code> (arquitectura | ingenieria), <code>usa_revit</code> (si | no), <code>seniority</code>, <code>nivel_ingles</code>, <code>acepto_visibilidad</code> (true) y <code>cv</code> (PDF de hasta 5 MB, extensión y firma ya verificadas por la app). La URL y el secreto solo los tiene el servidor de la app.</p>
+    </div>
+    <div>
+      <h3>Salida</h3>
+      <p><code>200</code> con <code>{"resultado": …}</code>:</p>
+      <ul>
+        <li><code>registrado</code>: candidato nuevo (validado o en revisión) o reintento del mismo referente.</li>
+        <li><code>ya_registrado</code>: ya estaba en el pool, o es un autorreferido.</li>
+        <li><code>codigo_invalido</code>: código inexistente, o referente no colocado o sancionado.</li>
+      </ul>
+      <p>Cualquier otra respuesta hace que la app devuelva 502.</p>
+    </div>
+  </div>
+
+  <h2>Qué decide n8n y qué decide la base</h2>
+  <div class="decide">
+    <div>
+      <h3>n8n orquesta</h3>
+      <ul>
+        <li>Autentica el webhook y adapta los tipos.</li>
+        <li>Nombra y sube el CV, y borra el que sobra.</li>
+        <li>Traduce el resultado para la app y responde.</li>
+        <li>Arma y manda los mails, sin recalcular montos.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>La base decide</h3>
+      <ul>
+        <li>Si el código es válido y el referente puede referir.</li>
+        <li>Autorreferido, duplicados y candidato ya en el pool.</li>
+        <li>Revisión o validación automática, y si el perfil es prioritario.</li>
+        <li>Pagos, ciclo, hitos e historial, en la misma transacción.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Flujos que quedaron como propuesta</h2>
+  <ul>
+    <li><span class="marca-no">No implementado</span><strong>Resumen diario a reclutamiento:</strong> casos en revisión y vencidos, solo si hay pendientes. Un caso vencido también se avisa a la coordinación de Operaciones.</li>
+    <li><span class="marca-no">No implementado</span><strong>Cierre mensual:</strong> el día de corte, un CSV de <code>v_cierre_ciclo</code> por mail a quien liquida sueldos, con un botón "Confirmar pago" que marca los movimientos como pagados.</li>
+    <li><span class="marca-no">No implementado</span><strong>Bienvenida al referente:</strong> una sola vez, con su link y el acceso al portal.</li>
+    <li><span class="marca-no">No implementado</span><strong>Aviso al referente cuando reclutamiento resuelve un caso:</strong> hoy se entera por el portal.</li>
+  </ul>
+</section>
+
+
+<section class="seccion s5 flujo">
+  <header class="titulo-seccion">
+    <span class="num">5</span>
+    <h1>Nota de decisiones</h1>
+    <span class="bajada">Registro completo: <code>DECISIONS.md</code></span>
+  </header>
+
+  <h2>Qué supuse</h2>
+  <p>WorldTeams respondió cuatro cosas: la meta se mide en ingresos al pool, el perfil más buscado es el arquitecto senior con Revit y buen inglés, no hay prioridad por país y no hay presupuesto definido. Lo demás quedó como supuesto, para confirmar en la charla:</p>
+  <ul>
+    <li>WorldTeams liquida el sueldo de los colocados y puede sumar el premio. A quien ya no está colocado le puede pagar por transferencia. Para el cierre mensual acepta un CSV.</li>
+    <li>WorldTeams ya filtra a los candidatos antes de que entren al pool, y el programa se engancha a ese paso. La tabla <code>candidatos</code> representa el pool; en producción se sincronizaría con su sistema de seguimiento de candidatos.</li>
+    <li>Los "+750 profesionales" y "+370 empresas" de su web son un dato público, sin verificar, y pueden incluir gente no colocada: que haya 750 referentes es un supuesto a confirmar con WorldTeams. Los montos son una propuesta propia y la participación de los escenarios es estimada.</li>
+    <li>"Landing para referir" son dos páginas: la del referente y la del candidato. El stack (Supabase, n8n, Resend, Next.js) es mío: no pregunté el de WorldTeams.</li>
+    <li>El magic link solo emite sesión para emails confirmados, y el registro libre en Auth queda cerrado. Vercel sobrescribe los encabezados de IP: hay que confirmarlo en el deploy.</li>
+    <li>No hay función para levantar una sanción: si hiciera falta, se edita la fila desde Supabase.</li>
+  </ul>
+
+  <h2>Decisiones clave</h2>
+  <table class="compacta">
+    <tbody>
+      <tr><td>Solo colocados refieren</td><td>Tienen sueldo donde cobrar, su criterio ya fue validado y no tienen conflicto de intereses. Abrir el programa a otros queda para cuando la base de referentes no alcance.</td></tr>
+      <tr><td>Se paga al validar</td><td>La meta son ingresos al pool. Pagar al colocar llega tarde; pagar al registrarse invita a registros falsos.</td></tr>
+      <tr><td>Efectivo, fijo y con hitos</td><td>USD 50, o 100 si el perfil es prioritario, y bonos de +75, +150 y +300 por año. Descarté un porcentaje del sueldo: no tiene techo, es injusto entre referentes y usa un dato sensible.</td></tr>
+      <tr><td>Revisión solo de los dudosos</td><td>Revisar cada caso no escala a 1.000 por mes: hay un solo punto de aprobación humana.</td></tr>
+      <tr><td>Link no adivinable</td><td>Sufijo de 8 caracteres base36 (36<sup>8</sup>, unos 2,8 billones de combinaciones). La segunda capa vive en la base: <code>consultar_referente_por_codigo</code> cuenta los códigos inexistentes por IP y bloquea al llegar a 10 en 600 segundos (<code>limite_consulta_codigo</code>), y solo responde con el secreto que tiene el servidor de la app.</td></tr>
+      <tr><td>Garantías en la base</td><td>Registro en una transacción, pagos por trigger, historial de solo inserción y RLS en todas las tablas. n8n orquesta y la service role solo vive en n8n.</td></tr>
+      <tr><td>Panel sin n8n</td><td>Aprobar, rechazar y reabrir llaman a <code>resolver_referido</code> con la sesión de la persona. Pasar por un webhook sumaba un salto y una credencial sin aportar lógica. Es una excepción documentada a mi diseño inicial.</td></tr>
+      <tr><td>Nada hardcodeado</td><td>Montos, hitos, día de corte, zona horaria, plazos y umbrales están en <code>configuracion</code>, que valida cada valor al guardarlo.</td></tr>
+      <tr><td>Mails</td><td>Resend desde n8n, con remitente <code>referidos@mail.signa.net.ar</code> (dominio verificado solo para este ejercicio). En producción, WorldTeams verifica su dominio y se cambia en dos lugares: el nodo <em>Enviar mail (Resend)</em> de n8n y el remitente del SMTP de Supabase.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Qué quedó afuera por tiempo</h2>
+  <ul>
+    <li>Los flujos programados de n8n (resumen diario y cierre mensual), la bienvenida al referente y el aviso cuando reclutamiento resuelve. Están descriptos en la sección 4.</li>
+    <li>Pantallas para cargar referentes y editar la configuración: hoy se hace desde Supabase.</li>
+  </ul>
+
+  <h2>Límites conocidos</h2>
+  <p>Los de la app (login y panel) están en la sección 3. Los del sistema:</p>
+  <ul>
+    <li><strong>Un validado no se puede reabrir, a propósito.</strong> Los pagos son únicos por referido y concepto y se crean con <code>on conflict do nothing</code>, así que revalidar no corregiría nada. Los movimientos pagados o cancelados están cerrados por trigger. El estado de pago no tiene un valor de "cancelado por revisión". Un pago hecho no tiene compensación, porque el monto siempre es mayor que 0. Los bonos de hito no se vinculan con el referido que los disparó. Si alguien se aprobó por error, hoy se resuelve fuera del sistema.</li>
+    <li>La validación automática comprueba duplicados, autorreferido, volumen y CV; no comprueba que el perfil sea real. Mientras un pago está pendiente (hasta el cierre mensual), una sanción lo cancela; la señal antifraude y el pago por colocación (segunda etapa) refuerzan ese punto.</li>
+    <li>El referente no recibe un mail cuando reclutamiento resuelve su caso: se entera por el portal.</li>
+    <li>Un caso reabierto aparece ya vencido, porque el plazo cuenta desde su ingreso original. El plazo cuenta de lunes a viernes, sin feriados.</li>
+    <li>El posible duplicado se detecta por nombre y apellido, así que con nombres comunes dará falsos positivos. Se acepta: un falso positivo cuesta una revisión, un duplicado real cuesta un pago indebido.</li>
+    <li>El autorreferido responde "ya registrado" y no deja rastro en la base: la única evidencia queda en el historial de ejecuciones de n8n.</li>
+    <li>Si la función falla después de subir el CV, el archivo queda huérfano. Su nombre es un UUID, sin datos personales.</li>
+    <li>Si el mismo referente reintenta un caso ya descartado, el mail "no cuenta" se repite.</li>
+    <li>La búsqueda del pool recorre la tabla. Con más de 10.000 candidatos conviene un índice <code>pg_trgm</code>.</li>
+    <li>Supabase marca las vistas del portal como "UNRESTRICTED". Es diseño: corren con permisos del dueño y filtran por <code>referente_actual_id()</code>, y las pruebas demuestran que un referente no ve lo de otro.</li>
+  </ul>
+
+  <h2>Segunda etapa</h2>
+  <ul>
+    <li>Pago adicional cuando el referido se coloca en una firma, y premio recurrente mientras siga colocado.</li>
+    <li>Abrir el programa a gente del pool o de afuera si los colocados no alcanzan. Canje opcional por experiencias para el equipo remoto (ya previsto en <code>preferencia_cobro</code>).</li>
+    <li>Señales antifraude (IP, teléfono, dispositivo) y un posible duplicado más fino.</li>
+    <li>Configuración versionada, con un panel de edición, y paneles de métricas y de pagos.</li>
+    <li>Corregir una validación: un estado de pago "cancelado por revisión", el vínculo del bono con su referido, ajustes de lo ya pagado y la fecha de reapertura para el plazo. Tabla de feriados.</li>
+    <li>La landing en inglés y portugués (los textos ya están en un archivo de traducciones).</li>
+  </ul>
+
+  <h2>Estado de las pruebas</h2>
+  <ul>
+    <li><strong>Base:</strong> <code>supabase/tests.sql</code> en la base real, 234 de 234. Las 2 fallas anteriores esperaban un email de ejemplo distinto del cargado en la base; se corrigieron las expectativas y el seed, sin tocar datos.</li>
+    <li><strong>App:</strong> pruebas unitarias de <code>app/</code> (Vitest), 193 de 193 en 17 archivos, corridas el 22/10.</li>
+    <li><strong>De punta a punta:</strong> el flujo 1 y el formulario real funcionan, con los mails (sección 4). En el panel, con la base real, "Ver CV" abrió un PDF real con una sesión de reclutamiento y Rechazar se probó a mano. Aprobar y Reabrir no se probaron a mano con la base real: los cubren <code>tests.sql</code> y <code>/dev/panel</code>.</li>
+  </ul>
+
+  <h2 style="break-before: page">Cómo usé IA y qué corregí</h2>
+  <p>Usé Claude como interlocutor de diseño (una pregunta por vez, con opciones y una recomendación). Contrasté sus propuestas con las respuestas de WorldTeams, con su web y con una consulta informal a 6 personas. Después usé Claude Code para construir, con el repo como contexto y el registro de decisiones como fuente de verdad. Cada corrección quedó anotada en <code>AI-LOG.md</code>; estas son las que más cambiaron el resultado:</p>
+  <table class="compacta ia">
+    <thead><tr><th>Tema</th><th>Qué propuso la IA</th><th>Qué corregí</th></tr></thead>
+    <tbody>
+      <tr><td>Validación</td><td>Revisión humana de cada referido.</td><td>Contradecía la automatización y no escalaba: validación automática y revisión solo de los dudosos.</td></tr>
+      <tr><td>Quién refiere</td><td>"Activos o colocados", sin definir "activo".</td><td>Solo colocados, con el porqué.</td></tr>
+      <tr><td>Meta</td><td>Achicar la meta por el costo.</td><td>El premio es una inversión. El dato público de 750 profesionales (sin verificar) mostró que el límite son los referentes.</td></tr>
+      <tr><td>Código del link</td><td>El nombre del referente como código (<code>/r/lucia-gomez</code>).</td><td>Era adivinable y exponía quién trabaja con WorldTeams: sufijo aleatorio y límite por IP. Después pedí 8 caracteres en vez de 6.</td></tr>
+      <tr><td>Registro en n8n</td><td>Tres escrituras sueltas: candidato, referido y estado.</td><td>Si fallaba la tercera quedaba un caso a medias: una sola función transaccional, <code>registrar_referido</code>.</td></tr>
+      <tr><td><code>es_prioritario</code></td><td>Lo calculaba n8n.</td><td>Es una columna generada de la base: la regla vive en un solo lugar.</td></tr>
+      <tr><td>Vistas "UNRESTRICTED"</td><td>Alertó que las vistas del portal estaban expuestas.</td><td>Era diseño: filtran por el referente y las pruebas lo demuestran.</td></tr>
+      <tr><td>Resolver casos</td><td>Un mail con botones Aprobar/Rechazar por cada caso.</td><td>No escala con 500 candidatos por mes y no tiene control de permisos: un panel con una función que verifica el permiso en la base.</td></tr>
+      <tr><td>Sanción</td><td>Solo cancelaba lo pendiente; el sancionado seguía refiriendo.</td><td>Una marca de sanción que también bloquea referidos y pagos nuevos.</td></tr>
+      <tr><td>Zona horaria</td><td>Ciclo de pago calculado en UTC, fijo en el código.</td><td>Una clave de configuración (Buenos Aires): el mismo instante cae en días distintos según la zona.</td></tr>
+      <tr><td>Seguridad del portal</td><td>Afirmó que las vistas filtraban por referente, sin una prueba.</td><td>Pedí la prueba de un referente que intenta ver datos de otro, y el vínculo por usuario pasó a tener prioridad sobre el email.</td></tr>
+      <tr><td>Función en la base real</td><td>Una concatenación de arrays que falló con <code>malformed array literal</code>.</td><td>Reporté el error exacto; se corrigió con <code>array_append</code> y se volvió a aplicar.</td></tr>
+      <tr><td>Entregables de más</td><td>Un video de 3 minutos y un diagrama de flujo.</td><td>Releí el mail de WorldTeams: no los pedía. El video quedó afuera; el flujo se presenta con una figura generada desde el JSON exportado.</td></tr>
+      <tr><td>Panel sin JavaScript</td><td>Afirmó que el talent pool "funciona sin JavaScript".</td><td>Solo del lado del servidor: el navegador se queda en el esqueleto de carga. Quedó como límite.</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">La tabla completa, con más correcciones de diseño y de interfaz, está en <code>AI-LOG.md</code> del repo.</p>
+</section>
+
+</body>
+</html>

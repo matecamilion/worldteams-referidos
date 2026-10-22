@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>5. Nota de decisiones</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<!-- contenido -->
+<section class="seccion s5 flujo">
+  <header class="titulo-seccion">
+    <span class="num">5</span>
+    <h1>Nota de decisiones</h1>
+    <span class="bajada">Registro completo: <code>DECISIONS.md</code></span>
+  </header>
+
+  <h2>Qué supuse</h2>
+  <p>WorldTeams respondió cuatro cosas: la meta se mide en ingresos al pool, el perfil más buscado es el arquitecto senior con Revit y buen inglés, no hay prioridad por país y no hay presupuesto definido. Lo demás quedó como supuesto, para confirmar en la charla:</p>
+  <ul>
+    <li>WorldTeams liquida el sueldo de los colocados y puede sumar el premio. A quien ya no está colocado le puede pagar por transferencia. Para el cierre mensual acepta un CSV.</li>
+    <li>WorldTeams ya filtra a los candidatos antes de que entren al pool, y el programa se engancha a ese paso. La tabla <code>candidatos</code> representa el pool; en producción se sincronizaría con su sistema de seguimiento de candidatos.</li>
+    <li>Los "+750 profesionales" y "+370 empresas" de su web son un dato público, sin verificar, y pueden incluir gente no colocada: que haya 750 referentes es un supuesto a confirmar con WorldTeams. Los montos son una propuesta propia y la participación de los escenarios es estimada.</li>
+    <li>"Landing para referir" son dos páginas: la del referente y la del candidato. El stack (Supabase, n8n, Resend, Next.js) es mío: no pregunté el de WorldTeams.</li>
+    <li>El magic link solo emite sesión para emails confirmados, y el registro libre en Auth queda cerrado. Vercel sobrescribe los encabezados de IP: hay que confirmarlo en el deploy.</li>
+    <li>No hay función para levantar una sanción: si hiciera falta, se edita la fila desde Supabase.</li>
+  </ul>
+
+  <h2>Decisiones clave</h2>
+  <table class="compacta">
+    <tbody>
+      <tr><td>Solo colocados refieren</td><td>Tienen sueldo donde cobrar, su criterio ya fue validado y no tienen conflicto de intereses. Abrir el programa a otros queda para cuando la base de referentes no alcance.</td></tr>
+      <tr><td>Se paga al validar</td><td>La meta son ingresos al pool. Pagar al colocar llega tarde; pagar al registrarse invita a registros falsos.</td></tr>
+      <tr><td>Efectivo, fijo y con hitos</td><td>USD 50, o 100 si el perfil es prioritario, y bonos de +75, +150 y +300 por año. Descarté un porcentaje del sueldo: no tiene techo, es injusto entre referentes y usa un dato sensible.</td></tr>
+      <tr><td>Revisión solo de los dudosos</td><td>Revisar cada caso no escala a 1.000 por mes: hay un solo punto de aprobación humana.</td></tr>
+      <tr><td>Link no adivinable</td><td>Sufijo de 8 caracteres base36 (36<sup>8</sup>, unos 2,8 billones de combinaciones). La segunda capa vive en la base: <code>consultar_referente_por_codigo</code> cuenta los códigos inexistentes por IP y bloquea al llegar a 10 en 600 segundos (<code>limite_consulta_codigo</code>), y solo responde con el secreto que tiene el servidor de la app.</td></tr>
+      <tr><td>Garantías en la base</td><td>Registro en una transacción, pagos por trigger, historial de solo inserción y RLS en todas las tablas. n8n orquesta y la service role solo vive en n8n.</td></tr>
+      <tr><td>Panel sin n8n</td><td>Aprobar, rechazar y reabrir llaman a <code>resolver_referido</code> con la sesión de la persona. Pasar por un webhook sumaba un salto y una credencial sin aportar lógica. Es una excepción documentada a mi diseño inicial.</td></tr>
+      <tr><td>Nada hardcodeado</td><td>Montos, hitos, día de corte, zona horaria, plazos y umbrales están en <code>configuracion</code>, que valida cada valor al guardarlo.</td></tr>
+      <tr><td>Mails</td><td>Resend desde n8n, con remitente <code>referidos@mail.signa.net.ar</code> (dominio verificado solo para este ejercicio). En producción, WorldTeams verifica su dominio y se cambia en dos lugares: el nodo <em>Enviar mail (Resend)</em> de n8n y el remitente del SMTP de Supabase.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Qué quedó afuera por tiempo</h2>
+  <ul>
+    <li>Los flujos programados de n8n (resumen diario y cierre mensual), la bienvenida al referente y el aviso cuando reclutamiento resuelve. Están descriptos en la sección 4.</li>
+    <li>Pantallas para cargar referentes y editar la configuración: hoy se hace desde Supabase.</li>
+  </ul>
+
+  <h2>Límites conocidos</h2>
+  <p>Los de la app (login y panel) están en la sección 3. Los del sistema:</p>
+  <ul>
+    <li><strong>Un validado no se puede reabrir, a propósito.</strong> Los pagos son únicos por referido y concepto y se crean con <code>on conflict do nothing</code>, así que revalidar no corregiría nada. Los movimientos pagados o cancelados están cerrados por trigger. El estado de pago no tiene un valor de "cancelado por revisión". Un pago hecho no tiene compensación, porque el monto siempre es mayor que 0. Los bonos de hito no se vinculan con el referido que los disparó. Si alguien se aprobó por error, hoy se resuelve fuera del sistema.</li>
+    <li>La validación automática comprueba duplicados, autorreferido, volumen y CV; no comprueba que el perfil sea real. Mientras un pago está pendiente (hasta el cierre mensual), una sanción lo cancela; la señal antifraude y el pago por colocación (segunda etapa) refuerzan ese punto.</li>
+    <li>El referente no recibe un mail cuando reclutamiento resuelve su caso: se entera por el portal.</li>
+    <li>Un caso reabierto aparece ya vencido, porque el plazo cuenta desde su ingreso original. El plazo cuenta de lunes a viernes, sin feriados.</li>
+    <li>El posible duplicado se detecta por nombre y apellido, así que con nombres comunes dará falsos positivos. Se acepta: un falso positivo cuesta una revisión, un duplicado real cuesta un pago indebido.</li>
+    <li>El autorreferido responde "ya registrado" y no deja rastro en la base: la única evidencia queda en el historial de ejecuciones de n8n.</li>
+    <li>Si la función falla después de subir el CV, el archivo queda huérfano. Su nombre es un UUID, sin datos personales.</li>
+    <li>Si el mismo referente reintenta un caso ya descartado, el mail "no cuenta" se repite.</li>
+    <li>La búsqueda del pool recorre la tabla. Con más de 10.000 candidatos conviene un índice <code>pg_trgm</code>.</li>
+    <li>Supabase marca las vistas del portal como "UNRESTRICTED". Es diseño: corren con permisos del dueño y filtran por <code>referente_actual_id()</code>, y las pruebas demuestran que un referente no ve lo de otro.</li>
+  </ul>
+
+  <h2>Segunda etapa</h2>
+  <ul>
+    <li>Pago adicional cuando el referido se coloca en una firma, y premio recurrente mientras siga colocado.</li>
+    <li>Abrir el programa a gente del pool o de afuera si los colocados no alcanzan. Canje opcional por experiencias para el equipo remoto (ya previsto en <code>preferencia_cobro</code>).</li>
+    <li>Señales antifraude (IP, teléfono, dispositivo) y un posible duplicado más fino.</li>
+    <li>Configuración versionada, con un panel de edición, y paneles de métricas y de pagos.</li>
+    <li>Corregir una validación: un estado de pago "cancelado por revisión", el vínculo del bono con su referido, ajustes de lo ya pagado y la fecha de reapertura para el plazo. Tabla de feriados.</li>
+    <li>La landing en inglés y portugués (los textos ya están en un archivo de traducciones).</li>
+  </ul>
+
+  <h2>Estado de las pruebas</h2>
+  <ul>
+    <li><strong>Base:</strong> <code>supabase/tests.sql</code> en la base real, 234 de 234. Las 2 fallas anteriores esperaban un email de ejemplo distinto del cargado en la base; se corrigieron las expectativas y el seed, sin tocar datos.</li>
+    <li><strong>App:</strong> pruebas unitarias de <code>app/</code> (Vitest), 193 de 193 en 17 archivos, corridas el 22/10.</li>
+    <li><strong>De punta a punta:</strong> el flujo 1 y el formulario real funcionan, con los mails (sección 4). En el panel, con la base real, "Ver CV" abrió un PDF real con una sesión de reclutamiento y Rechazar se probó a mano. Aprobar y Reabrir no se probaron a mano con la base real: los cubren <code>tests.sql</code> y <code>/dev/panel</code>.</li>
+  </ul>
+
+  <h2 style="break-before: page">Cómo usé IA y qué corregí</h2>
+  <p>Usé Claude como interlocutor de diseño (una pregunta por vez, con opciones y una recomendación). Contrasté sus propuestas con las respuestas de WorldTeams, con su web y con una consulta informal a 6 personas. Después usé Claude Code para construir, con el repo como contexto y el registro de decisiones como fuente de verdad. Cada corrección quedó anotada en <code>AI-LOG.md</code>; estas son las que más cambiaron el resultado:</p>
+  <table class="compacta ia">
+    <thead><tr><th>Tema</th><th>Qué propuso la IA</th><th>Qué corregí</th></tr></thead>
+    <tbody>
+      <tr><td>Validación</td><td>Revisión humana de cada referido.</td><td>Contradecía la automatización y no escalaba: validación automática y revisión solo de los dudosos.</td></tr>
+      <tr><td>Quién refiere</td><td>"Activos o colocados", sin definir "activo".</td><td>Solo colocados, con el porqué.</td></tr>
+      <tr><td>Meta</td><td>Achicar la meta por el costo.</td><td>El premio es una inversión. El dato público de 750 profesionales (sin verificar) mostró que el límite son los referentes.</td></tr>
+      <tr><td>Código del link</td><td>El nombre del referente como código (<code>/r/lucia-gomez</code>).</td><td>Era adivinable y exponía quién trabaja con WorldTeams: sufijo aleatorio y límite por IP. Después pedí 8 caracteres en vez de 6.</td></tr>
+      <tr><td>Registro en n8n</td><td>Tres escrituras sueltas: candidato, referido y estado.</td><td>Si fallaba la tercera quedaba un caso a medias: una sola función transaccional, <code>registrar_referido</code>.</td></tr>
+      <tr><td><code>es_prioritario</code></td><td>Lo calculaba n8n.</td><td>Es una columna generada de la base: la regla vive en un solo lugar.</td></tr>
+      <tr><td>Vistas "UNRESTRICTED"</td><td>Alertó que las vistas del portal estaban expuestas.</td><td>Era diseño: filtran por el referente y las pruebas lo demuestran.</td></tr>
+      <tr><td>Resolver casos</td><td>Un mail con botones Aprobar/Rechazar por cada caso.</td><td>No escala con 500 candidatos por mes y no tiene control de permisos: un panel con una función que verifica el permiso en la base.</td></tr>
+      <tr><td>Sanción</td><td>Solo cancelaba lo pendiente; el sancionado seguía refiriendo.</td><td>Una marca de sanción que también bloquea referidos y pagos nuevos.</td></tr>
+      <tr><td>Zona horaria</td><td>Ciclo de pago calculado en UTC, fijo en el código.</td><td>Una clave de configuración (Buenos Aires): el mismo instante cae en días distintos según la zona.</td></tr>
+      <tr><td>Seguridad del portal</td><td>Afirmó que las vistas filtraban por referente, sin una prueba.</td><td>Pedí la prueba de un referente que intenta ver datos de otro, y el vínculo por usuario pasó a tener prioridad sobre el email.</td></tr>
+      <tr><td>Función en la base real</td><td>Una concatenación de arrays que falló con <code>malformed array literal</code>.</td><td>Reporté el error exacto; se corrigió con <code>array_append</code> y se volvió a aplicar.</td></tr>
+      <tr><td>Entregables de más</td><td>Un video de 3 minutos y un diagrama de flujo.</td><td>Releí el mail de WorldTeams: no los pedía. El video quedó afuera; el flujo se presenta con una figura generada desde el JSON exportado.</td></tr>
+      <tr><td>Panel sin JavaScript</td><td>Afirmó que el talent pool "funciona sin JavaScript".</td><td>Solo del lado del servidor: el navegador se queda en el esqueleto de carga. Quedó como límite.</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">La tabla completa, con más correcciones de diseño y de interfaz, está en <code>AI-LOG.md</code> del repo.</p>
+</section>
+<!-- /contenido -->
+</body>
+</html>

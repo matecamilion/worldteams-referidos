@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>3. Landing para referir</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<!-- contenido -->
+<section class="seccion s3 flujo">
+  <header class="titulo-seccion">
+    <span class="num">3</span>
+    <h1>Landing para referir</h1>
+    <span class="bajada"><a href="https://worldteams-referidos.vercel.app" style="color:inherit">worldteams-referidos.vercel.app</a> · Next.js en Vercel</span>
+  </header>
+
+  <p class="intro">Una sola app: la página del programa para el referente, el formulario para la persona recomendada, y el portal y el panel, cada uno con su rol.</p>
+
+  <div class="capturas">
+    <figure>
+      <img src="recursos/captura-inicio-escritorio.png" alt="Inicio del programa en escritorio">
+      <figcaption>"/" en escritorio, el sitio publicado.</figcaption>
+    </figure>
+    <figure>
+      <img src="recursos/captura-link-celular.png" alt="Formulario del link de referido en celular">
+      <figcaption>/r/lucia-k7q2m9xd, celular.</figcaption>
+    </figure>
+  </div>
+
+  <table class="compacta">
+    <thead><tr><th>Pantalla</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td>/</td><td>El programa para el referente: cómo funciona, premios e hitos, una calculadora de premios por año, preguntas frecuentes y el acceso al portal. Los montos salen de la configuración, no están escritos a mano.</td></tr>
+      <tr><td>/r/{código}</td><td>El formulario para la persona recomendada: nombra a quien la recomendó, pide datos, perfil y CV en PDF, el aviso de visibilidad y reCAPTCHA v3. Al enviar muestra la confirmación con los próximos pasos o, si ya estaba en la base, un mensaje neutro. Un link inexistente o una IP bloqueada ven una pantalla propia.</td></tr>
+      <tr><td>/ingresar</td><td>Login por magic link, solo para emails habilitados. Siempre responde lo mismo, esté o no habilitado el email.</td></tr>
+      <tr><td>/portal</td><td>El referente ve su link para copiar, sus referidos con nombre y estado, sus premios pendientes y pagados y la barra al próximo hito. Solo lectura.</td></tr>
+      <tr><td>/panel</td><td>Reclutamiento: la cola de casos en revisión con sus motivos y el plazo vencido, el talent pool con búsqueda y filtro, el CV con un link firmado por 60 segundos, y Aprobar, Rechazar o Reabrir.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="par-panel">
+    <img src="recursos/captura-panel-cola.png" alt="Cola de revisión del panel con datos ficticios">
+    <img src="recursos/captura-panel-pool.png" alt="Talent pool del panel con datos ficticios">
+  </div>
+  <figcaption>Panel de reclutamiento: cola de revisión y talent pool. Capturas de <code>/dev/panel</code>, con datos ficticios.</figcaption>
+
+  <h2>Límites conocidos</h2>
+  <ul class="lista-2">
+    <li>El magic link se tiene que abrir en el mismo navegador en que se pidió (PKCE guarda el verificador en una cookie).</li>
+    <li>Los topes de <code>/ingresar</code> (5 por IP y 3 por email cada 10 minutos) viven en la memoria de cada instancia: con varias, se multiplican. El tope de códigos del link vive en la base.</li>
+    <li>En el talent pool, con JavaScript apagado la tabla se queda en el esqueleto de carga, y al filtrar por estado un candidato aparece si alguno de sus referidos tiene ese estado.</li>
+    <li>Las cifras de la franja de "/" (+750 profesionales, +370 empresas) son un dato público de worldteams.com, sin verificar.</li>
+  </ul>
+</section>
+<!-- /contenido -->
+</body>
+</html>

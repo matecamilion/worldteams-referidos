@@ -9,7 +9,7 @@ export const LIMITE_COLA = 50;
 export const estadosReferido = ["registrado", "en_revision", "validado", "rechazado", "descartado"] as const;
 export type EstadoReferido = (typeof estadosReferido)[number];
 
-export const motivosConocidos = ["posible_duplicado", "alerta_volumen", "perfil_incompleto"] as const;
+export const motivosConocidos = ["posible_duplicado", "alerta_volumen", "perfil_incompleto", "cv_dudoso"] as const;
 export function esMotivoConocido(codigo: string): boolean {
   return (motivosConocidos as readonly string[]).includes(codigo);
 }

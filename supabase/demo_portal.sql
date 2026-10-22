@@ -1,3 +1,5 @@
+-- DESCARTADO: no ejecutar. (Apunta a matecamilion05+lucia@gmail.com, que ya no existe: ver la decisión 68.)
+--
 -- Datos de demo SOLO para ver el portal antes de tener n8n. Se borran antes de grabar el video (demo_portal_borrar.sql).
 -- Pegar en el SQL Editor del proyecto WorldTeams. Es re-ejecutable: lo que ya existe no se duplica ni se vuelve a mover.
 --

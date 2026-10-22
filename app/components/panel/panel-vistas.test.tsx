@@ -49,6 +49,12 @@ describe("VistaRevision", () => {
     expect(html).not.toContain('role="search"');
     expect(html).toContain('data-slot="acciones-revision"');
   });
+  it("el motivo cv_dudoso se ve en español legible, no como el código", () => {
+    const { cfg, cola } = datosDemo({});
+    const html = renderToStaticMarkup(<VistaRevision zona={cfg.zona} plazo={cfg.plazoRevisionDias} cola={cola} accion={accion} />);
+    expect(html).toContain("CV dudoso: la evaluación automática del CV");
+    expect(html).not.toContain("cv_dudoso");
+  });
   it("sin casos muestra el estado vacío", () => {
     const { cfg, cola } = datosDemo({ modo: "vacio" });
     expect(renderToStaticMarkup(<VistaRevision zona={cfg.zona} plazo={3} cola={cola} accion={accion} />)).toContain('data-testid="cola-vacia"');
@@ -147,8 +153,8 @@ describe("botones de resolución", () => {
   it("cada tarjeta de la cola tiene Aprobar y Rechazar, y ningún Reabrir", () => {
     const { cfg, cola } = datosDemo({});
     const html = renderToStaticMarkup(<VistaRevision zona={cfg.zona} plazo={3} cola={cola} accion={accion} />);
-    expect(cuenta(html, 'data-testid="boton-aprobar"')).toBe(3);
-    expect(cuenta(html, 'data-testid="boton-rechazar"')).toBe(3);
+    expect(cuenta(html, 'data-testid="boton-aprobar"')).toBe(4);
+    expect(cuenta(html, 'data-testid="boton-rechazar"')).toBe(4);
     expect(html).not.toContain('data-testid="boton-reabrir"');
   });
   it("la cola vacía no muestra botones", () => {

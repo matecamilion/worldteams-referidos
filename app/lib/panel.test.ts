@@ -205,8 +205,8 @@ describe("armarCola", () => {
 });
 
 describe("motivos", () => {
-  it("conoce los tres de la base y muestra legible uno nuevo", () => {
-    for (const m of ["posible_duplicado", "alerta_volumen", "perfil_incompleto"]) expect(esMotivoConocido(m)).toBe(true);
+  it("conoce los cuatro de la base y muestra legible uno nuevo", () => {
+    for (const m of ["posible_duplicado", "alerta_volumen", "perfil_incompleto", "cv_dudoso"]) expect(esMotivoConocido(m)).toBe(true);
     expect(esMotivoConocido("otro")).toBe(false);
     expect(motivoDesconocido("senal_rara_nueva")).toBe("senal rara nueva");
   });

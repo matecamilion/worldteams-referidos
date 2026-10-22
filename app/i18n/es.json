@@ -244,7 +244,8 @@
         "etiqueta": "Motivos",
         "posible_duplicado": "Posible duplicado: ya hay un candidato con el mismo nombre y apellido.",
         "alerta_volumen": "Alerta de volumen: el referente cargó muchos referidos en pocos días.",
-        "perfil_incompleto": "Perfil incompleto: falta el CV."
+        "perfil_incompleto": "Perfil incompleto: falta el CV.",
+        "cv_dudoso": "CV dudoso: la evaluación automática del CV dio un puntaje bajo o no pudo calcularse. Revisalo a mano."
       },
       "candidato": "Candidato",
       "referente": "Referente",

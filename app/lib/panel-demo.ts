@@ -28,6 +28,7 @@ export function datosDemo(sp: Record<string, string | string[] | undefined>, aho
   const filasCola: FilaCola[] = [
     { id: "00000000-0000-4000-8000-000000000011", creado_en: hace(9), motivos_revision: ["posible_duplicado", "alerta_volumen"], candidatos: candidato("Camila", "Restrepo"), referentes: referente },
     { id: "00000000-0000-4000-8000-000000000012", creado_en: hace(3), motivos_revision: ["perfil_incompleto"], candidatos: candidato("Joaquín", "Ferreyra", { especialidad: "ingenieria", usa_revit: false, seniority: "semi_senior", nivel_ingles: "intermedio", es_prioritario: false, cv_url: null }), referentes: referente },
+    { id: "00000000-0000-4000-8000-000000000014", creado_en: hace(1), motivos_revision: ["perfil_incompleto", "cv_dudoso"], candidatos: candidato("Valentina", "Ortiz", { seniority: "semi_senior", es_prioritario: false }), referentes: referente },
     { id: "00000000-0000-4000-8000-000000000013", creado_en: hace(0), motivos_revision: ["algo_nuevo"], candidatos: candidato("Mariana", "Sousa"), referentes: { nombre: "Martín", apellido: "Ferreyra", email: "martin.ferreyra@ejemplo.com" } },
   ];
   const estados = ["validado", "en_revision", "registrado", "rechazado", "descartado"];

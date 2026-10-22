@@ -7,7 +7,7 @@
 | Quién refiere | Usó "activos o colocados" sin definir "activo" | Pedí definirlo y llegué a solo colocados (sueldo, criterio validado, fidelidad, sin conflicto de intereses) |
 | Premio | Efectivo directo | Propuse créditos con premios progresivos; tras consultar a 6 personas quedó efectivo, pero mi idea de la meta progresiva sobrevivió como bono por hitos |
 | Validación | Revisión humana de cada referido | Detecté que contradecía la automatización y no escalaba → validación automática con revisión solo de dudosos |
-| Meta | Achicar la meta por el costo | Planteé que el premio es una inversión que vuelve; aporté el dato de 750 profesionales, que mostró que el límite real es la cantidad de referentes |
+| Meta | Achicar la meta por el costo | Planteé que el premio es una inversión que vuelve; aporté el dato de 750 profesionales (dato público de su web, sin verificar), que mostró que el límite real es la cantidad de referentes |
 | Monto | Montos fijos | Evalué un % del sueldo; lo descarté por cuidar la billetera de la empresa y la equidad entre referentes |
 | Alcance | Dejar paneles fuera | Subí el alcance: panel de revisión y portal del referente ("sin visibilidad no hay incentivo") |
 | Mails | 8 tipos de mail | Pedí menos mails y entender la herramienta → 5 momentos con Resend, resumen diario a reclutamiento |
@@ -37,5 +37,7 @@
 | Función `registrar_referido`: primera versión | Concatené el texto de los motivos al array con el operador de concatenación (dos barras verticales) y un literal sin tipo; falló en la base real con `malformed array literal` (22P02) en el primer caso de revisión. Después, al re-correr, el error siguió porque la base tenía la función vieja sin re-aplicar | Reportó el error con el mensaje exacto; se cambió a `array_append` y se re-aplicó el archivo antes de volver a correr. Los tests pasaron (decisiones 51 y 58) |
 
 | Cómo resolver un caso fuera del panel | Con la decisión 18 como respaldo, propuse un mail diario con botones Aprobar/Rechazar por caso | Lo corrigió: no escala (con 500 candidatos por mes, el volumen de revisiones llenaría la casilla de mails con un botón por caso, sin control de permisos propio ni estado compartido). La resolución pasa a una función de la base ejecutada desde el panel con la sesión del revisor (decisiones 63 a 66) |
+| Entregables de más | Propuso un video corto (Loom, 3 minutos) del flujo funcionando y diagramas de flujo como entregables | Releyendo el mail de WorldTeams: no los pedía (los entregables son esquema, modelo de datos, landing, flujo de automatización y nota). Se sacaron del plan de entrega |
+| Pool del panel "sin JavaScript" | En la decisión 62 escribí que el formulario GET del talent pool "funciona sin JavaScript" | Corrigió: es cierto del lado del servidor, pero con JavaScript apagado el navegador se queda en el esqueleto de carga (`Suspense`). Quedó como límite conocido en la decisión 62 |
 
 <!-- Claude Code: agregá una fila cada vez que Mateo corrija o rechace algo que propongas. -->

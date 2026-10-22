@@ -41,4 +41,4 @@ Si la función falla (error o tiempo agotado) el CV **no** se borra: no se sabe 
 - **WT Supabase** — Custom Auth: `{"headers": {"apikey": "<service role>", "Authorization": "Bearer <service role>"}}`. La service role solo vive acá (regla 7).
 - **WT Resend** — Header Auth: nombre `Authorization`, valor `Bearer <clave de Resend>`.
 
-La URL del proyecto Supabase está escrita en los nodos HTTP (viene de `NEXT_PUBLIC_SUPABASE_URL`, no es secreta); confirmá que es la del proyecto `WorldTeams`. Remitente de los mails: `onboarding@resend.dev` (dominio de prueba: solo entrega a la casilla titular de Resend).
+La URL del proyecto Supabase está escrita en los nodos HTTP (viene de `NEXT_PUBLIC_SUPABASE_URL`, no es secreta); confirmá que es la del proyecto `WorldTeams`. Remitente de los mails: `referidos@mail.signa.net.ar` (dominio verificado en Resend solo para este ejercicio; en producción, el dominio de WorldTeams).

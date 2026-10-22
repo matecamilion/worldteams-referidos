@@ -1,5 +1,5 @@
 -- =====================================================================
--- tests.sql — Pruebas del esquema (se corren después de schema.sql, seed.sql, registrar_referido.sql y panel_resolver.sql)
+-- tests.sql — Pruebas del esquema (se corren después de schema.sql, seed.sql, panel_resolver.sql y evaluacion_cv.sql, que define registrar_referido)
 --
 -- Todo ocurre dentro de una transacción que termina en ROLLBACK: no deja datos.
 -- Cada prueba registra OK / FALLA; el resultado final es una tabla con el resumen arriba.
@@ -605,10 +605,13 @@ select pg_temp.registrar('consulta: la función y las tablas privadas existen (a
 insert into public.secretos_internos (clave, valor) values ('consulta_codigo', 'secreto-de-prueba-0123456789abcdef0123')
 on conflict (clave) do update set valor = excluded.valor;
 
+-- Emails del seed tal como están en la base real: Lucía usa la casilla sin alias.
 select pg_temp.registrar('codigo: los referentes del seed tienen códigos de 8 caracteres (lucia-k7q2m9xd, etc.)',
   (select count(*) = 4 and bool_and(codigo_referido ~ '^[a-z0-9]+(-[a-z0-9]+)*-[a-z0-9]{8}$')
           and bool_or(codigo_referido = 'lucia-k7q2m9xd') and bool_or(codigo_referido = 'andres-m2w5q8vc')
-     from public.referentes where email like 'matecamilion05+%@gmail.com'));
+     from public.referentes
+    where email in ('matecamilion05@gmail.com', 'matecamilion05+martin@gmail.com',
+                    'matecamilion05+camila@gmail.com', 'matecamilion05+andres@gmail.com')));
 
 -- 7.1 Qué devuelve y a quién
 do $$
@@ -803,16 +806,16 @@ begin
   perform pg_temp.registrar('login: email vacío o nulo -> ninguno', public.email_habilitado('', k) = 'ninguno' and public.email_habilitado(null, k) = 'ninguno');
   perform pg_temp.registrar('login: si está en las dos listas gana reclutamiento', public.email_habilitado('log-ambos@t.com', k) = 'reclutamiento');
   perform pg_temp.registrar('login: los alias del seed responden lo esperado (lucia y martin referente, reclutamiento, andres ninguno)',
-    public.email_habilitado('matecamilion05+lucia@gmail.com', k) = 'referente'
+    public.email_habilitado('matecamilion05@gmail.com', k) = 'referente'
     and public.email_habilitado('matecamilion05+martin@gmail.com', k) = 'referente'
     and public.email_habilitado('matecamilion05+reclutamiento@gmail.com', k) = 'reclutamiento'
     and public.email_habilitado('matecamilion05+andres@gmail.com', k) = 'ninguno');
 
   -- Sin secreto: no revela nada. Emails que existen y que no existen dan EXACTAMENTE la misma respuesta.
   select array_agg(public.email_habilitado(e, null)) into v_sin
-    from unnest(array['log-ok@t.com', 'log-rec@t.com', 'log-nc@t.com', 'nadie@t.com', 'matecamilion05+lucia@gmail.com']) e;
+    from unnest(array['log-ok@t.com', 'log-rec@t.com', 'log-nc@t.com', 'nadie@t.com', 'matecamilion05@gmail.com']) e;
   select array_agg(public.email_habilitado(e, 'secreto-equivocado-0123456789abcdef012')) into v_mal
-    from unnest(array['log-ok@t.com', 'log-rec@t.com', 'log-nc@t.com', 'nadie@t.com', 'matecamilion05+lucia@gmail.com']) e;
+    from unnest(array['log-ok@t.com', 'log-rec@t.com', 'log-nc@t.com', 'nadie@t.com', 'matecamilion05@gmail.com']) e;
   perform pg_temp.registrar('login: sin secreto responde no_autorizado a todos, existan o no (no revela nada)',
     (select count(distinct x) = 1 and bool_and(x = 'no_autorizado') from unnest(v_sin) x), array_to_string(v_sin, ','));
   perform pg_temp.registrar('login: con un secreto equivocado tampoco revela nada',
@@ -874,10 +877,10 @@ end $$;
 
 -- ---------------------------------------------------------------------
 -- 9. registrar_referido: alta atómica del referido (decisión 51)
---    Requiere registrar_referido.sql aplicado.
+--    Requiere evaluacion_cv.sql aplicado (ahí vive la definición de registrar_referido).
 -- ---------------------------------------------------------------------
-select pg_temp.registrar('registrar_referido: la función existe (aplicá registrar_referido.sql)',
-  to_regprocedure('public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text)') is not null);
+select pg_temp.registrar('registrar_referido: la función existe (aplicá evaluacion_cv.sql)',
+  to_regprocedure('public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text,integer)') is not null);
 
 -- Llama a la función como lo hace n8n. Prioritario = arquitectura + Revit + senior + inglés avanzado.
 create function pg_temp.rr(p_codigo text, p_nombre text, p_apellido text, p_email text, p_linkedin text,
@@ -1085,7 +1088,7 @@ end $$;
 do $$
 declare
   ra uuid; cod text; v_sig regprocedure :=
-    'public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text)'::regprocedure;
+    'public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text,integer)'::regprocedure;
   v_anon boolean; v_auth boolean; v_sr jsonb; v_sr_err text; n_antes int;
 begin
   ra := pg_temp.nuevo_referente('Rperm', 'rperm@t.com');
@@ -1123,6 +1126,249 @@ begin
   perform pg_temp.registrar('registrar_referido j: no es SECURITY DEFINER y fija search_path = public, pg_temp',
     (select not prosecdef and exists (select 1 from unnest(proconfig) c where c like 'search_path=%public%pg_temp%')
        from pg_proc where oid = v_sig));
+end $$;
+
+-- ---------------------------------------------------------------------
+-- 8.1 Evaluación del CV (evaluacion_cv.sql): el puntaje solo puede mandar a revisión, nunca validar ni rechazar
+-- ---------------------------------------------------------------------
+-- Igual que pg_temp.rr, con el puntaje del CV como parámetro nuevo.
+create function pg_temp.rrcv(p_codigo text, p_nombre text, p_apellido text, p_email text, p_linkedin text, p_puntaje integer,
+                             p_cv text default 'cv-test.pdf') returns jsonb
+language sql as $$
+  select public.registrar_referido(p_codigo, p_nombre, p_apellido, p_email, p_linkedin,
+    'ingenieria'::public.tipo_especialidad, false, 'junior'::public.tipo_seniority, 'avanzado', true, p_cv, p_puntaje) $$;
+
+create function pg_temp.pagos_cv(p_referido uuid) returns bigint
+language sql as $$ select count(*) from public.movimientos_pago where referido_id = p_referido $$;
+
+-- Configuración: claves, valores por defecto y validación
+do $$
+begin
+  perform pg_temp.registrar('evaluacion_cv: las claves existen, apagada y con umbral 60 por defecto',
+    (select valor = 'false'::jsonb from public.configuracion where clave = 'evaluacion_cv_activa')
+    and (select valor = '60'::jsonb from public.configuracion where clave = 'evaluacion_cv_umbral'));
+  perform pg_temp.espera_error('evaluacion_cv: el interruptor tiene que ser booleano (texto)',
+    $q$update public.configuracion set valor = '"si"' where clave = 'evaluacion_cv_activa'$q$, 'configuracion_invalida');
+  perform pg_temp.espera_error('evaluacion_cv: el interruptor tiene que ser booleano (número)',
+    $q$update public.configuracion set valor = '1' where clave = 'evaluacion_cv_activa'$q$, 'configuracion_invalida');
+  perform pg_temp.espera_error('evaluacion_cv: umbral mayor que 100 se rechaza',
+    $q$update public.configuracion set valor = '101' where clave = 'evaluacion_cv_umbral'$q$, 'configuracion_invalida');
+  perform pg_temp.espera_error('evaluacion_cv: umbral negativo se rechaza',
+    $q$update public.configuracion set valor = '-1' where clave = 'evaluacion_cv_umbral'$q$, 'configuracion_invalida');
+  perform pg_temp.espera_error('evaluacion_cv: umbral con decimales se rechaza',
+    $q$update public.configuracion set valor = '60.5' where clave = 'evaluacion_cv_umbral'$q$, 'configuracion_invalida');
+  perform pg_temp.espera_error('evaluacion_cv: umbral que no es número se rechaza',
+    $q$update public.configuracion set valor = '"60"' where clave = 'evaluacion_cv_umbral'$q$, 'configuracion_invalida');
+  update public.configuracion set valor = '0' where clave = 'evaluacion_cv_umbral';
+  update public.configuracion set valor = '100' where clave = 'evaluacion_cv_umbral';
+  update public.configuracion set valor = '60' where clave = 'evaluacion_cv_umbral';
+  perform pg_temp.registrar('evaluacion_cv: los extremos 0 y 100 son umbrales válidos',
+    (select valor = '60'::jsonb from public.configuracion where clave = 'evaluacion_cv_umbral'));
+end $$;
+
+-- Interruptor apagado (por defecto): el puntaje se ignora, todo como antes
+do $$
+declare ra uuid; j jsonb; k jsonb; m jsonb;
+begin
+  ra := pg_temp.nuevo_referente('Rcv1', 'rcv1@t.com');
+  j := pg_temp.rrcv(pg_temp.codigo_de(ra), 'Apagado', 'Bajo', 'cv.off1@t.com', 'linkedin.com/in/cv-off1', 5);
+  k := pg_temp.rrcv(pg_temp.codigo_de(ra), 'Apagado', 'Nulo', 'cv.off2@t.com', 'linkedin.com/in/cv-off2', null);
+  m := pg_temp.rrcv(pg_temp.codigo_de(ra), 'Apagado', 'Roto', 'cv.off3@t.com', 'linkedin.com/in/cv-off3', 999);
+  perform pg_temp.registrar('evaluacion_cv apagada: puntaje bajo, nulo o fuera de rango no cambia nada (validado, 50 USD, sin motivos)',
+    j ->> 'estado' = 'validado' and k ->> 'estado' = 'validado' and m ->> 'estado' = 'validado'
+    and j -> 'motivos' = '[]'::jsonb and k -> 'motivos' = '[]'::jsonb and m -> 'motivos' = '[]'::jsonb
+    and (j ->> 'monto_usd')::numeric = 50 and pg_temp.pagos_cv((j ->> 'referido_id')::uuid) = 1,
+    j::text || ' ' || k::text);
+  perform pg_temp.registrar('evaluacion_cv apagada: cv_puntaje de la respuesta es nulo (se ignoró)',
+    j -> 'cv_puntaje' = 'null'::jsonb and k -> 'cv_puntaje' = 'null'::jsonb and m -> 'cv_puntaje' = 'null'::jsonb, j::text);
+end $$;
+
+-- Interruptor encendido: umbral 60, inclusive
+do $$
+declare ra uuid; rb uuid; cod text; cod2 text; alto jsonb; justo jsonb; bajo jsonb; nulo jsonb; grande jsonb; neg jsonb;
+begin
+  update public.configuracion set valor = 'true' where clave = 'evaluacion_cv_activa';
+  -- Dos referentes: cada uno queda por debajo del tope de alerta_volumen (5 en 7 días), así que el único motivo posible es cv_dudoso.
+  ra := pg_temp.nuevo_referente('Rcv2', 'rcv2@t.com');
+  rb := pg_temp.nuevo_referente('Rcv2b', 'rcv2b@t.com');
+  cod := pg_temp.codigo_de(ra);
+  cod2 := pg_temp.codigo_de(rb);
+
+  alto   := pg_temp.rrcv(cod, 'Alto',   'Cvdos', 'cv.on1@t.com', 'linkedin.com/in/cv-on1', 85);
+  justo  := pg_temp.rrcv(cod, 'Justo',  'Cvdos', 'cv.on2@t.com', 'linkedin.com/in/cv-on2', 60);
+  perform pg_temp.registrar('evaluacion_cv activa: un puntaje alto valida y paga como siempre (50 USD, 1 movimiento)',
+    alto ->> 'estado' = 'validado' and alto -> 'motivos' = '[]'::jsonb and (alto ->> 'monto_usd')::numeric = 50
+    and pg_temp.pagos_cv((alto ->> 'referido_id')::uuid) = 1 and (alto ->> 'cv_puntaje')::int = 85, alto::text);
+  perform pg_temp.registrar('evaluacion_cv activa: el puntaje igual al umbral alcanza (60 valida)',
+    justo ->> 'estado' = 'validado' and (justo ->> 'monto_usd')::numeric = 50, justo::text);
+
+  bajo   := pg_temp.rrcv(cod, 'Bajo',   'Cvdos', 'cv.on3@t.com', 'linkedin.com/in/cv-on3', 59);
+  nulo   := pg_temp.rrcv(cod, 'Nulo',   'Cvdos', 'cv.on4@t.com', 'linkedin.com/in/cv-on4', null);
+  grande := pg_temp.rrcv(cod2, 'Grande', 'Cvdos', 'cv.on5@t.com', 'linkedin.com/in/cv-on5', 150);
+  neg    := pg_temp.rrcv(cod2, 'Negado', 'Cvdos', 'cv.on6@t.com', 'linkedin.com/in/cv-on6', -5);
+  perform pg_temp.registrar('evaluacion_cv activa: puntaje 59 -> en_revision con cv_dudoso, 0 USD y 0 movimientos',
+    bajo ->> 'resultado' = 'registrado' and bajo ->> 'estado' = 'en_revision' and bajo -> 'motivos' = '["cv_dudoso"]'::jsonb
+    and (bajo ->> 'monto_usd')::numeric = 0 and bajo ->> 'ciclo_pago' is null and pg_temp.pagos_cv((bajo ->> 'referido_id')::uuid) = 0
+    and (bajo ->> 'cv_puntaje')::int = 59, bajo::text);
+  perform pg_temp.registrar('evaluacion_cv activa: puntaje nulo -> en_revision con cv_dudoso y 0 pagos',
+    nulo ->> 'estado' = 'en_revision' and nulo -> 'motivos' = '["cv_dudoso"]'::jsonb and pg_temp.pagos_cv((nulo ->> 'referido_id')::uuid) = 0
+    and nulo -> 'cv_puntaje' = 'null'::jsonb, nulo::text);
+  perform pg_temp.registrar('evaluacion_cv activa: puntaje fuera de rango (150 y -5) se trata como nulo -> en_revision con cv_dudoso, 0 pagos',
+    grande ->> 'estado' = 'en_revision' and grande -> 'motivos' = '["cv_dudoso"]'::jsonb and grande -> 'cv_puntaje' = 'null'::jsonb
+    and neg ->> 'estado' = 'en_revision' and neg -> 'motivos' = '["cv_dudoso"]'::jsonb and neg -> 'cv_puntaje' = 'null'::jsonb
+    and pg_temp.pagos_cv((grande ->> 'referido_id')::uuid) = 0 and pg_temp.pagos_cv((neg ->> 'referido_id')::uuid) = 0,
+    grande::text || ' ' || neg::text);
+  perform pg_temp.registrar('evaluacion_cv activa: el referido guarda el motivo y el historial lo registra (sistema, registrado -> en_revision)',
+    (select motivos_revision = array['cv_dudoso'] from public.referidos where id = (bajo ->> 'referido_id')::uuid)
+    and (select count(*) = 2 and bool_or(estado_anterior = 'registrado' and estado_nuevo = 'en_revision' and motivo = 'cv_dudoso' and actor_tipo = 'sistema')
+           from public.historial_estados where referido_id = (bajo ->> 'referido_id')::uuid));
+  perform pg_temp.registrar('evaluacion_cv activa: el puntaje no altera es_prioritario ni los datos del candidato',
+    (select not es_prioritario and cv_url = 'cv-test.pdf' from public.candidatos where email = 'cv.on3@t.com'));
+end $$;
+
+-- El motivo se suma a los otros sin pisarlos (orden: posible_duplicado, alerta_volumen, perfil_incompleto, cv_dudoso)
+do $$
+declare ra uuid; rb uuid; j jsonb; k jsonb; m jsonb; i int;
+begin
+  ra := pg_temp.nuevo_referente('Rcv3', 'rcv3@t.com');
+  rb := pg_temp.nuevo_referente('Rcv4', 'rcv4@t.com');
+
+  -- perfil_incompleto + cv_dudoso (sin CV y puntaje bajo)
+  j := pg_temp.rrcv(pg_temp.codigo_de(ra), 'Sincv', 'Combo', 'cv.mix1@t.com', 'linkedin.com/in/cv-mix1', 10, null);
+  perform pg_temp.registrar('evaluacion_cv combinada: perfil_incompleto + cv_dudoso, ninguno pisa al otro',
+    j ->> 'estado' = 'en_revision' and j -> 'motivos' = '["perfil_incompleto", "cv_dudoso"]'::jsonb, j::text);
+
+  -- posible_duplicado + cv_dudoso
+  k := pg_temp.rrcv(pg_temp.codigo_de(ra), ' SINCV ', 'combo', 'cv.mix2@t.com', 'linkedin.com/in/cv-mix2', 10);
+  perform pg_temp.registrar('evaluacion_cv combinada: posible_duplicado + cv_dudoso',
+    k ->> 'estado' = 'en_revision' and k -> 'motivos' = '["posible_duplicado", "cv_dudoso"]'::jsonb, k::text);
+
+  -- posible_duplicado + alerta_volumen + cv_dudoso (tope de volumen bajado a 1)
+  update public.configuracion set valor = '{"cantidad": 1, "dias": 7}' where clave = 'alerta_volumen';
+  m := pg_temp.rrcv(pg_temp.codigo_de(ra), 'Sincv', 'Combo', 'cv.mix3@t.com', 'linkedin.com/in/cv-mix3', 10);
+  perform pg_temp.registrar('evaluacion_cv combinada: posible_duplicado + alerta_volumen + cv_dudoso, en ese orden',
+    m ->> 'estado' = 'en_revision' and m -> 'motivos' = '["posible_duplicado", "alerta_volumen", "cv_dudoso"]'::jsonb, m::text);
+
+  -- Con puntaje alto, los otros motivos siguen mandando a revisión como hoy y cv_dudoso no aparece
+  m := pg_temp.rrcv(pg_temp.codigo_de(ra), 'Sincv', 'Combo', 'cv.mix4@t.com', 'linkedin.com/in/cv-mix4', 95);
+  perform pg_temp.registrar('evaluacion_cv combinada: con puntaje alto no suma cv_dudoso (quedan solo los otros motivos)',
+    m ->> 'estado' = 'en_revision' and m -> 'motivos' = '["posible_duplicado", "alerta_volumen"]'::jsonb, m::text);
+  update public.configuracion set valor = '{"cantidad": 5, "dias": 7}' where clave = 'alerta_volumen';
+end $$;
+
+-- El umbral sale de configuracion
+do $$
+declare ra uuid; cod text; j jsonb; k jsonb;
+begin
+  ra := pg_temp.nuevo_referente('Rcv5', 'rcv5@t.com');
+  cod := pg_temp.codigo_de(ra);
+  update public.configuracion set valor = '90' where clave = 'evaluacion_cv_umbral';
+  j := pg_temp.rrcv(cod, 'Umbral', 'Alto', 'cv.umb1@t.com', 'linkedin.com/in/cv-umb1', 85);
+  perform pg_temp.registrar('evaluacion_cv umbral: con umbral 90, un 85 va a revisión (cv_dudoso)',
+    j ->> 'estado' = 'en_revision' and j -> 'motivos' = '["cv_dudoso"]'::jsonb, j::text);
+  update public.configuracion set valor = '10' where clave = 'evaluacion_cv_umbral';
+  k := pg_temp.rrcv(cod, 'Umbral', 'Bajo', 'cv.umb2@t.com', 'linkedin.com/in/cv-umb2', 59);
+  perform pg_temp.registrar('evaluacion_cv umbral: con umbral 10, un 59 valida y paga',
+    k ->> 'estado' = 'validado' and (k ->> 'monto_usd')::numeric = 50, k::text);
+  update public.configuracion set valor = '60' where clave = 'evaluacion_cv_umbral';
+end $$;
+
+-- Lo que no es un candidato nuevo no se ve afectado (con el interruptor encendido y puntaje bajo)
+do $$
+declare ra uuid; rb uuid; rc uuid; cod text; j jsonb; k jsonb; n_antes int; v_cand uuid;
+begin
+  ra := pg_temp.nuevo_referente('Rcv6', 'rcv6@t.com');
+  rb := pg_temp.nuevo_referente('Rcv7', 'rcv7@t.com');
+
+  -- ya estaba en el pool
+  v_cand := pg_temp.nuevo_candidato('cv.pool@t.com');
+  j := pg_temp.rrcv(pg_temp.codigo_de(ra), 'Pool', 'Existente', 'cv.pool@t.com', 'linkedin.com/in/cv-pool', 5);
+  perform pg_temp.registrar('evaluacion_cv activa: un candidato que ya estaba en el pool sigue siendo ya_registrado/descartado (ya_en_pool, sin cv_dudoso)',
+    j ->> 'resultado' = 'ya_registrado' and j ->> 'estado' = 'descartado' and j -> 'motivos' = '["ya_en_pool"]'::jsonb
+    and (j ->> 'monto_usd')::numeric = 0 and j -> 'cv_puntaje' = 'null'::jsonb
+    and (select count(*) = 1 from public.candidatos where id = v_cand), j::text);
+
+  -- autorreferido (la ficha de rb tiene LinkedIn ref-rcv7)
+  select count(*) into n_antes from public.candidatos;
+  k := pg_temp.rrcv(pg_temp.codigo_de(rb), 'Yo', 'Mismo', 'rcv7@t.com', 'linkedin.com/in/yo-mismo', 5);
+  perform pg_temp.registrar('evaluacion_cv activa: el autorreferido sigue siendo autorreferido y no deja rastro',
+    k ->> 'resultado' = 'autorreferido' and (select count(*) from public.candidatos) = n_antes
+    and (select count(*) = 0 from public.referidos where referente_id = rb), k::text);
+
+  -- código inválido
+  k := pg_temp.rrcv('inexistente-00000000', 'Aa', 'Bb', 'cv.inv@t.com', 'linkedin.com/in/cv-inv', 5);
+  perform pg_temp.registrar('evaluacion_cv activa: un código inválido sigue siendo codigo_invalido y no crea candidato',
+    k ->> 'resultado' = 'codigo_invalido' and (select count(*) = 0 from public.candidatos where email = 'cv.inv@t.com'), k::text);
+end $$;
+
+-- Reintento idempotente
+do $$
+declare ra uuid; cod text; j jsonb; k jsonb; m jsonb; v_ref uuid;
+begin
+  ra := pg_temp.nuevo_referente('Rcv8', 'rcv8@t.com');
+  cod := pg_temp.codigo_de(ra);
+  j := pg_temp.rrcv(cod, 'Reintento', 'Cv', 'cv.re@t.com', 'linkedin.com/in/cv-re', 30);
+  v_ref := (j ->> 'referido_id')::uuid;
+  k := pg_temp.rrcv(cod, 'Reintento', 'Cv', 'CV.RE@t.com', 'linkedin.com/in/cv-re', 30);
+  perform pg_temp.registrar('evaluacion_cv reintento: repetir la misma llamada -> mismo referido, repetido = true, sigue en_revision',
+    j ->> 'estado' = 'en_revision' and k ->> 'resultado' = 'registrado' and (k ->> 'repetido')::boolean
+    and (k ->> 'referido_id')::uuid = v_ref and k ->> 'estado' = 'en_revision' and k -> 'cv_puntaje' = 'null'::jsonb, k::text);
+  -- repetir con un puntaje alto no lo valida: el puntaje no se reevalúa y nunca valida por sí solo
+  m := pg_temp.rrcv(cod, 'Reintento', 'Cv', 'cv.re@t.com', 'linkedin.com/in/cv-re', 99);
+  perform pg_temp.registrar('evaluacion_cv reintento: repetir con un puntaje alto no valida ni paga',
+    m ->> 'estado' = 'en_revision' and (m ->> 'referido_id')::uuid = v_ref and pg_temp.pagos_cv(v_ref) = 0, m::text);
+  perform pg_temp.registrar('evaluacion_cv reintento: sigue habiendo un candidato, un referido y 2 filas de historial',
+    (select count(*) = 1 from public.candidatos where email = 'cv.re@t.com')
+    and (select count(*) = 1 from public.referidos where referente_id = ra)
+    and (select count(*) = 2 from public.historial_estados where referido_id = v_ref));
+end $$;
+
+-- Compatibilidad y permisos
+do $$
+declare
+  ra uuid; cod text; j jsonb; v_anon boolean; v_auth boolean; v_sr jsonb; v_sr_err text; n_antes int;
+  v_sig regprocedure :=
+    'public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text,integer)'::regprocedure;
+begin
+  ra := pg_temp.nuevo_referente('Rcv9', 'rcv9@t.com');
+  cod := pg_temp.codigo_de(ra);
+
+  -- la llamada existente (pg_temp.rr, 11 argumentos) sigue andando; con el interruptor encendido y sin puntaje va a revisión
+  j := pg_temp.rr(cod, 'Vieja', 'Llamada', 'cv.vieja@t.com', 'linkedin.com/in/cv-vieja');
+  perform pg_temp.registrar('evaluacion_cv compat: la llamada de 11 argumentos sigue funcionando (sin puntaje y activa -> cv_dudoso)',
+    j ->> 'resultado' = 'registrado' and j -> 'motivos' = '["cv_dudoso"]'::jsonb, j::text);
+  update public.configuracion set valor = 'false' where clave = 'evaluacion_cv_activa';
+  j := pg_temp.rr(cod, 'Vieja', 'Dos', 'cv.vieja2@t.com', 'linkedin.com/in/cv-vieja2');
+  perform pg_temp.registrar('evaluacion_cv compat: la llamada de 11 argumentos con la evaluación apagada se comporta como siempre (validado, 50 USD)',
+    j ->> 'estado' = 'validado' and (j ->> 'monto_usd')::numeric = 50, j::text);
+  perform pg_temp.registrar('evaluacion_cv compat: no queda la sobrecarga vieja de 11 argumentos (sería ambigua por RPC)',
+    to_regprocedure('public.registrar_referido(text,text,text,text,text,public.tipo_especialidad,boolean,public.tipo_seniority,public.tipo_nivel_ingles,boolean,text)') is null
+    and (select count(*) = 1 from pg_proc where proname = 'registrar_referido' and pronamespace = 'public'::regnamespace));
+
+  -- permisos intactos
+  select count(*) into n_antes from public.candidatos;
+  execute 'set local role anon';
+  begin perform pg_temp.rrcv(cod, 'Pa', 'Anon', 'cv.anon@t.com', 'linkedin.com/in/cv-anon', 90); v_anon := true;
+  exception when others then v_anon := not (sqlerrm ilike '%permission denied%'); end;
+  execute 'reset role';
+  execute 'set local role authenticated';
+  begin perform pg_temp.rrcv(cod, 'Pa', 'Auth', 'cv.auth@t.com', 'linkedin.com/in/cv-auth', 90); v_auth := true;
+  exception when others then v_auth := not (sqlerrm ilike '%permission denied%'); end;
+  execute 'reset role';
+  execute 'set local role service_role';
+  begin v_sr := pg_temp.rrcv(cod, 'Pa', 'Servicio', 'cv.sr@t.com', 'linkedin.com/in/cv-sr', 90);
+  exception when others then v_sr_err := sqlerrm; end;
+  execute 'reset role';
+  perform pg_temp.registrar('evaluacion_cv permisos: anon y authenticated no pueden ejecutarla con el puntaje y no crearon nada',
+    not v_anon and not v_auth and (select count(*) from public.candidatos where email in ('cv.anon@t.com', 'cv.auth@t.com')) = 0);
+  perform pg_temp.registrar('evaluacion_cv permisos: service_role la ejecuta con el puntaje',
+    v_sr ->> 'resultado' = 'registrado', coalesce(v_sr_err, v_sr::text));
+  perform pg_temp.registrar('evaluacion_cv permisos: privilegios de la firma nueva: service_role sí; anon, authenticated y public no',
+    has_function_privilege('service_role', v_sig, 'execute')
+    and not has_function_privilege('anon', v_sig, 'execute')
+    and not has_function_privilege('authenticated', v_sig, 'execute')
+    and not exists (select 1 from pg_proc p, aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+                     where p.oid = v_sig and a.grantee = 0 and a.privilege_type = 'EXECUTE'));
 end $$;
 
 -- ---------------------------------------------------------------------
