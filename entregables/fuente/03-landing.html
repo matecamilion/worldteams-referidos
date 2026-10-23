@@ -40,15 +40,17 @@
 
   <div class="par-panel">
     <img src="recursos/captura-panel-cola.png" alt="Cola de revisión del panel con datos ficticios">
+    <img src="recursos/captura-panel-cv-dudoso.png" alt="Caso en revisión con el motivo CV dudoso, datos ficticios">
     <img src="recursos/captura-panel-pool.png" alt="Talent pool del panel con datos ficticios">
   </div>
-  <figcaption>Panel de reclutamiento: cola de revisión y talent pool. Capturas de <code>/dev/panel</code>, con datos ficticios.</figcaption>
+  <figcaption>Panel de reclutamiento: cola de revisión, un caso con el motivo "CV dudoso" y talent pool. Capturas de <code>/dev/panel</code> y <code>/dev/panel/pool</code>, con datos ficticios.</figcaption>
 
   <h2>Límites conocidos</h2>
   <ul class="lista-2">
     <li>El magic link se tiene que abrir en el mismo navegador en que se pidió (PKCE guarda el verificador en una cookie).</li>
     <li>Los topes de <code>/ingresar</code> (5 por IP y 3 por email cada 10 minutos) viven en la memoria de cada instancia: con varias, se multiplican. El tope de códigos del link vive en la base.</li>
     <li>En el talent pool, con JavaScript apagado la tabla se queda en el esqueleto de carga, y al filtrar por estado un candidato aparece si alguno de sus referidos tiene ese estado.</li>
+    <li>El aviso de visibilidad del formulario no menciona el análisis automático del CV ni el proveedor externo de IA: es un límite abierto.</li>
     <li>Las cifras de la franja de "/" (+750 profesionales, +370 empresas) son un dato público de worldteams.com, sin verificar.</li>
   </ul>
 </section>

@@ -26,7 +26,7 @@
 
     <div class="bloque">
       <h2>Cómo se refiere</h2>
-      <p>Cada referente tiene un link personal, <code>/r/{nombre}-{8 caracteres}</code> (ej.: <code>/r/lucia-k7q2m9xd</code>), con un sufijo aleatorio no adivinable. La persona recomendada carga sus propios datos y su CV en PDF, y acepta que quien la recomendó vea su nombre y el estado de su registro. El formulario tiene reCAPTCHA. El referente sigue sus referidos y premios en un portal con login por magic link.</p>
+      <p>Cada referente tiene un link personal, <code>/r/{nombre}-{8 caracteres}</code> (ej.: <code>/r/lucia-k7q2m9xd</code>), con un sufijo aleatorio no adivinable. La persona recomendada carga sus propios datos y su CV en PDF, y acepta que quien la recomendó vea su nombre y el estado de su registro. El formulario tiene reCAPTCHA. El referente sigue sus referidos y premios en un portal con magic link.</p>
     </div>
 
     <div class="bloque">
@@ -49,7 +49,7 @@
 
     <div class="bloque">
       <h2>Validación</h2>
-      <p>Automática por reglas: si el perfil cumple todo, queda validado sin intervención humana. Va a revisión solo ante un <strong>posible duplicado</strong> (mismo nombre y apellido que otro candidato), una <strong>alerta de volumen</strong> (más de 5 referidos del mismo referente en 7 días; no hay tope de referidos) o un <strong>perfil sin CV</strong> (red de seguridad: el formulario ya lo exige). Reclutamiento resuelve desde un panel en 3 días hábiles; a la persona se le promete respuesta en 5.</p>
+      <p>Automática por reglas: si el perfil cumple todo, queda validado sin intervención humana. Va a revisión solo ante un <strong>posible duplicado</strong> (mismo nombre y apellido), una <strong>alerta de volumen</strong> (más de 5 referidos del mismo referente en 7 días; sin tope), un <strong>perfil sin CV</strong> o un <strong>CV dudoso</strong>: la evaluación automática del CV da menos que el umbral configurable (hoy 60 de 100) o no se pudo calcular. Solo manda a revisión: nunca valida ni rechaza. Reclutamiento resuelve en 3 días hábiles; a la persona se le promete respuesta en 5.</p>
     </div>
 
     <div class="bloque partible">
@@ -58,8 +58,8 @@
         <li><strong>Autorreferido bloqueado:</strong> el email o el LinkedIn de la persona no puede ser el del referente.</li>
         <li><strong>Sin duplicados:</strong> email y LinkedIn únicos; quien ya estaba en el pool no cuenta y el referente recibe un aviso.</li>
         <li><strong>Link no adivinable</strong> (36<sup>8</sup> combinaciones) y tope de 10 códigos inexistentes por IP cada 10 minutos.</li>
-        <li><strong>Sanción:</strong> autorreferirse o cargar referidos falsos cancela los premios pendientes y puede llevar a la expulsión.</li>
-        <li><strong>Trazabilidad:</strong> historial de estados de solo inserción, un solo pago por referido y concepto, y montos, umbrales y plazos en una tabla de configuración.</li>
+        <li><strong>Sanción:</strong> autorreferirse o cargar referidos falsos cancela los premios pendientes.</li>
+        <li><strong>Trazabilidad:</strong> historial de solo inserción, un solo pago por referido y concepto, y montos, umbrales y plazos en configuración.</li>
       </ul>
     </div>
   </div>
@@ -68,8 +68,8 @@
     <h2>Meta y límites</h2>
     <div class="texto-tabla">
       <div>
-        <p>Si hubiera 750 referentes (supuesto a confirmar con WorldTeams), sumar 500 ingresos por mes exige 0,67 validados por referente por mes con el 100 % participando. El cuello de botella es cuántos referentes participan, no el costo.</p>
-        <p>WorldTeams no definió presupuesto: los montos son una propuesta y se ajustan desde la configuración. El programa se paga solo si al menos X % de los referidos termina colocado (X&nbsp;=&nbsp;costo por referido ÷ ingreso por colocación, dato a pedir).</p>
+        <p>Con 750 referentes (supuesto a confirmar), 500 ingresos por mes exigen 0,67 validados por referente con el 100 % participando. El cuello de botella es cuántos referentes participan, no el costo.</p>
+        <p>WorldTeams no definió presupuesto: los montos son una propuesta y se ajustan desde la configuración. El programa se paga si al menos X % de los referidos se coloca (X&nbsp;=&nbsp;costo por referido ÷ ingreso por colocación, dato a pedir).</p>
       </div>
       <div>
         <table class="sin-corte-1">

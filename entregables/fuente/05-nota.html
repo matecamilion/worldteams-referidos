@@ -34,6 +34,7 @@
       <tr><td>Revisión solo de los dudosos</td><td>Revisar cada caso no escala a 1.000 por mes: hay un solo punto de aprobación humana.</td></tr>
       <tr><td>Link no adivinable</td><td>Sufijo de 8 caracteres base36 (36<sup>8</sup>, unos 2,8 billones de combinaciones). La segunda capa vive en la base: <code>consultar_referente_por_codigo</code> cuenta los códigos inexistentes por IP y bloquea al llegar a 10 en 600 segundos (<code>limite_consulta_codigo</code>), y solo responde con el secreto que tiene el servidor de la app.</td></tr>
       <tr><td>Garantías en la base</td><td>Registro en una transacción, pagos por trigger, historial de solo inserción y RLS en todas las tablas. n8n orquesta y la service role solo vive en n8n.</td></tr>
+      <tr><td>Evaluación del CV con IA (decisión 70)</td><td>Idea mía: sin esto, el pago automático validaba perfiles sin comprobar que fueran reales. n8n extrae el texto del PDF, le quita emails, teléfonos y URLs, y le pide un puntaje de 0 a 100 a un modelo (llamada simple, no un agente). La <strong>base</strong> decide: con el interruptor encendido, un puntaje nulo o menor que el umbral (60, en <code>configuracion</code>) suma el motivo <code>cv_dudoso</code> y manda el caso a revisión. Nunca valida, rechaza ni cambia montos, y el puntaje no se guarda. <strong>Se envía</strong> solo el texto del CV y los cuatro campos del perfil declarado; <strong>no se envía</strong> nombre, apellido, email, LinkedIn del formulario ni el código del referente. Tope de 10 s en total (3 s el interruptor, 6 s el modelo), sin reintentos; si algo falla, el puntaje es nulo. Descarté un agente con herramientas y que el puntaje valide o rechace.</td></tr>
       <tr><td>Panel sin n8n</td><td>Aprobar, rechazar y reabrir llaman a <code>resolver_referido</code> con la sesión de la persona. Pasar por un webhook sumaba un salto y una credencial sin aportar lógica. Es una excepción documentada a mi diseño inicial.</td></tr>
       <tr><td>Nada hardcodeado</td><td>Montos, hitos, día de corte, zona horaria, plazos y umbrales están en <code>configuracion</code>, que valida cada valor al guardarlo.</td></tr>
       <tr><td>Mails</td><td>Resend desde n8n, con remitente <code>referidos@mail.signa.net.ar</code> (dominio verificado solo para este ejercicio). En producción, WorldTeams verifica su dominio y se cambia en dos lugares: el nodo <em>Enviar mail (Resend)</em> de n8n y el remitente del SMTP de Supabase.</td></tr>
@@ -50,7 +51,20 @@
   <p>Los de la app (login y panel) están en la sección 3. Los del sistema:</p>
   <ul>
     <li><strong>Un validado no se puede reabrir, a propósito.</strong> Los pagos son únicos por referido y concepto y se crean con <code>on conflict do nothing</code>, así que revalidar no corregiría nada. Los movimientos pagados o cancelados están cerrados por trigger. El estado de pago no tiene un valor de "cancelado por revisión". Un pago hecho no tiene compensación, porque el monto siempre es mayor que 0. Los bonos de hito no se vinculan con el referido que los disparó. Si alguien se aprobó por error, hoy se resuelve fuera del sistema.</li>
-    <li>La validación automática comprueba duplicados, autorreferido, volumen y CV; no comprueba que el perfil sea real. Mientras un pago está pendiente (hasta el cierre mensual), una sanción lo cancela; la señal antifraude y el pago por colocación (segunda etapa) refuerzan ese punto.</li>
+    <li>La validación automática comprueba duplicados, autorreferido, volumen y CV (con el filtro de la decisión 70); no comprueba que el perfil sea real. Mientras un pago está pendiente (hasta el cierre mensual), una sanción lo cancela; la señal antifraude y el pago por colocación (segunda etapa) refuerzan ese punto.</li>
+    <li><strong>Evaluación del CV (decisión 70):</strong>
+      <ul>
+        <li>Un CV falso bien armado se le escapa. Es un filtro que sube el costo del fraude, no una prueba; y un puntaje alto no impide una inyección exitosa: si una frase disfrazada engaña al modelo, el caso pasa por las demás reglas, pero no queda marcado.</li>
+        <li>El texto del CV sale a un proveedor externo. Los nombres no se pueden quitar de forma confiable: salen dentro del texto, aunque no se envíen los campos del formulario.</li>
+        <li>El aviso de visibilidad del formulario no menciona el análisis automático del CV ni al proveedor: hay que ajustarlo antes de usarlo en producción.</li>
+        <li>Las explicaciones del modelo pueden ser inexactas: en una prueba dijo que un CV tenía instrucciones dirigidas al evaluador y no las tenía. Por eso la observación no se guarda ni se muestra, y el puntaje solo manda a revisión.</li>
+        <li>La retención de ejecuciones de n8n está sin configurar: el historial guarda el texto enviado (con los nombres) y la observación del modelo. Conviene una retención corta.</li>
+        <li>El panel muestra el motivo "CV dudoso" pero no el puntaje.</li>
+        <li>Un PDF escaneado o casi vacío (menos de 200 caracteres) va a revisión por diseño: no hay nada que evaluar.</li>
+        <li>El interruptor está encendido en el ejercicio, y una caída de OpenAI manda todos los casos nuevos a revisión. Es el costo de que ante la duda decida una persona.</li>
+        <li>Se evalúa antes de saber si el candidato es nuevo, así que también sale a OpenAI el CV de quien ya estaba registrado.</li>
+      </ul>
+    </li>
     <li>El referente no recibe un mail cuando reclutamiento resuelve su caso: se entera por el portal.</li>
     <li>Un caso reabierto aparece ya vencido, porque el plazo cuenta desde su ingreso original. El plazo cuenta de lunes a viernes, sin feriados.</li>
     <li>El posible duplicado se detecta por nombre y apellido, así que con nombres comunes dará falsos positivos. Se acepta: un falso positivo cuesta una revisión, un duplicado real cuesta un pago indebido.</li>
@@ -68,17 +82,19 @@
     <li>Señales antifraude (IP, teléfono, dispositivo) y un posible duplicado más fino.</li>
     <li>Configuración versionada, con un panel de edición, y paneles de métricas y de pagos.</li>
     <li>Corregir una validación: un estado de pago "cancelado por revisión", el vínculo del bono con su referido, ajustes de lo ya pagado y la fecha de reapertura para el plazo. Tabla de feriados.</li>
+    <li>Evaluar el CV después de saber si el candidato es nuevo (hoy también sale a OpenAI el de quien resulta ya registrado), y afinar el detector de inyección.</li>
     <li>La landing en inglés y portugués (los textos ya están en un archivo de traducciones).</li>
   </ul>
 
   <h2>Estado de las pruebas</h2>
   <ul>
-    <li><strong>Base:</strong> <code>supabase/tests.sql</code> en la base real, 234 de 234. Las 2 fallas anteriores esperaban un email de ejemplo distinto del cargado en la base; se corrigieron las expectativas y el seed, sin tocar datos.</li>
-    <li><strong>App:</strong> pruebas unitarias de <code>app/</code> (Vitest), 193 de 193 en 17 archivos, corridas el 22/10.</li>
-    <li><strong>De punta a punta:</strong> el flujo 1 y el formulario real funcionan, con los mails (sección 4). En el panel, con la base real, "Ver CV" abrió un PDF real con una sesión de reclutamiento y Rechazar se probó a mano. Aprobar y Reabrir no se probaron a mano con la base real: los cubren <code>tests.sql</code> y <code>/dev/panel</code>.</li>
+    <li><strong>Base:</strong> <code>supabase/tests.sql</code> en la base real, 269 de 269 (12 claves de configuración). Incluye 35 pruebas de la evaluación del CV.</li>
+    <li><strong>App:</strong> pruebas unitarias de <code>app/</code> (Vitest), 194 de 194 en 17 archivos, corridas el 22/10.</li>
+    <li><strong>A mano, con la base real, sin script:</strong> en el panel, Ver CV, Rechazar, Aprobar y Reabrir. Con la evaluación apagada, un registro normal se validó sin llamar a OpenAI (5,1 s). Encendida, un CV que no coincidía con el perfil declarado sacó 10 y quedó en revisión; uno coherente sacó 95 (fue a revisión solo por la alerta de volumen del referente). Una corrida completa con evaluación tardó 5,2 s, de una sola muestra. El formulario real y los mails funcionan (sección 4).</li>
+    <li><strong>Escritas y sin correr:</strong> los casos de evaluación de <code>n8n/probar-flujo-1.mjs</code> (E1 a E5). El "12 de 12" de ese script era del flujo de 13 nodos: no cubre el flujo actual de 21.</li>
   </ul>
 
-  <h2 style="break-before: page">Cómo usé IA y qué corregí</h2>
+  <h2>Cómo usé IA y qué corregí</h2>
   <p>Usé Claude como interlocutor de diseño (una pregunta por vez, con opciones y una recomendación). Contrasté sus propuestas con las respuestas de WorldTeams, con su web y con una consulta informal a 6 personas. Después usé Claude Code para construir, con el repo como contexto y el registro de decisiones como fuente de verdad. Cada corrección quedó anotada en <code>AI-LOG.md</code>; estas son las que más cambiaron el resultado:</p>
   <table class="compacta ia">
     <thead><tr><th>Tema</th><th>Qué propuso la IA</th><th>Qué corregí</th></tr></thead>
@@ -95,7 +111,9 @@
       <tr><td>Zona horaria</td><td>Ciclo de pago calculado en UTC, fijo en el código.</td><td>Una clave de configuración (Buenos Aires): el mismo instante cae en días distintos según la zona.</td></tr>
       <tr><td>Seguridad del portal</td><td>Afirmó que las vistas filtraban por referente, sin una prueba.</td><td>Pedí la prueba de un referente que intenta ver datos de otro, y el vínculo por usuario pasó a tener prioridad sobre el email.</td></tr>
       <tr><td>Función en la base real</td><td>Una concatenación de arrays que falló con <code>malformed array literal</code>.</td><td>Reporté el error exacto; se corrigió con <code>array_append</code> y se volvió a aplicar.</td></tr>
-      <tr><td>Entregables de más</td><td>Un video de 3 minutos y un diagrama de flujo.</td><td>Releí el mail de WorldTeams: no los pedía. El video quedó afuera; el flujo se presenta con una figura generada desde el JSON exportado.</td></tr>
+      <tr><td>Entregables de más</td><td>Un video de 3 minutos y un diagrama de flujo.</td><td>Releí el mail de WorldTeams: no los pedía. El video quedó afuera; el flujo se presenta con capturas de n8n.</td></tr>
+      <tr><td>Evaluación del CV</td><td>Idea mía: evaluar el CV con IA para que el pago automático no valide perfiles sin comprobar que sean reales.</td><td>Fijé el alcance: una llamada simple al modelo, no un agente; la decisión sigue en la base y el puntaje solo puede mandar a revisión, nunca rechazar ni validar. Sobre el plan de Claude pedí un timeout de 6 s, quitar emails, teléfonos y URLs antes de enviar el texto, y no llamar al modelo ante frases evidentes de inyección. Un test de Claude fallaba por reutilizar un referente que ya pasaba el tope de volumen: el error era de la prueba, no de la función.</td></tr>
+      <tr><td>Nodo OpenAI del flujo</td><td>Escribió de memoria los parámetros del nodo OpenAI de n8n y avisó que eran una suposición. Sus 62 comprobaciones verificaban su propio código, no el nodo.</td><td>Al importarlo en n8n Cloud falló con un 400 genérico: la operación que usó no existía en esa versión. Pedí reemplazarlo por un HTTP Request a la API, que además permite fijar el timeout. Se sumaron comprobaciones sobre la forma real de la respuesta.</td></tr>
       <tr><td>Panel sin JavaScript</td><td>Afirmó que el talent pool "funciona sin JavaScript".</td><td>Solo del lado del servidor: el navegador se queda en el esqueleto de carga. Quedó como límite.</td></tr>
     </tbody>
   </table>

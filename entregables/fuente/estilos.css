@@ -369,10 +369,10 @@ table.campos code { background: none; padding: 0; white-space: normal; }
 .compacta { font-size: 8.8pt; }
 .compacta td:first-child { white-space: nowrap; font-family: var(--display); font-weight: 600; }
 
-.capturas { display: grid; grid-template-columns: 1fr 0.29fr; gap: 4mm; align-items: start; margin: 2mm auto 2.4mm; width: 80%; }
+.capturas { display: grid; grid-template-columns: 1fr 0.29fr; gap: 4mm; align-items: start; margin: 2mm auto 2.4mm; width: 66%; }
 .capturas img, .captura img { width: 100%; display: block; border-radius: 1.5mm; border: 0.25mm solid var(--linea); }
 .capturas figure, .captura { margin: 0; }
-.par-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 3mm 0 0; }
+.par-panel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; margin: 3mm 0 0; }
 .par-panel img { width: 100%; height: 33mm; display: block; border-radius: 1.5mm; border: 0.25mm solid var(--linea); object-fit: cover; object-position: top; }
 .par-panel + figcaption { margin: 1.4mm 0 2mm; }
 
@@ -396,3 +396,9 @@ table.campos code { background: none; padding: 0; white-space: normal; }
 
 .flujo > h2 + p { break-after: avoid; }
 .flujo > h2 + p + ul > li:first-child { break-before: avoid; }
+
+/* Capturas de n8n (sección 4) */
+.captura-n8n img { width: 100%; display: block; border-radius: 1.5mm; border: 0.25mm solid var(--linea); }
+.par-n8n { display: grid; grid-template-columns: 1.55fr 1fr; gap: 4mm; align-items: start; margin: 2mm 0 3mm; }
+.par-n8n figure { margin: 0; }
+.par-n8n img { width: 100%; display: block; border-radius: 1.5mm; border: 0.25mm solid var(--linea); }

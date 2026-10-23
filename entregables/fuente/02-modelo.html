@@ -11,7 +11,7 @@
   <header class="titulo-seccion">
     <span class="num">2</span>
     <h1>Modelo de datos</h1>
-    <span class="bajada">Postgres en Supabase · fuente: <code>supabase/schema.sql</code></span>
+    <span class="bajada">Postgres en Supabase · fuente: <code>supabase/schema.sql</code> y <code>evaluacion_cv.sql</code></span>
   </header>
 
   <p class="intro">Siete tablas de negocio, dos internas y tres vistas. Las reglas que no se pueden romper (unicidad, estados, pagos y permisos) las impone la base.</p>
@@ -73,7 +73,7 @@
         <tr><td>referente_id</td><td>uuid · FK, no se puede cambiar</td><td>A quién se le atribuye el premio.</td></tr>
         <tr><td>candidato_id</td><td>uuid · FK, no se puede cambiar</td><td>Un solo referido vigente por candidato (índice único parcial, sin contar los descartados).</td></tr>
         <tr><td>estado</td><td>enum · transiciones controladas por trigger</td><td>registrado, validado, en_revision, rechazado o descartado.</td></tr>
-        <tr><td>motivos_revision</td><td>text[]</td><td>Por qué entró a revisión o se descartó.</td></tr>
+        <tr><td>motivos_revision</td><td>text[]</td><td>Por qué entró a revisión o se descartó: <code>posible_duplicado</code>, <code>alerta_volumen</code>, <code>perfil_incompleto</code> o <code>cv_dudoso</code> (evaluación automática del CV; el puntaje no se guarda).</td></tr>
         <tr><td>validado_en</td><td>timestamptz · solo si está validado</td><td>Define el ciclo de pago y el año de los hitos.</td></tr>
       </tbody>
     </table>
@@ -119,7 +119,7 @@
     <table class="campos">
       <thead><tr><th>Objeto</th><th>Forma</th><th>Para qué</th></tr></thead>
       <tbody>
-        <tr><td>configuracion</td><td>clave text PK · valor jsonb · descripcion · actualizado_en/por</td><td>Montos, hitos, día de corte, zona horaria, plazos, alerta de volumen y límite por IP. Un trigger valida cada valor al guardarlo y registra quién lo cambió.</td></tr>
+        <tr><td>configuracion</td><td>clave text PK · valor jsonb · descripcion · actualizado_en/por</td><td>12 claves: montos, hitos, día de corte, zona horaria, plazos, alerta de volumen, límite por IP y la evaluación del CV (<code>evaluacion_cv_activa</code>, un interruptor que viene apagado, y <code>evaluacion_cv_umbral</code>, de 0 a 100, por defecto 60). Un trigger valida cada valor al guardarlo y registra quién lo cambió.</td></tr>
         <tr><td>equipo_reclutamiento</td><td>email único · nombre · activo</td><td>Quién entra al panel. Sin políticas de lectura: se consulta con <code>es_reclutamiento()</code>.</td></tr>
         <tr><td>secretos_internos</td><td>tabla interna</td><td>El secreto de aplicación que exigen las dos funciones que llama la landing. Sin permisos para anónimo ni autenticado.</td></tr>
         <tr><td>intentos_consulta_codigo</td><td>tabla interna · PK (ip, código)</td><td>Códigos inexistentes que probó cada IP, para el tope de 10 cada 600 s.</td></tr>
@@ -154,7 +154,7 @@
       <tr><td>Historial</td><td>Cada alta y cada cambio de estado escribe una fila. Otro trigger impide modificarla o borrarla, y a la service role se le quitó el permiso.</td></tr>
       <tr><td>Pagos al validar</td><td>Al pasar a validado se ejecuta <code>crear_movimientos_validacion</code>.</td></tr>
       <tr><td>Movimientos</td><td>Monto y concepto inmutables; un movimiento pagado o cancelado no se toca; un sancionado no genera nuevos.</td></tr>
-      <tr><td>Configuración</td><td>Valida tipo y rango de cada clave al guardarla (por ejemplo, el día de corte va de 1 a 28 y la zona horaria tiene que existir).</td></tr>
+      <tr><td>Configuración</td><td>Valida tipo y rango de cada clave al guardarla (por ejemplo, el día de corte va de 1 a 28, la zona horaria tiene que existir y el umbral del CV es un entero de 0 a 100).</td></tr>
     </tbody>
   </table>
 
@@ -162,7 +162,7 @@
   <table class="compacta">
     <thead><tr><th>Función</th><th>Qué hace</th><th>Quién la ejecuta</th></tr></thead>
     <tbody>
-      <tr><td>registrar_referido</td><td>En una transacción: normaliza, bloquea por email y LinkedIn, valida el código, detecta autorreferido y candidato existente, evalúa las reglas de revisión, inserta y valida o manda a revisión. Devuelve un JSON con resultado, estado, monto, bono, ciclo y próximo hito.</td><td>service_role (n8n)</td></tr>
+      <tr><td>registrar_referido</td><td>En una transacción: normaliza, bloquea por email y LinkedIn, valida el código, detecta autorreferido y candidato existente, evalúa las reglas de revisión, inserta y valida o manda a revisión. Recibe un parámetro opcional, <code>p_cv_puntaje</code> (entero de 0 a 100; fuera de rango cuenta como nulo): con la evaluación del CV encendida, un puntaje nulo o menor que el umbral suma el motivo <code>cv_dudoso</code>; apagada, lo ignora. Devuelve un JSON con resultado, estado, monto, bono, ciclo, próximo hito y <code>cv_puntaje</code> (informativo: no hay columna, el puntaje no se guarda).</td><td>service_role (n8n)</td></tr>
       <tr><td>resolver_referido</td><td>Aprobar, rechazar o reabrir un caso. Verifica <code>es_reclutamiento()</code> adentro, bloquea la fila y deja al revisor en el historial.</td><td>authenticated (panel)</td></tr>
       <tr><td>cambiar_estado_referido</td><td>Cambia el estado y deja actor y motivo en el historial.</td><td>service_role</td></tr>
       <tr><td>crear_movimientos_validacion</td><td>Base, extra prioritario y bonos de hito con los montos de <code>configuracion</code>; ciclo según el día de corte y la zona horaria. Idempotente.</td><td>trigger</td></tr>

@@ -1,8 +1,8 @@
 # Genera los dos diagramas de la entrega a partir del repo y los incrusta (SVG en línea) en el HTML de cada sección:
 #   · Diagrama entidad-relación desde supabase/schema.sql (+ las tablas internas de supabase/consulta_referente.sql)
 #     -> entre <!-- er:inicio --> y <!-- er:fin --> de fuente/02-modelo.html
-#   · Secuencia de nodos del flujo 1 desde n8n/flujo-1-registro.json
-#     -> entre <!-- flujo:inicio --> y <!-- flujo:fin --> de fuente/04-flujo.html
+#   · (svg_flujo, sin uso desde el 22/10) Secuencia de nodos del flujo 1 desde n8n/flujo-1-registro.json. La sección 4
+#     usa capturas reales de n8n; la función queda por si hace falta volver a la figura generada.
 # Solo la posición de cada tabla en el lienzo es fija; columnas, tipos, claves y relaciones salen del SQL, y los nodos,
 # su orden y sus conexiones salen del JSON.
 # Uso (desde la raíz del repo): python entregables/diagramas.py
@@ -265,5 +265,4 @@ def svg_flujo() -> str:
 
 if __name__ == "__main__":
     incrustar(FUENTE / "02-modelo.html", "er", svg_er())
-    incrustar(FUENTE / "04-flujo.html", "flujo", svg_flujo())
-    print("diagramas incrustados en 02-modelo.html y 04-flujo.html")
+    print("diagrama incrustado en 02-modelo.html")

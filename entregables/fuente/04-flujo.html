@@ -14,14 +14,23 @@
     <span class="bajada">n8n · flujo 1, registro de un referido</span>
   </header>
 
-  <p class="intro">Cuando la persona recomendada envía el formulario, la app verifica reCAPTCHA y reenvía los datos a un webhook de n8n. El flujo sube el CV, registra todo en la base con una sola llamada, responde a la app y manda los mails. El JSON importable (<code>flujo-1-registro.json</code>) va adjunto aparte.</p>
+  <p class="intro">Cuando la persona recomendada envía el formulario, la app verifica reCAPTCHA y reenvía los datos a un webhook de n8n. El flujo sube el CV, evalúa su texto con un modelo de IA (si el interruptor está encendido), registra todo en la base con una sola llamada, responde a la app y manda los mails. El JSON importable (<code>flujo-1-registro.json</code>) va adjunto aparte.</p>
 
-  <figure>
-<!-- flujo:inicio -->
-<svg class="diagrama" viewBox="0 0 1012 288" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Secuencia de nodos del flujo 1, generada desde n8n/flujo-1-registro.json"><defs><marker id="punta" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#58958c"/></marker></defs><path d="M156,41.0 C174,41.0 160,41.0 178,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M324,41.0 C342,41.0 328,41.0 346,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M492,41.0 C510,41.0 496,41.0 514,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M660,41.0 C678,41.0 664,41.0 682,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M828,41.0 C846,41.0 832,41.0 850,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="832" y="36.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">sí</text><path d="M828,41.0 C846,41.0 832,123.0 850,123.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="832" y="57.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">no</text><path d="M996,41.0 H1006 V180 H83.0 V196" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M156,227.0 C174,227.0 160,227.0 178,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="160" y="222.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">sí</text><path d="M83.0,258 V274 H419.0 V258" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="89.0" y="271" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">no</text><path d="M324,227.0 C342,227.0 328,227.0 346,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M492,227.0 C510,227.0 496,227.0 514,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M660,227.0 C678,227.0 664,227.0 682,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M828,227.0 C846,227.0 832,227.0 850,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><rect x="10" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="24" cy="24" r="8.5" fill="#d0ef76"/><text x="24" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">1</text><text x="38" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Webhook</text><text x="20" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Webhook registro</text><rect x="178" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="192" cy="24" r="8.5" fill="#d0ef76"/><text x="192" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">2</text><text x="206" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="188" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Preparar</text><rect x="346" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="360" cy="24" r="8.5" fill="#d0ef76"/><text x="360" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">3</text><text x="374" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="356" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Subir CV</text><rect x="514" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="528" cy="24" r="8.5" fill="#d0ef76"/><text x="528" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">4</text><text x="542" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="524" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Registrar</text><text x="524" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">referido</text><rect x="682" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="696" cy="24" r="8.5" fill="#d0ef76"/><text x="696" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">5</text><text x="710" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Condición</text><text x="692" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">¿Respondió la</text><text x="692" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">función?</text><rect x="850" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="864" cy="24" r="8.5" fill="#d0ef76"/><text x="864" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">6</text><text x="878" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="860" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Normalizar</text><text x="860" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">resultado</text><rect x="850" y="92" width="146" height="62" rx="6" fill="#fff1ec" stroke="#142d2b" stroke-width="1.1" /><circle cx="864" cy="106" r="8.5" fill="#d0ef76"/><text x="864" y="109.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">7</text><text x="878" y="110" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Respuesta</text><text x="860" y="130" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Responder error</text><rect x="10" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="24" cy="210" r="8.5" fill="#d0ef76"/><text x="24" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">8</text><text x="38" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Condición</text><text x="20" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">¿Borrar CV?</text><rect x="178" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="192" cy="210" r="8.5" fill="#d0ef76"/><text x="192" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">9</text><text x="206" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="188" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Borrar CV</text><text x="188" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">huérfano</text><rect x="346" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="360" cy="210" r="8.5" fill="#d0ef76"/><text x="360" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">10</text><text x="374" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Respuesta</text><text x="356" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Responder</text><rect x="514" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="528" cy="210" r="8.5" fill="#d0ef76"/><text x="528" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">11</text><text x="542" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="524" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Leer plazo de</text><text x="524" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">respuesta</text><rect x="682" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="696" cy="210" r="8.5" fill="#d0ef76"/><text x="696" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">12</text><text x="710" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="692" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Armar mails</text><rect x="850" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="864" cy="210" r="8.5" fill="#d0ef76"/><text x="864" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">13</text><text x="878" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="860" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Enviar mail</text><text x="860" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">(Resend)</text></svg>
-<!-- flujo:fin -->
-    <figcaption>Generado desde <code>n8n/flujo-1-registro.json</code>: nodos, orden y conexiones salen del archivo exportado. Borde punteado: el nodo sigue aunque falle. Fondo rosado: respuesta de error.</figcaption>
+  <figure class="captura-n8n">
+    <img src="recursos/n8n-flujo-completo.png" alt="Vista general del flujo 1 en n8n: 21 nodos">
+    <figcaption>Vista general del flujo 1 (21 nodos) en n8n Cloud, corrida del 22/10 con datos de prueba. A este tamaño no se leen los nombres de los nodos: el detalle está en la figura siguiente y en la tabla. Los subtítulos con la URL de la base están difuminados.</figcaption>
   </figure>
+
+  <div class="par-n8n">
+    <figure>
+      <img src="recursos/n8n-evaluacion.png" alt="Tramo de evaluación del CV en n8n">
+      <figcaption>Tramo de la evaluación del CV, de <em>¿Evaluar CV?</em> a <em>Registrar referido</em>. Corrida del 22/10, datos de prueba.</figcaption>
+    </figure>
+    <figure>
+      <img src="recursos/n8n-salida-evaluacion.png" alt="Salida del nodo Resolver puntaje">
+      <figcaption>Salida de <em>Resolver puntaje</em>: puntaje 95, estado "evaluado" y una observación breve. CV de prueba, 22/10.</figcaption>
+    </figure>
+  </div>
 
   <h2>Nodo por nodo</h2>
   <table class="compacta">
@@ -29,21 +38,35 @@
       <tr><td>1 · Webhook registro</td><td>Recibe el <code>POST</code> multipart con los datos y el CV. Exige el encabezado secreto (credencial Header Auth) y responde desde un nodo posterior.</td></tr>
       <tr><td>2 · Preparar</td><td>Limpia espacios, pasa <code>usa_revit</code> de "si/no" a booleano y nombra el archivo con un UUID. No calcula <code>es_prioritario</code>. Si falta el CV, corta.</td></tr>
       <tr><td>3 · Subir CV</td><td>Sube el PDF a <code>cvs/{uuid}.pdf</code>, un bucket privado. Si falla, el flujo se corta sin llamar a la base y la app responde un error.</td></tr>
-      <tr><td>4 · Registrar referido</td><td>Una llamada RPC a <code>registrar_referido</code>. Toda la lógica del registro ocurre ahí, en una transacción.</td></tr>
-      <tr><td>5 · ¿Respondió la función?</td><td>Si el resultado es uno de los conocidos, sigue. Si hubo un error o se agotó el tiempo, va al 7.</td></tr>
-      <tr><td>6 · Normalizar resultado</td><td>Traduce <code>autorreferido</code> a <code>ya_registrado</code>, porque la app conoce tres resultados y una pantalla propia le avisaría a quien intenta hacer trampa. Marca si hay que borrar el CV: se borra siempre que no sea un registro nuevo.</td></tr>
-      <tr><td>7 · Responder error</td><td>502 con <code>{"resultado":"error"}</code>. El CV no se borra, porque no se sabe si la base confirmó.</td></tr>
-      <tr><td>8 · ¿Borrar CV?</td><td>Bifurca según la marca del paso 6.</td></tr>
-      <tr><td>9 · Borrar CV huérfano</td><td>Borra el archivo que sobra. Si el borrado falla, sigue igual.</td></tr>
-      <tr><td>10 · Responder</td><td>200 con el resultado para la app. Se responde antes de mandar mails: un mail caído no rompe el registro.</td></tr>
-      <tr><td>11 · Leer plazo de respuesta</td><td>Lee de <code>configuracion</code> los días hábiles que se le prometen al candidato. Si falla, el mail dice "en los próximos días hábiles".</td></tr>
-      <tr><td>12 · Armar mails</td><td>De 0 a 2 mails, con todo lo que muestran sacado del JSON de la función: confirmación al candidato nuevo; "referido validado" al referente, con monto, bono y avance; "no cuenta" al referente si la persona ya estaba en el pool.</td></tr>
-      <tr><td>13 · Enviar mail (Resend)</td><td>Uno por uno, a un mail por cada 600 ms. Si un envío falla, sigue.</td></tr>
+      <tr><td>4 · Leer interruptor CV</td><td>Lee <code>evaluacion_cv_activa</code> de <code>configuracion</code> (tiempo máximo 3 s). Si falla, se toma como apagado.</td></tr>
+      <tr><td>5 · ¿Evaluar CV?</td><td>Apagado: salta directo al nodo 11 y no se llama a OpenAI. Encendido: sigue.</td></tr>
+      <tr><td>6 · Recuperar CV</td><td>Toma el PDF que ya está en memoria desde <em>Preparar</em>; no lo descarga de nuevo.</td></tr>
+      <tr><td>7 · Extraer texto del CV</td><td>Extrae el texto del PDF con el nodo Extract From File.</td></tr>
+      <tr><td>8 · Preparar evaluación</td><td>Quita emails, teléfonos y URLs con expresiones regulares, recorta a 12.000 caracteres y arma el prompt, con el CV entre marcadores como dato. Descarta frases evidentes de inyección. Con menos de 200 caracteres (PDF escaneado o casi vacío) no hay texto que evaluar.</td></tr>
+      <tr><td>9 · ¿Hay texto?</td><td>Sin texto o con inyección evidente, salta al nodo 11 sin llamar al modelo.</td></tr>
+      <tr><td>10 · Evaluar CV</td><td>HTTP Request a chat completions de OpenAI (<code>gpt-4o-mini</code>, temperatura 0, respuesta en JSON). Tiempo máximo 6 s, sin reintentos; si falla, el flujo sigue.</td></tr>
+      <tr><td>11 · Resolver puntaje</td><td>Único origen de <code>cv_puntaje</code>: un entero de 0 a 100 o nulo. Cualquier falla, respuesta cortada o ilegible da nulo.</td></tr>
+      <tr><td>12 · Registrar referido</td><td>Una llamada RPC a <code>registrar_referido</code>, con <code>p_cv_puntaje</code>. Toda la lógica del registro, incluida la decisión sobre el puntaje, ocurre ahí, en una transacción.</td></tr>
+      <tr><td>13 · ¿Respondió la función?</td><td>Si el resultado es uno de los conocidos, sigue. Si hubo un error o se agotó el tiempo, va al 15.</td></tr>
+      <tr><td>14 · Normalizar resultado</td><td>Traduce <code>autorreferido</code> a <code>ya_registrado</code>, porque la app conoce tres resultados y una pantalla propia le avisaría a quien intenta hacer trampa. Marca si hay que borrar el CV: se borra siempre que no sea un registro nuevo.</td></tr>
+      <tr><td>15 · Responder error</td><td>502 con <code>{"resultado":"error"}</code>. El CV no se borra, porque no se sabe si la base confirmó.</td></tr>
+      <tr><td>16 · ¿Borrar CV?</td><td>Bifurca según la marca del nodo 14.</td></tr>
+      <tr><td>17 · Borrar CV huérfano</td><td>Borra el archivo que sobra. Si el borrado falla, sigue igual.</td></tr>
+      <tr><td>18 · Responder</td><td>200 con el resultado para la app. Se responde antes de mandar mails: un mail caído no rompe el registro.</td></tr>
+      <tr><td>19 · Leer plazo de respuesta</td><td>Lee de <code>configuracion</code> los días hábiles que se le prometen al candidato. Si falla, el mail dice "en los próximos días hábiles".</td></tr>
+      <tr><td>20 · Armar mails</td><td>De 0 a 2 mails, con todo lo que muestran sacado del JSON de la función: confirmación al candidato nuevo; "referido validado" al referente, con monto, bono y avance; "no cuenta" al referente si la persona ya estaba en el pool.</td></tr>
+      <tr><td>21 · Enviar mail (Resend)</td><td>Uno por uno, a un mail por cada 600 ms. Si un envío falla, sigue.</td></tr>
     </tbody>
   </table>
 
   <h2>Estado</h2>
-  <p>Verificado el 22/10: el flujo importado en n8n Cloud pasó <code>n8n/probar-flujo-1.mjs</code> (12 de 12), y el formulario real anduvo de punta a punta, en local y en el sitio publicado: registro, referido visible en el portal y mails. Con el dominio verificado llegan el mail al candidato y el del referente.</p>
+  <p>Verificado el 22/10, con la base real y a mano (sin script):</p>
+  <ul>
+    <li><strong>Evaluación de CV (decisión 70): implementada y encendida en el ejercicio.</strong> Con el interruptor apagado, un registro normal se validó sin llamar a OpenAI (5,1 s). Encendido, un CV que no coincidía con el perfil declarado sacó 10 y quedó en revisión; uno coherente sacó 95 (ese caso fue a revisión solo por la alerta de volumen del referente). Una corrida completa con evaluación tardó 5,2 s: una sola muestra.</li>
+    <li>El formulario real anduvo de punta a punta, en local y en el sitio publicado: registro, referido visible en el portal y mails (con el dominio verificado).</li>
+    <li>En el panel se probaron a mano Ver CV, Rechazar, Aprobar y Reabrir.</li>
+    <li><strong>Sin correr todavía:</strong> los casos de evaluación de <code>n8n/probar-flujo-1.mjs</code> (E1 a E5) están escritos y no se ejecutaron. El "12 de 12" anterior era del flujo de 13 nodos: <strong>no cubre</strong> el flujo actual de 21.</li>
+  </ul>
 
   <h2>Contrato con la app</h2>
   <div class="decide">
@@ -59,7 +82,7 @@
         <li><code>ya_registrado</code>: ya estaba en el pool, o es un autorreferido.</li>
         <li><code>codigo_invalido</code>: código inexistente, o referente no colocado o sancionado.</li>
       </ul>
-      <p>Cualquier otra respuesta hace que la app devuelva 502.</p>
+      <p>Cualquier otra respuesta hace que la app devuelva 502. La evaluación del CV no cambia este contrato: la app no ve el puntaje.</p>
     </div>
   </div>
 
@@ -72,6 +95,7 @@
         <li>Nombra y sube el CV, y borra el que sobra.</li>
         <li>Traduce el resultado para la app y responde.</li>
         <li>Arma y manda los mails, sin recalcular montos.</li>
+        <li>Calcula el puntaje del CV, que es solo un dato de entrada para la base.</li>
       </ul>
     </div>
     <div>
@@ -80,6 +104,7 @@
         <li>Si el código es válido y el referente puede referir.</li>
         <li>Autorreferido, duplicados y candidato ya en el pool.</li>
         <li>Revisión o validación automática, y si el perfil es prioritario.</li>
+        <li>Qué hacer con el puntaje del CV: nulo o menor que el umbral manda el caso a revisión. Nunca valida ni rechaza.</li>
         <li>Pagos, ciclo, hitos e historial, en la misma transacción.</li>
       </ul>
     </div>
@@ -91,6 +116,7 @@
     <li><span class="marca-no">No implementado</span><strong>Cierre mensual:</strong> el día de corte, un CSV de <code>v_cierre_ciclo</code> por mail a quien liquida sueldos, con un botón "Confirmar pago" que marca los movimientos como pagados.</li>
     <li><span class="marca-no">No implementado</span><strong>Bienvenida al referente:</strong> una sola vez, con su link y el acceso al portal.</li>
     <li><span class="marca-no">No implementado</span><strong>Aviso al referente cuando reclutamiento resuelve un caso:</strong> hoy se entera por el portal.</li>
+    <li><span class="marca-no">No implementado</span><strong>Retención de ejecuciones de n8n:</strong> sin configurar. Las ejecuciones del flujo 1 guardan el texto del CV ya sin emails, teléfonos ni URLs, pero con los nombres.</li>
   </ul>
 </section>
 <!-- /contenido -->

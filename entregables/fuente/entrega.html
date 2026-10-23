@@ -61,7 +61,7 @@
 
     <div class="bloque">
       <h2>Cómo se refiere</h2>
-      <p>Cada referente tiene un link personal, <code>/r/{nombre}-{8 caracteres}</code> (ej.: <code>/r/lucia-k7q2m9xd</code>), con un sufijo aleatorio no adivinable. La persona recomendada carga sus propios datos y su CV en PDF, y acepta que quien la recomendó vea su nombre y el estado de su registro. El formulario tiene reCAPTCHA. El referente sigue sus referidos y premios en un portal con login por magic link.</p>
+      <p>Cada referente tiene un link personal, <code>/r/{nombre}-{8 caracteres}</code> (ej.: <code>/r/lucia-k7q2m9xd</code>), con un sufijo aleatorio no adivinable. La persona recomendada carga sus propios datos y su CV en PDF, y acepta que quien la recomendó vea su nombre y el estado de su registro. El formulario tiene reCAPTCHA. El referente sigue sus referidos y premios en un portal con magic link.</p>
     </div>
 
     <div class="bloque">
@@ -84,7 +84,7 @@
 
     <div class="bloque">
       <h2>Validación</h2>
-      <p>Automática por reglas: si el perfil cumple todo, queda validado sin intervención humana. Va a revisión solo ante un <strong>posible duplicado</strong> (mismo nombre y apellido que otro candidato), una <strong>alerta de volumen</strong> (más de 5 referidos del mismo referente en 7 días; no hay tope de referidos) o un <strong>perfil sin CV</strong> (red de seguridad: el formulario ya lo exige). Reclutamiento resuelve desde un panel en 3 días hábiles; a la persona se le promete respuesta en 5.</p>
+      <p>Automática por reglas: si el perfil cumple todo, queda validado sin intervención humana. Va a revisión solo ante un <strong>posible duplicado</strong> (mismo nombre y apellido), una <strong>alerta de volumen</strong> (más de 5 referidos del mismo referente en 7 días; sin tope), un <strong>perfil sin CV</strong> o un <strong>CV dudoso</strong>: la evaluación automática del CV da menos que el umbral configurable (hoy 60 de 100) o no se pudo calcular. Solo manda a revisión: nunca valida ni rechaza. Reclutamiento resuelve en 3 días hábiles; a la persona se le promete respuesta en 5.</p>
     </div>
 
     <div class="bloque partible">
@@ -93,8 +93,8 @@
         <li><strong>Autorreferido bloqueado:</strong> el email o el LinkedIn de la persona no puede ser el del referente.</li>
         <li><strong>Sin duplicados:</strong> email y LinkedIn únicos; quien ya estaba en el pool no cuenta y el referente recibe un aviso.</li>
         <li><strong>Link no adivinable</strong> (36<sup>8</sup> combinaciones) y tope de 10 códigos inexistentes por IP cada 10 minutos.</li>
-        <li><strong>Sanción:</strong> autorreferirse o cargar referidos falsos cancela los premios pendientes y puede llevar a la expulsión.</li>
-        <li><strong>Trazabilidad:</strong> historial de estados de solo inserción, un solo pago por referido y concepto, y montos, umbrales y plazos en una tabla de configuración.</li>
+        <li><strong>Sanción:</strong> autorreferirse o cargar referidos falsos cancela los premios pendientes.</li>
+        <li><strong>Trazabilidad:</strong> historial de solo inserción, un solo pago por referido y concepto, y montos, umbrales y plazos en configuración.</li>
       </ul>
     </div>
   </div>
@@ -103,8 +103,8 @@
     <h2>Meta y límites</h2>
     <div class="texto-tabla">
       <div>
-        <p>Si hubiera 750 referentes (supuesto a confirmar con WorldTeams), sumar 500 ingresos por mes exige 0,67 validados por referente por mes con el 100 % participando. El cuello de botella es cuántos referentes participan, no el costo.</p>
-        <p>WorldTeams no definió presupuesto: los montos son una propuesta y se ajustan desde la configuración. El programa se paga solo si al menos X % de los referidos termina colocado (X&nbsp;=&nbsp;costo por referido ÷ ingreso por colocación, dato a pedir).</p>
+        <p>Con 750 referentes (supuesto a confirmar), 500 ingresos por mes exigen 0,67 validados por referente con el 100 % participando. El cuello de botella es cuántos referentes participan, no el costo.</p>
+        <p>WorldTeams no definió presupuesto: los montos son una propuesta y se ajustan desde la configuración. El programa se paga si al menos X % de los referidos se coloca (X&nbsp;=&nbsp;costo por referido ÷ ingreso por colocación, dato a pedir).</p>
       </div>
       <div>
         <table class="sin-corte-1">
@@ -127,7 +127,7 @@
   <header class="titulo-seccion">
     <span class="num">2</span>
     <h1>Modelo de datos</h1>
-    <span class="bajada">Postgres en Supabase · fuente: <code>supabase/schema.sql</code></span>
+    <span class="bajada">Postgres en Supabase · fuente: <code>supabase/schema.sql</code> y <code>evaluacion_cv.sql</code></span>
   </header>
 
   <p class="intro">Siete tablas de negocio, dos internas y tres vistas. Las reglas que no se pueden romper (unicidad, estados, pagos y permisos) las impone la base.</p>
@@ -189,7 +189,7 @@
         <tr><td>referente_id</td><td>uuid · FK, no se puede cambiar</td><td>A quién se le atribuye el premio.</td></tr>
         <tr><td>candidato_id</td><td>uuid · FK, no se puede cambiar</td><td>Un solo referido vigente por candidato (índice único parcial, sin contar los descartados).</td></tr>
         <tr><td>estado</td><td>enum · transiciones controladas por trigger</td><td>registrado, validado, en_revision, rechazado o descartado.</td></tr>
-        <tr><td>motivos_revision</td><td>text[]</td><td>Por qué entró a revisión o se descartó.</td></tr>
+        <tr><td>motivos_revision</td><td>text[]</td><td>Por qué entró a revisión o se descartó: <code>posible_duplicado</code>, <code>alerta_volumen</code>, <code>perfil_incompleto</code> o <code>cv_dudoso</code> (evaluación automática del CV; el puntaje no se guarda).</td></tr>
         <tr><td>validado_en</td><td>timestamptz · solo si está validado</td><td>Define el ciclo de pago y el año de los hitos.</td></tr>
       </tbody>
     </table>
@@ -235,7 +235,7 @@
     <table class="campos">
       <thead><tr><th>Objeto</th><th>Forma</th><th>Para qué</th></tr></thead>
       <tbody>
-        <tr><td>configuracion</td><td>clave text PK · valor jsonb · descripcion · actualizado_en/por</td><td>Montos, hitos, día de corte, zona horaria, plazos, alerta de volumen y límite por IP. Un trigger valida cada valor al guardarlo y registra quién lo cambió.</td></tr>
+        <tr><td>configuracion</td><td>clave text PK · valor jsonb · descripcion · actualizado_en/por</td><td>12 claves: montos, hitos, día de corte, zona horaria, plazos, alerta de volumen, límite por IP y la evaluación del CV (<code>evaluacion_cv_activa</code>, un interruptor que viene apagado, y <code>evaluacion_cv_umbral</code>, de 0 a 100, por defecto 60). Un trigger valida cada valor al guardarlo y registra quién lo cambió.</td></tr>
         <tr><td>equipo_reclutamiento</td><td>email único · nombre · activo</td><td>Quién entra al panel. Sin políticas de lectura: se consulta con <code>es_reclutamiento()</code>.</td></tr>
         <tr><td>secretos_internos</td><td>tabla interna</td><td>El secreto de aplicación que exigen las dos funciones que llama la landing. Sin permisos para anónimo ni autenticado.</td></tr>
         <tr><td>intentos_consulta_codigo</td><td>tabla interna · PK (ip, código)</td><td>Códigos inexistentes que probó cada IP, para el tope de 10 cada 600 s.</td></tr>
@@ -270,7 +270,7 @@
       <tr><td>Historial</td><td>Cada alta y cada cambio de estado escribe una fila. Otro trigger impide modificarla o borrarla, y a la service role se le quitó el permiso.</td></tr>
       <tr><td>Pagos al validar</td><td>Al pasar a validado se ejecuta <code>crear_movimientos_validacion</code>.</td></tr>
       <tr><td>Movimientos</td><td>Monto y concepto inmutables; un movimiento pagado o cancelado no se toca; un sancionado no genera nuevos.</td></tr>
-      <tr><td>Configuración</td><td>Valida tipo y rango de cada clave al guardarla (por ejemplo, el día de corte va de 1 a 28 y la zona horaria tiene que existir).</td></tr>
+      <tr><td>Configuración</td><td>Valida tipo y rango de cada clave al guardarla (por ejemplo, el día de corte va de 1 a 28, la zona horaria tiene que existir y el umbral del CV es un entero de 0 a 100).</td></tr>
     </tbody>
   </table>
 
@@ -278,7 +278,7 @@
   <table class="compacta">
     <thead><tr><th>Función</th><th>Qué hace</th><th>Quién la ejecuta</th></tr></thead>
     <tbody>
-      <tr><td>registrar_referido</td><td>En una transacción: normaliza, bloquea por email y LinkedIn, valida el código, detecta autorreferido y candidato existente, evalúa las reglas de revisión, inserta y valida o manda a revisión. Devuelve un JSON con resultado, estado, monto, bono, ciclo y próximo hito.</td><td>service_role (n8n)</td></tr>
+      <tr><td>registrar_referido</td><td>En una transacción: normaliza, bloquea por email y LinkedIn, valida el código, detecta autorreferido y candidato existente, evalúa las reglas de revisión, inserta y valida o manda a revisión. Recibe un parámetro opcional, <code>p_cv_puntaje</code> (entero de 0 a 100; fuera de rango cuenta como nulo): con la evaluación del CV encendida, un puntaje nulo o menor que el umbral suma el motivo <code>cv_dudoso</code>; apagada, lo ignora. Devuelve un JSON con resultado, estado, monto, bono, ciclo, próximo hito y <code>cv_puntaje</code> (informativo: no hay columna, el puntaje no se guarda).</td><td>service_role (n8n)</td></tr>
       <tr><td>resolver_referido</td><td>Aprobar, rechazar o reabrir un caso. Verifica <code>es_reclutamiento()</code> adentro, bloquea la fila y deja al revisor en el historial.</td><td>authenticated (panel)</td></tr>
       <tr><td>cambiar_estado_referido</td><td>Cambia el estado y deja actor y motivo en el historial.</td><td>service_role</td></tr>
       <tr><td>crear_movimientos_validacion</td><td>Base, extra prioritario y bonos de hito con los montos de <code>configuracion</code>; ciclo según el día de corte y la zona horaria. Idempotente.</td><td>trigger</td></tr>
@@ -343,15 +343,17 @@
 
   <div class="par-panel">
     <img src="recursos/captura-panel-cola.png" alt="Cola de revisión del panel con datos ficticios">
+    <img src="recursos/captura-panel-cv-dudoso.png" alt="Caso en revisión con el motivo CV dudoso, datos ficticios">
     <img src="recursos/captura-panel-pool.png" alt="Talent pool del panel con datos ficticios">
   </div>
-  <figcaption>Panel de reclutamiento: cola de revisión y talent pool. Capturas de <code>/dev/panel</code>, con datos ficticios.</figcaption>
+  <figcaption>Panel de reclutamiento: cola de revisión, un caso con el motivo "CV dudoso" y talent pool. Capturas de <code>/dev/panel</code> y <code>/dev/panel/pool</code>, con datos ficticios.</figcaption>
 
   <h2>Límites conocidos</h2>
   <ul class="lista-2">
     <li>El magic link se tiene que abrir en el mismo navegador en que se pidió (PKCE guarda el verificador en una cookie).</li>
     <li>Los topes de <code>/ingresar</code> (5 por IP y 3 por email cada 10 minutos) viven en la memoria de cada instancia: con varias, se multiplican. El tope de códigos del link vive en la base.</li>
     <li>En el talent pool, con JavaScript apagado la tabla se queda en el esqueleto de carga, y al filtrar por estado un candidato aparece si alguno de sus referidos tiene ese estado.</li>
+    <li>El aviso de visibilidad del formulario no menciona el análisis automático del CV ni el proveedor externo de IA: es un límite abierto.</li>
     <li>Las cifras de la franja de "/" (+750 profesionales, +370 empresas) son un dato público de worldteams.com, sin verificar.</li>
   </ul>
 </section>
@@ -364,14 +366,23 @@
     <span class="bajada">n8n · flujo 1, registro de un referido</span>
   </header>
 
-  <p class="intro">Cuando la persona recomendada envía el formulario, la app verifica reCAPTCHA y reenvía los datos a un webhook de n8n. El flujo sube el CV, registra todo en la base con una sola llamada, responde a la app y manda los mails. El JSON importable (<code>flujo-1-registro.json</code>) va adjunto aparte.</p>
+  <p class="intro">Cuando la persona recomendada envía el formulario, la app verifica reCAPTCHA y reenvía los datos a un webhook de n8n. El flujo sube el CV, evalúa su texto con un modelo de IA (si el interruptor está encendido), registra todo en la base con una sola llamada, responde a la app y manda los mails. El JSON importable (<code>flujo-1-registro.json</code>) va adjunto aparte.</p>
 
-  <figure>
-<!-- flujo:inicio -->
-<svg class="diagrama" viewBox="0 0 1012 288" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Secuencia de nodos del flujo 1, generada desde n8n/flujo-1-registro.json"><defs><marker id="punta" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#58958c"/></marker></defs><path d="M156,41.0 C174,41.0 160,41.0 178,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M324,41.0 C342,41.0 328,41.0 346,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M492,41.0 C510,41.0 496,41.0 514,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M660,41.0 C678,41.0 664,41.0 682,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M828,41.0 C846,41.0 832,41.0 850,41.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="832" y="36.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">sí</text><path d="M828,41.0 C846,41.0 832,123.0 850,123.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="832" y="57.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">no</text><path d="M996,41.0 H1006 V180 H83.0 V196" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M156,227.0 C174,227.0 160,227.0 178,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="160" y="222.0" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">sí</text><path d="M83.0,258 V274 H419.0 V258" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><text x="89.0" y="271" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#58958c">no</text><path d="M324,227.0 C342,227.0 328,227.0 346,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M492,227.0 C510,227.0 496,227.0 514,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M660,227.0 C678,227.0 664,227.0 682,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><path d="M828,227.0 C846,227.0 832,227.0 850,227.0" fill="none" stroke="#58958c" stroke-width="1.4" marker-end="url(#punta)"/><rect x="10" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="24" cy="24" r="8.5" fill="#d0ef76"/><text x="24" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">1</text><text x="38" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Webhook</text><text x="20" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Webhook registro</text><rect x="178" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="192" cy="24" r="8.5" fill="#d0ef76"/><text x="192" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">2</text><text x="206" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="188" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Preparar</text><rect x="346" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="360" cy="24" r="8.5" fill="#d0ef76"/><text x="360" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">3</text><text x="374" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="356" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Subir CV</text><rect x="514" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="528" cy="24" r="8.5" fill="#d0ef76"/><text x="528" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">4</text><text x="542" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="524" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Registrar</text><text x="524" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">referido</text><rect x="682" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="696" cy="24" r="8.5" fill="#d0ef76"/><text x="696" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">5</text><text x="710" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Condición</text><text x="692" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">¿Respondió la</text><text x="692" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">función?</text><rect x="850" y="10" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="864" cy="24" r="8.5" fill="#d0ef76"/><text x="864" y="27.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">6</text><text x="878" y="28" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="860" y="48" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Normalizar</text><text x="860" y="63" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">resultado</text><rect x="850" y="92" width="146" height="62" rx="6" fill="#fff1ec" stroke="#142d2b" stroke-width="1.1" /><circle cx="864" cy="106" r="8.5" fill="#d0ef76"/><text x="864" y="109.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">7</text><text x="878" y="110" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Respuesta</text><text x="860" y="130" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Responder error</text><rect x="10" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="24" cy="210" r="8.5" fill="#d0ef76"/><text x="24" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">8</text><text x="38" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Condición</text><text x="20" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">¿Borrar CV?</text><rect x="178" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="192" cy="210" r="8.5" fill="#d0ef76"/><text x="192" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">9</text><text x="206" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="188" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Borrar CV</text><text x="188" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">huérfano</text><rect x="346" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="360" cy="210" r="8.5" fill="#d0ef76"/><text x="360" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">10</text><text x="374" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Respuesta</text><text x="356" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Responder</text><rect x="514" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="528" cy="210" r="8.5" fill="#d0ef76"/><text x="528" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">11</text><text x="542" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="524" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Leer plazo de</text><text x="524" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">respuesta</text><rect x="682" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" /><circle cx="696" cy="210" r="8.5" fill="#d0ef76"/><text x="696" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">12</text><text x="710" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">Código</text><text x="692" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Armar mails</text><rect x="850" y="196" width="146" height="62" rx="6" fill="#fff" stroke="#142d2b" stroke-width="1.1" stroke-dasharray="4 3"/><circle cx="864" cy="210" r="8.5" fill="#d0ef76"/><text x="864" y="213.5" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="9.5" font-weight="700" fill="#142d2b">13</text><text x="878" y="214" font-family="Manrope, sans-serif" font-size="10" font-weight="600" fill="#4a5f5b">HTTP</text><text x="860" y="234" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">Enviar mail</text><text x="860" y="249" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="600" fill="#142d2b">(Resend)</text></svg>
-<!-- flujo:fin -->
-    <figcaption>Generado desde <code>n8n/flujo-1-registro.json</code>: nodos, orden y conexiones salen del archivo exportado. Borde punteado: el nodo sigue aunque falle. Fondo rosado: respuesta de error.</figcaption>
+  <figure class="captura-n8n">
+    <img src="recursos/n8n-flujo-completo.png" alt="Vista general del flujo 1 en n8n: 21 nodos">
+    <figcaption>Vista general del flujo 1 (21 nodos) en n8n Cloud, corrida del 22/10 con datos de prueba. A este tamaño no se leen los nombres de los nodos: el detalle está en la figura siguiente y en la tabla. Los subtítulos con la URL de la base están difuminados.</figcaption>
   </figure>
+
+  <div class="par-n8n">
+    <figure>
+      <img src="recursos/n8n-evaluacion.png" alt="Tramo de evaluación del CV en n8n">
+      <figcaption>Tramo de la evaluación del CV, de <em>¿Evaluar CV?</em> a <em>Registrar referido</em>. Corrida del 22/10, datos de prueba.</figcaption>
+    </figure>
+    <figure>
+      <img src="recursos/n8n-salida-evaluacion.png" alt="Salida del nodo Resolver puntaje">
+      <figcaption>Salida de <em>Resolver puntaje</em>: puntaje 95, estado "evaluado" y una observación breve. CV de prueba, 22/10.</figcaption>
+    </figure>
+  </div>
 
   <h2>Nodo por nodo</h2>
   <table class="compacta">
@@ -379,21 +390,35 @@
       <tr><td>1 · Webhook registro</td><td>Recibe el <code>POST</code> multipart con los datos y el CV. Exige el encabezado secreto (credencial Header Auth) y responde desde un nodo posterior.</td></tr>
       <tr><td>2 · Preparar</td><td>Limpia espacios, pasa <code>usa_revit</code> de "si/no" a booleano y nombra el archivo con un UUID. No calcula <code>es_prioritario</code>. Si falta el CV, corta.</td></tr>
       <tr><td>3 · Subir CV</td><td>Sube el PDF a <code>cvs/{uuid}.pdf</code>, un bucket privado. Si falla, el flujo se corta sin llamar a la base y la app responde un error.</td></tr>
-      <tr><td>4 · Registrar referido</td><td>Una llamada RPC a <code>registrar_referido</code>. Toda la lógica del registro ocurre ahí, en una transacción.</td></tr>
-      <tr><td>5 · ¿Respondió la función?</td><td>Si el resultado es uno de los conocidos, sigue. Si hubo un error o se agotó el tiempo, va al 7.</td></tr>
-      <tr><td>6 · Normalizar resultado</td><td>Traduce <code>autorreferido</code> a <code>ya_registrado</code>, porque la app conoce tres resultados y una pantalla propia le avisaría a quien intenta hacer trampa. Marca si hay que borrar el CV: se borra siempre que no sea un registro nuevo.</td></tr>
-      <tr><td>7 · Responder error</td><td>502 con <code>{"resultado":"error"}</code>. El CV no se borra, porque no se sabe si la base confirmó.</td></tr>
-      <tr><td>8 · ¿Borrar CV?</td><td>Bifurca según la marca del paso 6.</td></tr>
-      <tr><td>9 · Borrar CV huérfano</td><td>Borra el archivo que sobra. Si el borrado falla, sigue igual.</td></tr>
-      <tr><td>10 · Responder</td><td>200 con el resultado para la app. Se responde antes de mandar mails: un mail caído no rompe el registro.</td></tr>
-      <tr><td>11 · Leer plazo de respuesta</td><td>Lee de <code>configuracion</code> los días hábiles que se le prometen al candidato. Si falla, el mail dice "en los próximos días hábiles".</td></tr>
-      <tr><td>12 · Armar mails</td><td>De 0 a 2 mails, con todo lo que muestran sacado del JSON de la función: confirmación al candidato nuevo; "referido validado" al referente, con monto, bono y avance; "no cuenta" al referente si la persona ya estaba en el pool.</td></tr>
-      <tr><td>13 · Enviar mail (Resend)</td><td>Uno por uno, a un mail por cada 600 ms. Si un envío falla, sigue.</td></tr>
+      <tr><td>4 · Leer interruptor CV</td><td>Lee <code>evaluacion_cv_activa</code> de <code>configuracion</code> (tiempo máximo 3 s). Si falla, se toma como apagado.</td></tr>
+      <tr><td>5 · ¿Evaluar CV?</td><td>Apagado: salta directo al nodo 11 y no se llama a OpenAI. Encendido: sigue.</td></tr>
+      <tr><td>6 · Recuperar CV</td><td>Toma el PDF que ya está en memoria desde <em>Preparar</em>; no lo descarga de nuevo.</td></tr>
+      <tr><td>7 · Extraer texto del CV</td><td>Extrae el texto del PDF con el nodo Extract From File.</td></tr>
+      <tr><td>8 · Preparar evaluación</td><td>Quita emails, teléfonos y URLs con expresiones regulares, recorta a 12.000 caracteres y arma el prompt, con el CV entre marcadores como dato. Descarta frases evidentes de inyección. Con menos de 200 caracteres (PDF escaneado o casi vacío) no hay texto que evaluar.</td></tr>
+      <tr><td>9 · ¿Hay texto?</td><td>Sin texto o con inyección evidente, salta al nodo 11 sin llamar al modelo.</td></tr>
+      <tr><td>10 · Evaluar CV</td><td>HTTP Request a chat completions de OpenAI (<code>gpt-4o-mini</code>, temperatura 0, respuesta en JSON). Tiempo máximo 6 s, sin reintentos; si falla, el flujo sigue.</td></tr>
+      <tr><td>11 · Resolver puntaje</td><td>Único origen de <code>cv_puntaje</code>: un entero de 0 a 100 o nulo. Cualquier falla, respuesta cortada o ilegible da nulo.</td></tr>
+      <tr><td>12 · Registrar referido</td><td>Una llamada RPC a <code>registrar_referido</code>, con <code>p_cv_puntaje</code>. Toda la lógica del registro, incluida la decisión sobre el puntaje, ocurre ahí, en una transacción.</td></tr>
+      <tr><td>13 · ¿Respondió la función?</td><td>Si el resultado es uno de los conocidos, sigue. Si hubo un error o se agotó el tiempo, va al 15.</td></tr>
+      <tr><td>14 · Normalizar resultado</td><td>Traduce <code>autorreferido</code> a <code>ya_registrado</code>, porque la app conoce tres resultados y una pantalla propia le avisaría a quien intenta hacer trampa. Marca si hay que borrar el CV: se borra siempre que no sea un registro nuevo.</td></tr>
+      <tr><td>15 · Responder error</td><td>502 con <code>{"resultado":"error"}</code>. El CV no se borra, porque no se sabe si la base confirmó.</td></tr>
+      <tr><td>16 · ¿Borrar CV?</td><td>Bifurca según la marca del nodo 14.</td></tr>
+      <tr><td>17 · Borrar CV huérfano</td><td>Borra el archivo que sobra. Si el borrado falla, sigue igual.</td></tr>
+      <tr><td>18 · Responder</td><td>200 con el resultado para la app. Se responde antes de mandar mails: un mail caído no rompe el registro.</td></tr>
+      <tr><td>19 · Leer plazo de respuesta</td><td>Lee de <code>configuracion</code> los días hábiles que se le prometen al candidato. Si falla, el mail dice "en los próximos días hábiles".</td></tr>
+      <tr><td>20 · Armar mails</td><td>De 0 a 2 mails, con todo lo que muestran sacado del JSON de la función: confirmación al candidato nuevo; "referido validado" al referente, con monto, bono y avance; "no cuenta" al referente si la persona ya estaba en el pool.</td></tr>
+      <tr><td>21 · Enviar mail (Resend)</td><td>Uno por uno, a un mail por cada 600 ms. Si un envío falla, sigue.</td></tr>
     </tbody>
   </table>
 
   <h2>Estado</h2>
-  <p>Verificado el 22/10: el flujo importado en n8n Cloud pasó <code>n8n/probar-flujo-1.mjs</code> (12 de 12), y el formulario real anduvo de punta a punta, en local y en el sitio publicado: registro, referido visible en el portal y mails. Con el dominio verificado llegan el mail al candidato y el del referente.</p>
+  <p>Verificado el 22/10, con la base real y a mano (sin script):</p>
+  <ul>
+    <li><strong>Evaluación de CV (decisión 70): implementada y encendida en el ejercicio.</strong> Con el interruptor apagado, un registro normal se validó sin llamar a OpenAI (5,1 s). Encendido, un CV que no coincidía con el perfil declarado sacó 10 y quedó en revisión; uno coherente sacó 95 (ese caso fue a revisión solo por la alerta de volumen del referente). Una corrida completa con evaluación tardó 5,2 s: una sola muestra.</li>
+    <li>El formulario real anduvo de punta a punta, en local y en el sitio publicado: registro, referido visible en el portal y mails (con el dominio verificado).</li>
+    <li>En el panel se probaron a mano Ver CV, Rechazar, Aprobar y Reabrir.</li>
+    <li><strong>Sin correr todavía:</strong> los casos de evaluación de <code>n8n/probar-flujo-1.mjs</code> (E1 a E5) están escritos y no se ejecutaron. El "12 de 12" anterior era del flujo de 13 nodos: <strong>no cubre</strong> el flujo actual de 21.</li>
+  </ul>
 
   <h2>Contrato con la app</h2>
   <div class="decide">
@@ -409,7 +434,7 @@
         <li><code>ya_registrado</code>: ya estaba en el pool, o es un autorreferido.</li>
         <li><code>codigo_invalido</code>: código inexistente, o referente no colocado o sancionado.</li>
       </ul>
-      <p>Cualquier otra respuesta hace que la app devuelva 502.</p>
+      <p>Cualquier otra respuesta hace que la app devuelva 502. La evaluación del CV no cambia este contrato: la app no ve el puntaje.</p>
     </div>
   </div>
 
@@ -422,6 +447,7 @@
         <li>Nombra y sube el CV, y borra el que sobra.</li>
         <li>Traduce el resultado para la app y responde.</li>
         <li>Arma y manda los mails, sin recalcular montos.</li>
+        <li>Calcula el puntaje del CV, que es solo un dato de entrada para la base.</li>
       </ul>
     </div>
     <div>
@@ -430,6 +456,7 @@
         <li>Si el código es válido y el referente puede referir.</li>
         <li>Autorreferido, duplicados y candidato ya en el pool.</li>
         <li>Revisión o validación automática, y si el perfil es prioritario.</li>
+        <li>Qué hacer con el puntaje del CV: nulo o menor que el umbral manda el caso a revisión. Nunca valida ni rechaza.</li>
         <li>Pagos, ciclo, hitos e historial, en la misma transacción.</li>
       </ul>
     </div>
@@ -441,6 +468,7 @@
     <li><span class="marca-no">No implementado</span><strong>Cierre mensual:</strong> el día de corte, un CSV de <code>v_cierre_ciclo</code> por mail a quien liquida sueldos, con un botón "Confirmar pago" que marca los movimientos como pagados.</li>
     <li><span class="marca-no">No implementado</span><strong>Bienvenida al referente:</strong> una sola vez, con su link y el acceso al portal.</li>
     <li><span class="marca-no">No implementado</span><strong>Aviso al referente cuando reclutamiento resuelve un caso:</strong> hoy se entera por el portal.</li>
+    <li><span class="marca-no">No implementado</span><strong>Retención de ejecuciones de n8n:</strong> sin configurar. Las ejecuciones del flujo 1 guardan el texto del CV ya sin emails, teléfonos ni URLs, pero con los nombres.</li>
   </ul>
 </section>
 
@@ -472,6 +500,7 @@
       <tr><td>Revisión solo de los dudosos</td><td>Revisar cada caso no escala a 1.000 por mes: hay un solo punto de aprobación humana.</td></tr>
       <tr><td>Link no adivinable</td><td>Sufijo de 8 caracteres base36 (36<sup>8</sup>, unos 2,8 billones de combinaciones). La segunda capa vive en la base: <code>consultar_referente_por_codigo</code> cuenta los códigos inexistentes por IP y bloquea al llegar a 10 en 600 segundos (<code>limite_consulta_codigo</code>), y solo responde con el secreto que tiene el servidor de la app.</td></tr>
       <tr><td>Garantías en la base</td><td>Registro en una transacción, pagos por trigger, historial de solo inserción y RLS en todas las tablas. n8n orquesta y la service role solo vive en n8n.</td></tr>
+      <tr><td>Evaluación del CV con IA (decisión 70)</td><td>Idea mía: sin esto, el pago automático validaba perfiles sin comprobar que fueran reales. n8n extrae el texto del PDF, le quita emails, teléfonos y URLs, y le pide un puntaje de 0 a 100 a un modelo (llamada simple, no un agente). La <strong>base</strong> decide: con el interruptor encendido, un puntaje nulo o menor que el umbral (60, en <code>configuracion</code>) suma el motivo <code>cv_dudoso</code> y manda el caso a revisión. Nunca valida, rechaza ni cambia montos, y el puntaje no se guarda. <strong>Se envía</strong> solo el texto del CV y los cuatro campos del perfil declarado; <strong>no se envía</strong> nombre, apellido, email, LinkedIn del formulario ni el código del referente. Tope de 10 s en total (3 s el interruptor, 6 s el modelo), sin reintentos; si algo falla, el puntaje es nulo. Descarté un agente con herramientas y que el puntaje valide o rechace.</td></tr>
       <tr><td>Panel sin n8n</td><td>Aprobar, rechazar y reabrir llaman a <code>resolver_referido</code> con la sesión de la persona. Pasar por un webhook sumaba un salto y una credencial sin aportar lógica. Es una excepción documentada a mi diseño inicial.</td></tr>
       <tr><td>Nada hardcodeado</td><td>Montos, hitos, día de corte, zona horaria, plazos y umbrales están en <code>configuracion</code>, que valida cada valor al guardarlo.</td></tr>
       <tr><td>Mails</td><td>Resend desde n8n, con remitente <code>referidos@mail.signa.net.ar</code> (dominio verificado solo para este ejercicio). En producción, WorldTeams verifica su dominio y se cambia en dos lugares: el nodo <em>Enviar mail (Resend)</em> de n8n y el remitente del SMTP de Supabase.</td></tr>
@@ -488,7 +517,20 @@
   <p>Los de la app (login y panel) están en la sección 3. Los del sistema:</p>
   <ul>
     <li><strong>Un validado no se puede reabrir, a propósito.</strong> Los pagos son únicos por referido y concepto y se crean con <code>on conflict do nothing</code>, así que revalidar no corregiría nada. Los movimientos pagados o cancelados están cerrados por trigger. El estado de pago no tiene un valor de "cancelado por revisión". Un pago hecho no tiene compensación, porque el monto siempre es mayor que 0. Los bonos de hito no se vinculan con el referido que los disparó. Si alguien se aprobó por error, hoy se resuelve fuera del sistema.</li>
-    <li>La validación automática comprueba duplicados, autorreferido, volumen y CV; no comprueba que el perfil sea real. Mientras un pago está pendiente (hasta el cierre mensual), una sanción lo cancela; la señal antifraude y el pago por colocación (segunda etapa) refuerzan ese punto.</li>
+    <li>La validación automática comprueba duplicados, autorreferido, volumen y CV (con el filtro de la decisión 70); no comprueba que el perfil sea real. Mientras un pago está pendiente (hasta el cierre mensual), una sanción lo cancela; la señal antifraude y el pago por colocación (segunda etapa) refuerzan ese punto.</li>
+    <li><strong>Evaluación del CV (decisión 70):</strong>
+      <ul>
+        <li>Un CV falso bien armado se le escapa. Es un filtro que sube el costo del fraude, no una prueba; y un puntaje alto no impide una inyección exitosa: si una frase disfrazada engaña al modelo, el caso pasa por las demás reglas, pero no queda marcado.</li>
+        <li>El texto del CV sale a un proveedor externo. Los nombres no se pueden quitar de forma confiable: salen dentro del texto, aunque no se envíen los campos del formulario.</li>
+        <li>El aviso de visibilidad del formulario no menciona el análisis automático del CV ni al proveedor: hay que ajustarlo antes de usarlo en producción.</li>
+        <li>Las explicaciones del modelo pueden ser inexactas: en una prueba dijo que un CV tenía instrucciones dirigidas al evaluador y no las tenía. Por eso la observación no se guarda ni se muestra, y el puntaje solo manda a revisión.</li>
+        <li>La retención de ejecuciones de n8n está sin configurar: el historial guarda el texto enviado (con los nombres) y la observación del modelo. Conviene una retención corta.</li>
+        <li>El panel muestra el motivo "CV dudoso" pero no el puntaje.</li>
+        <li>Un PDF escaneado o casi vacío (menos de 200 caracteres) va a revisión por diseño: no hay nada que evaluar.</li>
+        <li>El interruptor está encendido en el ejercicio, y una caída de OpenAI manda todos los casos nuevos a revisión. Es el costo de que ante la duda decida una persona.</li>
+        <li>Se evalúa antes de saber si el candidato es nuevo, así que también sale a OpenAI el CV de quien ya estaba registrado.</li>
+      </ul>
+    </li>
     <li>El referente no recibe un mail cuando reclutamiento resuelve su caso: se entera por el portal.</li>
     <li>Un caso reabierto aparece ya vencido, porque el plazo cuenta desde su ingreso original. El plazo cuenta de lunes a viernes, sin feriados.</li>
     <li>El posible duplicado se detecta por nombre y apellido, así que con nombres comunes dará falsos positivos. Se acepta: un falso positivo cuesta una revisión, un duplicado real cuesta un pago indebido.</li>
@@ -506,17 +548,19 @@
     <li>Señales antifraude (IP, teléfono, dispositivo) y un posible duplicado más fino.</li>
     <li>Configuración versionada, con un panel de edición, y paneles de métricas y de pagos.</li>
     <li>Corregir una validación: un estado de pago "cancelado por revisión", el vínculo del bono con su referido, ajustes de lo ya pagado y la fecha de reapertura para el plazo. Tabla de feriados.</li>
+    <li>Evaluar el CV después de saber si el candidato es nuevo (hoy también sale a OpenAI el de quien resulta ya registrado), y afinar el detector de inyección.</li>
     <li>La landing en inglés y portugués (los textos ya están en un archivo de traducciones).</li>
   </ul>
 
   <h2>Estado de las pruebas</h2>
   <ul>
-    <li><strong>Base:</strong> <code>supabase/tests.sql</code> en la base real, 234 de 234. Las 2 fallas anteriores esperaban un email de ejemplo distinto del cargado en la base; se corrigieron las expectativas y el seed, sin tocar datos.</li>
-    <li><strong>App:</strong> pruebas unitarias de <code>app/</code> (Vitest), 193 de 193 en 17 archivos, corridas el 22/10.</li>
-    <li><strong>De punta a punta:</strong> el flujo 1 y el formulario real funcionan, con los mails (sección 4). En el panel, con la base real, "Ver CV" abrió un PDF real con una sesión de reclutamiento y Rechazar se probó a mano. Aprobar y Reabrir no se probaron a mano con la base real: los cubren <code>tests.sql</code> y <code>/dev/panel</code>.</li>
+    <li><strong>Base:</strong> <code>supabase/tests.sql</code> en la base real, 269 de 269 (12 claves de configuración). Incluye 35 pruebas de la evaluación del CV.</li>
+    <li><strong>App:</strong> pruebas unitarias de <code>app/</code> (Vitest), 194 de 194 en 17 archivos, corridas el 22/10.</li>
+    <li><strong>A mano, con la base real, sin script:</strong> en el panel, Ver CV, Rechazar, Aprobar y Reabrir. Con la evaluación apagada, un registro normal se validó sin llamar a OpenAI (5,1 s). Encendida, un CV que no coincidía con el perfil declarado sacó 10 y quedó en revisión; uno coherente sacó 95 (fue a revisión solo por la alerta de volumen del referente). Una corrida completa con evaluación tardó 5,2 s, de una sola muestra. El formulario real y los mails funcionan (sección 4).</li>
+    <li><strong>Escritas y sin correr:</strong> los casos de evaluación de <code>n8n/probar-flujo-1.mjs</code> (E1 a E5). El "12 de 12" de ese script era del flujo de 13 nodos: no cubre el flujo actual de 21.</li>
   </ul>
 
-  <h2 style="break-before: page">Cómo usé IA y qué corregí</h2>
+  <h2>Cómo usé IA y qué corregí</h2>
   <p>Usé Claude como interlocutor de diseño (una pregunta por vez, con opciones y una recomendación). Contrasté sus propuestas con las respuestas de WorldTeams, con su web y con una consulta informal a 6 personas. Después usé Claude Code para construir, con el repo como contexto y el registro de decisiones como fuente de verdad. Cada corrección quedó anotada en <code>AI-LOG.md</code>; estas son las que más cambiaron el resultado:</p>
   <table class="compacta ia">
     <thead><tr><th>Tema</th><th>Qué propuso la IA</th><th>Qué corregí</th></tr></thead>
@@ -533,7 +577,9 @@
       <tr><td>Zona horaria</td><td>Ciclo de pago calculado en UTC, fijo en el código.</td><td>Una clave de configuración (Buenos Aires): el mismo instante cae en días distintos según la zona.</td></tr>
       <tr><td>Seguridad del portal</td><td>Afirmó que las vistas filtraban por referente, sin una prueba.</td><td>Pedí la prueba de un referente que intenta ver datos de otro, y el vínculo por usuario pasó a tener prioridad sobre el email.</td></tr>
       <tr><td>Función en la base real</td><td>Una concatenación de arrays que falló con <code>malformed array literal</code>.</td><td>Reporté el error exacto; se corrigió con <code>array_append</code> y se volvió a aplicar.</td></tr>
-      <tr><td>Entregables de más</td><td>Un video de 3 minutos y un diagrama de flujo.</td><td>Releí el mail de WorldTeams: no los pedía. El video quedó afuera; el flujo se presenta con una figura generada desde el JSON exportado.</td></tr>
+      <tr><td>Entregables de más</td><td>Un video de 3 minutos y un diagrama de flujo.</td><td>Releí el mail de WorldTeams: no los pedía. El video quedó afuera; el flujo se presenta con capturas de n8n.</td></tr>
+      <tr><td>Evaluación del CV</td><td>Idea mía: evaluar el CV con IA para que el pago automático no valide perfiles sin comprobar que sean reales.</td><td>Fijé el alcance: una llamada simple al modelo, no un agente; la decisión sigue en la base y el puntaje solo puede mandar a revisión, nunca rechazar ni validar. Sobre el plan de Claude pedí un timeout de 6 s, quitar emails, teléfonos y URLs antes de enviar el texto, y no llamar al modelo ante frases evidentes de inyección. Un test de Claude fallaba por reutilizar un referente que ya pasaba el tope de volumen: el error era de la prueba, no de la función.</td></tr>
+      <tr><td>Nodo OpenAI del flujo</td><td>Escribió de memoria los parámetros del nodo OpenAI de n8n y avisó que eran una suposición. Sus 62 comprobaciones verificaban su propio código, no el nodo.</td><td>Al importarlo en n8n Cloud falló con un 400 genérico: la operación que usó no existía en esa versión. Pedí reemplazarlo por un HTTP Request a la API, que además permite fijar el timeout. Se sumaron comprobaciones sobre la forma real de la respuesta.</td></tr>
       <tr><td>Panel sin JavaScript</td><td>Afirmó que el talent pool "funciona sin JavaScript".</td><td>Solo del lado del servidor: el navegador se queda en el esqueleto de carga. Quedó como límite.</td></tr>
     </tbody>
   </table>

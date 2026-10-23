@@ -23,6 +23,8 @@ const capturas =
     ? [
         { url: `${BASE_DEV}/dev/panel`, archivo: "captura-panel-cola.png", vista: ESCRITORIO },
         { url: `${BASE_DEV}/dev/panel/pool`, archivo: "captura-panel-pool.png", vista: ESCRITORIO },
+        // La tarjeta del caso de ejemplo con el motivo cv_dudoso (queda fuera de cuadro en la primera captura).
+        { url: `${BASE_DEV}/dev/panel`, archivo: "captura-panel-cv-dudoso.png", vista: ESCRITORIO, tarjeta: "Valentina Ortiz" },
       ]
     : [
         { url: `${SITIO}/`, archivo: "captura-inicio-escritorio.png", vista: ESCRITORIO },
@@ -41,7 +43,18 @@ try {
     await new Promise((r) => setTimeout(r, 3500));
     // En `next dev` aparece el indicador de desarrollo de Next: no es parte de la página.
     await pagina.evaluate(() => document.querySelectorAll("nextjs-portal").forEach((n) => n.remove()));
-    await pagina.screenshot({ path: path.join(SALIDA, c.archivo) });
+    if (c.tarjeta) {
+      // Sube desde el nombre hasta la tarjeta (el ancestro más chico que tiene los motivos) y captura solo ese elemento.
+      const el = await pagina.evaluateHandle((nombre) => {
+        const h = [...document.querySelectorAll("h2,h3")].find((n) => n.textContent.trim() === nombre);
+        let n = h;
+        while (n && n.parentElement && !/Motivos/.test(n.textContent)) n = n.parentElement;
+        return n;
+      }, c.tarjeta);
+      await el.asElement().screenshot({ path: path.join(SALIDA, c.archivo) });
+    } else {
+      await pagina.screenshot({ path: path.join(SALIDA, c.archivo) });
+    }
     console.log(`  ${c.archivo} <- ${c.url}`);
     await pagina.close();
   }
