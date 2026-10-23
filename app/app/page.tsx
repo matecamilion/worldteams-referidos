@@ -3,7 +3,7 @@ import { Calculadora } from "@/components/Calculadora";
 import { Encabezado } from "@/components/Encabezado";
 import { ComoFunciona } from "@/components/inicio/ComoFunciona";
 import { HeroFragmentos } from "@/components/inicio/HeroFragmentos";
-import { HeroPoliedro } from "@/components/inicio/HeroPoliedro";
+import { HeroRed } from "@/components/inicio/HeroRed";
 import { Magnetico } from "@/components/inicio/Magnetico";
 import { Marquesina } from "@/components/inicio/Marquesina";
 import { Movimiento } from "@/components/inicio/Movimiento";
@@ -39,57 +39,51 @@ export default function Page() {
       </a>
       <Encabezado entrar />
       <main id="contenido" tabIndex={-1} className="outline-none">
-        <section
-          data-fondo="verde"
-          className={`${contenedor} grid gap-12 pb-20 pt-8 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-center lg:gap-10 lg:pb-28`}
-        >
-          <div className="min-w-0">
-            <h1 className="font-display text-[clamp(2.4rem,5.6vw,4.75rem)] font-medium leading-[1.02] tracking-[-0.035em]">
-              <span className="sr-only">{inicio.hero.tituloAccesible}</span>
-              <span aria-hidden className="block">
-                <span className="linea">
-                  <span style={{ "--retraso": "0ms" } as CSSProperties}>{inicio.hero.titulo}</span>
-                </span>
-                <span className="linea">
-                  <span style={{ "--retraso": "120ms" } as CSSProperties}>
-                    <HeroFragmentos />
-                  </span>
+        <HeroRed>
+          <h1 className="font-display text-[clamp(2.4rem,5.6vw,4.75rem)] font-medium leading-[1.02] tracking-[-0.035em]">
+            <span className="sr-only">{inicio.hero.tituloAccesible}</span>
+            <span aria-hidden className="block">
+              <span className="linea">
+                <span style={{ "--retraso": "0ms" } as CSSProperties}>{inicio.hero.titulo}</span>
+              </span>
+              <span className="linea">
+                <span style={{ "--retraso": "120ms" } as CSSProperties}>
+                  <HeroFragmentos />
                 </span>
               </span>
-            </h1>
+            </span>
+          </h1>
 
-            <p className="mt-8 max-w-[32rem] text-lg leading-relaxed text-fg/80">{inicio.hero.bajada}</p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Magnetico>
-                <a
-                  href="#calculadora"
-                  className="inline-flex h-12 items-center rounded-lg bg-lima px-7 font-bold text-verde transition-transform duration-150 active:scale-[0.98]"
-                >
-                  {inicio.hero.cta}
-                </a>
-              </Magnetico>
+          <p className="mt-8 max-w-[32rem] text-lg leading-relaxed text-fg/80">{inicio.hero.bajada}</p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Magnetico>
               <a
-                href="#como"
-                className="inline-flex h-12 items-center rounded-lg border-[1.5px] border-fg/30 px-6 font-bold transition-colors duration-150 hover:border-fg/60 active:scale-[0.98]"
+                href="#calculadora"
+                className="inline-flex h-12 items-center rounded-lg bg-lima px-7 font-bold text-verde transition-transform duration-150 active:scale-[0.98]"
               >
-                {inicio.hero.ctaSecundario}
+                {inicio.hero.cta}
               </a>
-            </div>
-
-            <ul className="mt-10 flex max-w-[34rem] flex-wrap gap-x-9 gap-y-5 border-t border-fg/15 pt-6">
-              {inicio.hero.cifras.map((c) => (
-                <li key={c.clave}>
-                  <p className="num whitespace-nowrap font-display text-[clamp(1.25rem,2.4vw,1.875rem)] font-medium leading-none">
-                    {"prefijo" in c ? <span className="mr-1 text-xs text-fg/70">{c.prefijo}</span> : null}
-                    USD {cifras[c.clave]}
-                  </p>
-                  <p className="mt-2 text-sm leading-snug text-fg/65">{c.etiqueta}</p>
-                </li>
-              ))}
-            </ul>
+            </Magnetico>
+            <a
+              href="#como"
+              className="inline-flex h-12 items-center rounded-lg border-[1.5px] border-fg/30 px-6 font-bold transition-colors duration-150 hover:border-fg/60 active:scale-[0.98]"
+            >
+              {inicio.hero.ctaSecundario}
+            </a>
           </div>
-          <HeroPoliedro />
-        </section>
+
+          <ul className="mt-10 flex max-w-[34rem] flex-wrap gap-x-9 gap-y-5 border-t border-fg/15 pt-6">
+            {inicio.hero.cifras.map((c) => (
+              <li key={c.clave}>
+                <p className="num whitespace-nowrap font-display text-[clamp(1.25rem,2.4vw,1.875rem)] font-medium leading-none">
+                  {"prefijo" in c ? <span className="mr-1 text-xs text-fg/70">{c.prefijo}</span> : null}
+                  USD {cifras[c.clave]}
+                </p>
+                <p className="mt-2 text-sm leading-snug text-fg/65">{c.etiqueta}</p>
+              </li>
+            ))}
+          </ul>
+        </HeroRed>
 
         <ComoFunciona />
         <Marquesina />
