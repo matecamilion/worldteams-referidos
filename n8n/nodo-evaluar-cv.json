@@ -1,0 +1,39 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const e = $('Preparar evaluación').first().json; return JSON.stringify({ model: e.modelo, messages: [{ role: 'system', content: e.prompt_sistema }, { role: 'user', content: e.prompt_usuario }], temperature: 0, max_tokens: 150, response_format: { type: 'json_object' } }); })() }}",
+        "options": {
+          "timeout": 6000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "e7de3b0c-8703-484f-97c5-1b8e230beecf",
+      "name": "Evaluar CV",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "openAiApi": {
+          "name": "WT OpenAI"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {}
+}

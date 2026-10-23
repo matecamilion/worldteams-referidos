@@ -10,6 +10,9 @@
 | `tests.sql` con la consulta del link (schema + seed + `consulta_referente.sql`) | 22/10/2026 | **124 pasan, 0 fallan, de 124** |
 | `verificar-consulta.mjs` contra la API real, con la clave anónima | 22/10/2026 | **18 de 18 comprobaciones OK** |
 | Landing `/r/[codigo]` en modo real (`NEXT_PUBLIC_DEMO=false`) contra Supabase | 22/10/2026 | Todos los casos como corresponde (detalle abajo) |
+| **`tests.sql` completo, estado actual** (schema + seed + consulta_referente + email_habilitado + panel_resolver + `evaluacion_cv.sql`) | 22/10/2026 | **269 pasan, 0 fallan, de 269** (corrido por Mateo en la base real) |
+
+Las filas de 93 y 124 pruebas son fotos históricas de cada etapa; el estado vigente es el de 269. Desde `evaluacion_cv.sql` la función `registrar_referido` vive en ese archivo (`registrar_referido.sql` quedó solo como comentario), por lo que el orden de aplicación es `schema.sql`, `seed.sql`, `consulta_referente.sql`, `email_habilitado.sql`, `panel_resolver.sql`, `evaluacion_cv.sql` y `tests.sql`.
 
 `tests.sql` lo corrió Mateo en el editor SQL del proyecto real, en este orden: `schema.sql`, `seed.sql`, `consulta_referente.sql`, carga del secreto de aplicación y `tests.sql` (que termina en `ROLLBACK`: no deja datos). En `tests.sql` el editor preguntó cómo crear la tabla temporal `resultados`; se eligió **"Run without RLS"**: es una tabla temporal de la sesión de prueba, donde se anotan los OK y las FALLA, y desaparece con el `ROLLBACK`. No es una tabla del esquema.
 
@@ -19,7 +22,7 @@ El detalle prueba por prueba es la tabla que devuelve `tests.sql` (la primera fi
 
 | Área | Qué se verifica |
 |---|---|
-| Configuración | Las 10 claves del seed existen; se rechazan montos negativos o no numéricos, día de corte fuera de 1–28, hitos mal formados, zona horaria inexistente o `limite_consulta_codigo` incompleto |
+| Configuración | Hay **12 claves**: el test de seed *"las 10 claves existen"* cuenta solo las 10 originales y las 2 de la evaluación del CV (`evaluacion_cv_activa`, `evaluacion_cv_umbral`; apagada y en 60 por defecto) tienen sus propias pruebas; se rechazan montos negativos o no numéricos, día de corte fuera de 1–28, hitos mal formados, zona horaria inexistente o `limite_consulta_codigo` incompleto |
 | `codigo_referido` | Se genera solo (nombre normalizado + sufijo base36 de **8**); el formato viejo (solo nombre) y el de 6 caracteres se rechazan; mayúsculas rechazadas; no se repite; no se puede cambiar; 500 códigos generados son válidos y distintos; los 4 del seed tienen 8 caracteres |
 | Candidatos | Email y LinkedIn se guardan normalizados; duplicados por email o LinkedIn (aunque cambien mayúsculas, `www`, barra o parámetros) se rechazan; LinkedIn inválido; aviso de visibilidad obligatorio; `es_prioritario` solo con las 4 condiciones |
 | Referidos | Un solo referido vigente por candidato; un descartado convive con el vigente; autorreferido por email y por LinkedIn bloqueado; solo un referente colocado y no sancionado abre referidos; transiciones de estado válidas |
