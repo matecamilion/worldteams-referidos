@@ -140,3 +140,8 @@ body {
     animation: none;
   }
 }
+
+/* Cartel de reCAPTCHA v3 oculto; la línea legal de Google va bajo el botón de envío del formulario. */
+.grecaptcha-badge {
+  visibility: hidden;
+}

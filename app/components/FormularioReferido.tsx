@@ -206,7 +206,7 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
               />
 
               <div>
-                <label className="flex cursor-pointer items-start gap-3">
+                <label className="flex min-h-10 cursor-pointer items-start gap-3">
                   <input
                     type="checkbox"
                     aria-invalid={errors.acepto_visibilidad ? true : undefined}
@@ -257,6 +257,19 @@ export function FormularioReferido({ codigo, referente }: { codigo: string; refe
                 )}
               </button>
               <p className="mt-2.5 text-center text-xs text-tinta-suave">{t("formulario.privacidad")}</p>
+              {!esDemo && (
+                <p className="mt-1.5 text-center text-xs text-tinta-suave">
+                  {t("formulario.recaptcha.antes")}
+                  <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-verde">
+                    {t("formulario.recaptcha.politica")}
+                  </a>
+                  {t("formulario.recaptcha.medio")}
+                  <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-verde">
+                    {t("formulario.recaptcha.condiciones")}
+                  </a>
+                  {t("formulario.recaptcha.despues")}
+                </p>
+              )}
             </div>
           </motion.form>
         ) : estado.tipo === "registrado" ? (

@@ -55,7 +55,7 @@ async function Contenido({ params }: { params: PageProps<"/r/[codigo]">["params"
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:items-start lg:gap-16">
       {/* Escritorio: bienvenida fija a la izquierda mientras se completa el formulario. */}
       <section className="lg:sticky lg:top-8">
-        <h1 className="font-display text-[clamp(2.5rem,6.4vw,5.5rem)] font-medium leading-[0.96] tracking-[-0.035em]">
+        <h1 className="font-display text-balance text-[clamp(2.5rem,6.4vw,5.5rem)] font-medium lg:text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.96] tracking-[-0.035em]">
           <span className="linea">
             <span style={{ "--retraso": "0ms" } as React.CSSProperties}>{nombreCompleto}</span>
           </span>

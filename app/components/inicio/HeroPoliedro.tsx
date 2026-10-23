@@ -88,8 +88,8 @@ export function HeroPoliedro() {
             data-pop
             className="flex h-[6.6rem] w-[7.6rem] flex-col items-center justify-center bg-verde px-3 text-center text-lima [clip-path:polygon(25%_0,75%_0,100%_50%,75%_100%,25%_100%,0_50%)]"
           >
-            <span data-quien className="text-[0.7rem] font-semibold leading-tight" />
-            <span data-que className="text-[0.7rem] leading-tight text-lima/80" />
+            <span data-quien className="text-xs font-semibold leading-tight" />
+            <span data-que className="text-xs leading-tight text-lima/80" />
             <span data-monto className="num mt-0.5 font-display text-lg font-semibold leading-none" />
           </div>
         </div>

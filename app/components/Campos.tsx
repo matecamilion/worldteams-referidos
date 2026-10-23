@@ -8,7 +8,7 @@ import { t } from "@/lib/i18n";
 export const claseEtiqueta = "mb-1.5 block text-sm font-semibold";
 
 export const claseInput =
-  "h-11 w-full rounded-lg border-[1.5px] border-borde bg-white px-3.5 text-base text-verde placeholder:text-tinta-suave/70 transition-colors hover:border-verde aria-[invalid=true]:border-error aria-[invalid=true]:bg-[#fff4f2]";
+  "h-11 w-full rounded-lg border-[1.5px] border-borde bg-white px-3.5 text-base text-verde placeholder:text-tinta-suave/90 transition-colors hover:border-verde aria-[invalid=true]:border-error aria-[invalid=true]:bg-[#fff4f2]";
 
 export function MensajeError({ id, children }: { id: string; children?: ReactNode }) {
   return (
@@ -58,7 +58,7 @@ export function Segmentado<T extends FieldValues>({
         role="radiogroup"
         aria-labelledby={idLeyenda}
         aria-describedby={error ? idError : undefined}
-        className={`flex h-10 overflow-hidden rounded-lg border-[1.5px] bg-white ${error ? "border-error" : "border-borde"}`}
+        className={`flex h-11 overflow-hidden rounded-lg border-[1.5px] bg-white ${error ? "border-error" : "border-borde"}`}
       >
         {opciones.map((o) => (
           <label

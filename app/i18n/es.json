@@ -452,7 +452,14 @@
     "enviar": "Enviar mi perfil",
     "enviando": "Enviando…",
     "reintentar": "Reintentar",
-    "privacidad": "Usamos tus datos solo para evaluar tu perfil dentro de WorldTeams."
+    "privacidad": "Usamos tus datos solo para evaluar tu perfil dentro de WorldTeams.",
+    "recaptcha": {
+      "antes": "Este sitio está protegido por reCAPTCHA y se aplican la ",
+      "politica": "Política de privacidad",
+      "medio": " y las ",
+      "condiciones": "Condiciones del servicio",
+      "despues": " de Google."
+    }
   },
   "confirmacion": {
     "titulo": "Listo, {nombre}. Recibimos tu perfil.",

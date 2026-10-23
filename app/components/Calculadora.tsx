@@ -39,7 +39,7 @@ function Deslizador({
         step={1}
         value={valor}
         onChange={(e) => alCambiar(Number(e.target.value))}
-        className="mt-2 h-8 w-full cursor-pointer accent-verde"
+        className="h-10 w-full cursor-pointer accent-verde"
       />
     </div>
   );

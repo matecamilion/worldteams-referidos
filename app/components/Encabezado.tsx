@@ -9,7 +9,7 @@ import { t } from "@/lib/i18n";
 export function Encabezado({ entrar = false, acciones }: { entrar?: boolean; acciones?: ReactNode }) {
   return (
     <header className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4 px-5 py-6 sm:px-8 lg:px-14">
-      <Link href="/" className="inline-block" aria-label={t("marca.nombre")}>
+      <Link href="/" className="-my-1.5 inline-flex h-10 items-center" aria-label={t("marca.nombre")}>
         {/* SVG publicado por WorldTeams en su sitio; next/image no aporta para un SVG. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/worldteams-logo.svg" alt={t("marca.logoAlt")} width={150} height={29} className="h-7 w-auto" />

@@ -74,7 +74,7 @@ export function ComoFunciona() {
         const etiquetas = q("[data-etiqueta]");
         gsap.set([...textos.slice(1), ...pant.slice(1)], { autoAlpha: 0 });
         gsap.set(nodos.slice(1), { scale: 0.4, transformOrigin: "center", opacity: 0.35 });
-        gsap.set(etiquetas.slice(1), { opacity: 0.4 });
+        gsap.set(etiquetas.slice(1), { opacity: 0.6 });
 
         const tl = gsap.timeline({
           defaults: { ease: "none" },

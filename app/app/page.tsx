@@ -80,7 +80,7 @@ export default function Page() {
               {inicio.hero.cifras.map((c) => (
                 <li key={c.clave}>
                   <p className="num whitespace-nowrap font-display text-[clamp(1.25rem,2.4vw,1.875rem)] font-medium leading-none">
-                    {"prefijo" in c ? <span className="mr-1 text-[0.55em] text-fg/70">{c.prefijo}</span> : null}
+                    {"prefijo" in c ? <span className="mr-1 text-xs text-fg/70">{c.prefijo}</span> : null}
                     USD {cifras[c.clave]}
                   </p>
                   <p className="mt-2 text-sm leading-snug text-fg/65">{c.etiqueta}</p>
