@@ -24,6 +24,9 @@ const eventos = es.inicio.hero.poliedro.eventos.map((e) => ({
 /** Rótulos del relato: palabras que el sitio ya usa en "Cómo funciona" (Referente, Candidato). */
 const rotulosTexto = es.inicio.como.hilo.slice(0, 2);
 
+/** Una frase por momento del relato; con el escritorio animado se leen en pantalla y, además, como lista para lectores de pantalla. */
+const frases = es.inicio.red.frases;
+
 const hayWebgl = () => {
   try {
     const c = document.createElement("canvas");
@@ -47,6 +50,7 @@ export function HeroRed({ children }: { children: ReactNode }) {
   const hex = useRef<HTMLDivElement>(null);
   const r0 = useRef<HTMLSpanElement>(null);
   const r1 = useRef<HTMLSpanElement>(null);
+  const leyendas = useRef<(HTMLParagraphElement | null)[]>([]);
   const [vivo, setVivo] = useState(false);
   // En escritorio sin WebGL (o si se pierde el contexto) la pista alta sobra: se vuelve al diseño fijo.
   const [sinRed, setSinRed] = useState(false);
@@ -88,6 +92,7 @@ export function HeroRed({ children }: { children: ReactNode }) {
             pista: pista.current,
             hex: hex.current,
             rotulos: [r0.current, r1.current],
+            leyendas: leyendas.current.filter((l): l is HTMLParagraphElement => !!l),
             eventos,
             alPerder: fallar,
           });
@@ -136,6 +141,19 @@ export function HeroRed({ children }: { children: ReactNode }) {
         <span ref={r1} className="absolute left-0 top-0 opacity-0 transition-opacity duration-300 ease-out">
           <span className="absolute left-6 top-0 -translate-y-1/2 whitespace-nowrap rounded bg-verde px-1.5 py-0.5 font-display text-base font-medium text-lima">{rotulosTexto[1]}</span>
         </span>
+        <div className="absolute bottom-10 left-5 grid w-full max-w-[15rem] sm:left-8 lg:left-14">
+          {frases.map((f, n) => (
+            <p
+              key={f}
+              ref={(el) => {
+                leyendas.current[n] = el;
+              }}
+              className="col-start-1 row-start-1 self-end rounded bg-fondo py-2 pr-3 text-lg leading-snug text-fg opacity-0 transition-opacity duration-300 ease-out"
+            >
+              {f}
+            </p>
+          ))}
+        </div>
       </div>
 
       <div className={`relative lg:flex lg:min-h-screen lg:items-center ${textoSobre}`}>
@@ -156,8 +174,16 @@ export function HeroRed({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <div aria-hidden className={`${contenedor} pb-16 ${mapaEstatico}`}>
+      <div aria-hidden className={`${contenedor} ${mapaEstatico}`}>
         <RedEstatica />
+      </div>
+      {/* Las tres frases del relato: visibles junto al mapa fijo; con la escena animada, solo para lectores de pantalla. */}
+      <div className={`${contenedor} ${sinRed ? "pb-16 pt-6" : "pb-16 pt-6 lg:p-0 motion-reduce:lg:pb-16 motion-reduce:lg:pt-6"}`}>
+        <ul className={`space-y-3 text-lg leading-snug text-fg/85 ${sinRed ? "" : "lg:sr-only motion-reduce:lg:not-sr-only"}`}>
+          {frases.map((f) => (
+            <li key={f}>{f}</li>
+          ))}
+        </ul>
       </div>
     </section>
   );

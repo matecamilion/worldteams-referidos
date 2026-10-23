@@ -27,6 +27,13 @@
         ]
       }
     },
+    "red": {
+      "frases": [
+        "Una persona recomienda a un colega.",
+        "La persona recomendada completa su perfil y entra al talent pool.",
+        "Cuando el perfil se valida, el referente lo ve en su portal y cobra."
+      ]
+    },
     "como": {
       "titulo": "Cómo funciona",
       "hilo": ["Referente", "Candidato", "Premio"],

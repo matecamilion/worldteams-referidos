@@ -12,6 +12,8 @@ type Opciones = {
   hex: HTMLElement;
   /** Rótulos del relato, en orden de hito (el último hito no lleva rótulo). */
   rotulos: HTMLElement[];
+  /** Frases del relato (tres), una visible a la vez según el avance del scroll. */
+  leyendas: HTMLElement[];
   eventos: EventoHero[];
   /** El contexto WebGL se perdió: quien llama vuelve al SVG. */
   alPerder: () => void;
@@ -28,7 +30,7 @@ declare global {
  * Monta la portada animada: un solo requestAnimationFrame, sin estado de React por cuadro. Se pausa fuera de pantalla y
  * con la pestaña oculta. Devuelve la función que lo desmonta.
  */
-export function montar({ contenedor, pista, hex, rotulos, eventos, alPerder }: Opciones) {
+export function montar({ contenedor, pista, hex, rotulos, leyendas, eventos, alPerder }: Opciones) {
   const e = crearEscena(contenedor);
   const coreo = crearCoreografia(e);
   const hexagono = crearHexagono(e, hex, eventos);
@@ -107,6 +109,7 @@ export function montar({ contenedor, pista, hex, rotulos, eventos, alPerder }: O
     const r = contenedor.getBoundingClientRect();
     hexagono.cuadro(dt, estado.p, r.width, r.height, estado.t >= SEGUNDOS_ENTRADA || degradada || s > 0.01);
     posicionarRotulos(r.width, r.height);
+    mostrarLeyenda(s);
     const ms = performance.now() - t0;
     e.render();
     if (medir && window.__redCuadros && window.__redCuadros.length < 8000) window.__redCuadros.push(real, ms);
@@ -135,6 +138,15 @@ export function montar({ contenedor, pista, hex, rotulos, eventos, alPerder }: O
         el.style.opacity = "1";
       }
     });
+  };
+
+  // Frase 1 acompaña la formación de la red y la salida del relato; la 2, el paso por el medio; la 3, la llegada.
+  let leyendaActual = -2;
+  const mostrarLeyenda = (avance: number) => {
+    const n = avance < 0.36 ? -1 : avance < 0.7 ? 0 : avance < 0.88 ? 1 : 2;
+    if (n === leyendaActual) return;
+    leyendaActual = n;
+    leyendas.forEach((el, i) => (el.style.opacity = i === n ? "1" : "0"));
   };
 
   const actualizar = () => {
@@ -175,6 +187,7 @@ export function montar({ contenedor, pista, hex, rotulos, eventos, alPerder }: O
     document.documentElement.removeEventListener("pointerleave", alSalir);
     e.lienzo.removeEventListener("webglcontextlost", alPerderContexto);
     hexagono.destruir();
+    leyendas.forEach((el) => (el.style.opacity = ""));
     rotulos.forEach((el) => {
       el.style.opacity = "";
       el.style.transform = "";
